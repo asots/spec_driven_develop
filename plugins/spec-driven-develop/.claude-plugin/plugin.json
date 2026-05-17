@@ -1,7 +1,7 @@
 {
   "name": "spec-driven-develop",
   "description": "Two complementary AI agent skills: (1) Spec-Driven Develop — automates pre-development workflow for large-scale complex tasks: project analysis, task decomposition, progress tracking, and sub-SKILL generation; (2) Deep Discuss — structured deep discussion for problem analysis, brainstorming, and solution design.",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "author": {
     "name": "zhu1090093659"
   }
