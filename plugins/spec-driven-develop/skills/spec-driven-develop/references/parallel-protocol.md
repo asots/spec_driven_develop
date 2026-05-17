@@ -63,3 +63,25 @@ The `task-breakdown.md` includes merge risk ratings for parallel lanes. Apply th
 - **Low risk**: Merge freely — lanes touch different files
 - **Medium risk**: Merge sequentially, run tests between each merge
 - **High risk**: Consider running these tasks sequentially instead of in parallel, or use worktree isolation with careful conflict resolution
+
+---
+
+## Post-Merge Architecture Validation
+
+After the test suite passes on merged parallel results, perform these architecture-level checks. These go beyond functional correctness to verify structural integrity across lane boundaries.
+
+### Cross-Lane S.U.P.E.R Compliance
+
+Verify that parallel execution did not introduce cross-lane violations:
+- **S (Single Purpose)**: No module gained responsibilities from multiple lanes
+- **U (Unidirectional Flow)**: No circular dependencies introduced between code touched by different lanes
+- **P (Ports)**: Interface contracts at lane boundaries remain intact — if Lane A changed a module's API, Lane B's usage still conforms
+- **R (Replaceable)**: No lane created implicit coupling that makes another lane's modules harder to replace
+
+### Aggregate Telemetry
+
+After consolidating parallel results, aggregate the adaptive control telemetry:
+1. Sum `task_drift` contributions from all tasks completed in this parallel batch
+2. Update the cumulative `drift_score` in the Milestone description (GitHub modes) or MASTER.md (LOCAL_ONLY)
+3. Evaluate thresholds against the new cumulative score
+4. If any threshold is exceeded → trigger the appropriate response (see `references/adaptive-control.md` § 3) BEFORE starting the next phase

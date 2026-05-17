@@ -8,7 +8,7 @@ description: >-
   "迁移", "重构", "大规模", "规范驱动". Performs full project analysis, task decomposition,
   documentation generation, progress tracking setup, and task-specific sub-SKILL creation
   before any development begins.
-version: 1.8.0
+version: 1.10.0
 ---
 
 # Spec-Driven Develop
@@ -25,8 +25,9 @@ You are executing the **Spec-Driven Development** workflow — a standardized pr
 | Archive output     | `docs/archives/<project>/`   | Phase 7 archived artifacts                 |
 | Sub-SKILL install  | Project level (auto-detect)  | Platform-specific: `.cursor/skills/`, `.claude/commands/`, or project-local |
 | Task tracking mode | Auto-detect                  | `GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY` (see below) |
+| Adaptive control   | Enabled                      | Drift thresholds: annotate=20%, replan=40%, rescope=60% of phase tasks |
 
-Templates for all generated documents are in `references/templates/`. Behavioral rules are in `references/behavioral-rules.md`. The parallel execution protocol is in `references/parallel-protocol.md`. The GitHub integration protocol is in `references/github-integration.md`.
+Templates for all generated documents are in `references/templates/`. Behavioral rules are in `references/behavioral-rules.md`. The parallel execution protocol is in `references/parallel-protocol.md`. The GitHub integration protocol is in `references/github-integration.md`. The adaptive control protocol is in `references/adaptive-control.md`.
 
 ### Task Tracking Modes
 
@@ -159,7 +160,25 @@ After loading your current state, populate the platform's native task tracking t
 
    After creation, record all GitHub resource URLs (Project URL, Milestone URLs, Issue number mapping) — these are needed for MASTER.md in Phase 4.
 
-**Output**: Complete `docs/plan/` directory with three documents. Every task is annotated with its S.U.P.E.R design drivers. In GitHub modes, all tasks also exist as GitHub Issues with Labels and Milestones.
+5. **Initialize Adaptive Control State** (see `references/adaptive-control.md` § 4):
+
+   For each Milestone created, compute the percentage-based drift thresholds from the task count in that phase and append the adaptive control YAML block to the Milestone description:
+   ```yaml
+   ---
+   adaptive:
+     drift_score: 0
+     strategy: "<decomposition-strategy>"
+     thresholds:
+       annotate: <ceil(total_tasks * 0.20)>
+       replan: <ceil(total_tasks * 0.40)>
+       rescope: <ceil(total_tasks * 0.60)>
+     total_tasks: <count>
+     completed_tasks: 0
+     last_updated: "<ISO-8601>"
+   ```
+   In `LOCAL_ONLY` mode, add the "Adaptive Control State" section to MASTER.md instead (see Phase 4).
+
+**Output**: Complete `docs/plan/` directory with three documents. Every task is annotated with its S.U.P.E.R design drivers. In GitHub modes, all tasks also exist as GitHub Issues with Labels and Milestones. Adaptive control state is initialized for each phase.
 
 ---
 
@@ -187,6 +206,8 @@ Use the templates in `references/templates/progress.md` for all progress documen
 
    The MASTER.md in GitHub mode does NOT duplicate task details — those live in the GitHub Issues. It serves as a local index and entry point for cross-conversation continuity.
 
+   Additionally, include a lightweight "Execution Telemetry" reference section noting that per-task telemetry is stored in Issue comments (see `references/adaptive-control.md` § 4.3) and drift state lives in Milestone descriptions (§ 4.1). This tells the resuming agent where to look.
+
 2. **Per-phase detail files are optional** in GitHub mode. The phase's task list lives in GitHub Issues filtered by milestone. If you create them, keep them lightweight — just a list of Issue references, not full task descriptions.
 
 ### In LOCAL_ONLY mode:
@@ -205,6 +226,10 @@ Use the templates in `references/templates/progress.md` for all progress documen
    - Each file contains the phase's tasks as checkbox items: `- [ ] Task description`
    - Include acceptance criteria inline for each task
    - Include a "Notes" section for recording decisions, blockers, and context
+
+3. Add the "Adaptive Control State" section to MASTER.md (see `references/adaptive-control.md` § 4.2). This is the primary adaptive state storage in LOCAL_ONLY mode, since Milestone descriptions are not available.
+
+4. Add a "Task Telemetry Log" table to MASTER.md for recording per-task execution metrics (see `references/adaptive-control.md` § 4.2).
 
 ### Common to all modes:
 
@@ -234,6 +259,7 @@ Use the templates in `references/templates/progress.md` for all progress documen
    - Guidance on how to update progress documents after completing each task
    - Phase-specific instructions relevant to the transformation type
    - **Parallel execution protocol**: reference `references/parallel-protocol.md` for the full protocol
+   - **Adaptive control protocol**: reference `references/adaptive-control.md` for telemetry collection, drift evaluation, and automatic response actions. The sub-SKILL MUST include the Post-Task Telemetry section (see `references/templates/sub-skill.md` § 9).
    - The archive trigger: when all tasks are done, initiate Phase 7
 
 3. **Delegate creation to the platform's native skill-creator**:

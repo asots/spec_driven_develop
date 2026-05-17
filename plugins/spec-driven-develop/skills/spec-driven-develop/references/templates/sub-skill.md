@@ -134,3 +134,69 @@ Reference `references/parallel-protocol.md` for the full protocol. Summarize key
 ### 8. Archive Trigger
 
 When all tasks are done (all Issues closed in GitHub modes, or all checkboxes checked in LOCAL_ONLY mode), initiate Phase 7 (Archive). Move local artifacts to `docs/archives/<project>/`. In GitHub modes, Milestones and Issues remain as a permanent record on GitHub.
+
+### 9. Post-Task Telemetry (MANDATORY)
+
+**CRITICAL**: This section implements the adaptive control feedback loop. The agent MUST execute these steps after completing every task and BEFORE marking the task as done (closing the Issue or checking the box). Skipping telemetry breaks the control loop. See `references/adaptive-control.md` for the complete protocol.
+
+```markdown
+## Post-Task Telemetry — Execute After Every Task
+
+After completing a task, BEFORE marking it as done:
+
+### Step 1: Record Actual Effort
+Compare your actual experience against the estimated effort from task-breakdown.md:
+
+| Level | Criteria |
+|:------|:---------|
+| S | < 30 minutes, no unexpected issues |
+| M | 30 min – 2 hours, minor surprises |
+| L | 2 – 4 hours, or significant unexpected complexity |
+| XL | > 4 hours, or required re-thinking approach |
+
+### Step 2: Run S.U.P.E.R Quick Check
+Run the S.U.P.E.R Code Review Checklist (§ 3 above). Record the score (passes out of 10).
+
+### Step 3: Count Unplanned Dependencies
+Count files, tasks, or external resources you needed but that weren't listed in the task's "Affected Files" or "Dependencies" sections.
+
+### Step 4: Write Telemetry
+
+**In GitHub modes**: Post a structured comment on the Issue:
+
+  ## 📊 Execution Telemetry
+
+  | Metric | Estimated | Actual |
+  |--------|-----------|--------|
+  | Effort | {est} | {actual} |
+  | SUPER Score | — | {score}/10 |
+  | Unplanned Deps | 0 | {count} |
+
+  **Deltas**: effort {+/-n}, SUPER {+/-n}, deps +{n}
+  **Task drift contribution**: {task_drift}
+  **Cumulative drift_score**: {new_total} (thresholds: annotate={a}, replan={r}, rescope={s})
+
+**In LOCAL_ONLY mode**: Append a row to the "Task Telemetry Log" table in MASTER.md.
+
+### Step 5: Update Drift Score
+
+**In GitHub modes**: Update the adaptive YAML block in the active Milestone's description with the new drift_score and completed_tasks count.
+
+**In LOCAL_ONLY mode**: Update the "Adaptive Control State" table in MASTER.md.
+
+### Step 6: Check Thresholds
+
+If drift_score >= threshold_rescope: HALT. Output:
+  "🛑 Adaptive Control: drift_score={n} exceeded rescope threshold.
+   Returning to Phase 2 for scope re-evaluation with user."
+
+If drift_score >= threshold_replan: HALT. Output:
+  "🔄 Adaptive Control: drift_score={n} exceeded replan threshold.
+   Re-entering Phase 3 to re-decompose remaining tasks."
+
+If drift_score >= threshold_annotate:
+  Add warning to next pending task (label + comment on Issue, or note in phase file).
+  Continue execution with caution.
+
+Otherwise: proceed to next task normally.
+```

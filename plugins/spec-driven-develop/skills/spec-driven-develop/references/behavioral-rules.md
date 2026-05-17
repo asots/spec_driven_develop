@@ -24,3 +24,9 @@ These rules apply to every agent and every phase in the Spec-Driven Develop work
    In all modes, the principle is the same: no single point of failure for progress state.
 
 9. **Use AskUserQuestionTool for all user interactions**. Whenever you need to ask the user a question, request clarification, or get confirmation (including phase boundary checkpoints), you MUST use the platform's built-in `AskUserQuestionTool`. Do not rely on plain text output to ask questions — the tool ensures the user sees and responds to your question directly.
+
+10. **Post-task telemetry is mandatory**. After completing every task, record actual effort, S.U.P.E.R score, and unplanned dependency count BEFORE marking the task as done. This is as non-negotiable as progress updates (rule 4). See `references/adaptive-control.md` § 1 for what to collect and § 4 for where to store it.
+
+11. **Drift threshold triggers are automatic**. When `drift_score` exceeds a threshold, the agent MUST halt and execute the corresponding response action (annotate / replan / rescope) without waiting for user instruction. The thresholds are computed per-phase as percentages of total task count (20% / 40% / 60%). See `references/adaptive-control.md` § 3 for the response protocol.
+
+12. **Adaptive state is persistent**. Always read and write `drift_score` via the defined storage: Milestone description YAML block in GitHub modes, or the "Adaptive Control State" section in MASTER.md for LOCAL_ONLY. Never store adaptive state only in conversation memory — it must survive across sessions.
