@@ -74,6 +74,41 @@ Three modes are auto-detected based on environment:
 
 The workflow gracefully degrades — if `gh` CLI is unavailable or the repo isn't on GitHub, it falls back to local-only mode automatically.
 
+### Adaptive Control (New in v1.10)
+
+Inspired by engineering cybernetics (工程控制论), the workflow now includes a **closed-loop feedback control system** that observes execution reality and automatically corrects course when plans drift:
+
+```
+    Set Point (Phase 2 spec)
+          │
+          ▼
+    ┌────────────┐         drift_score + telemetry
+    │ Controller │◄────────────────────────────┐
+    │ (SKILL)    │                              │
+    └─────┬──────┘                              │
+          │ task instructions                   │ observe
+          ▼                                     │
+    ┌────────────┐                              │
+    │ Executor   │──── actual effort/SUPER/deps ┘
+    │ (Agent)    │
+    └─────┬──────┘
+          │ code changes
+          ▼
+    ┌────────────┐
+    │ Codebase   │
+    └────────────┘
+```
+
+After every task, the agent collects **execution telemetry** (actual effort vs. estimated, S.U.P.E.R compliance delta, unplanned dependencies) and updates a cumulative `drift_score`. When drift exceeds percentage-based thresholds:
+
+| Drift Level | Threshold | Automatic Response |
+|:------------|:----------|:-------------------|
+| Mild | ≥ 20% of phase tasks | Annotate next task with warning |
+| Significant | ≥ 40% | Halt and re-decompose remaining tasks |
+| Severe | ≥ 60% | Return to Phase 2 for scope re-evaluation |
+
+This ensures the workflow **self-corrects** instead of blindly executing a plan that no longer matches reality.
+
 ## Deep Discuss — Structured Deep Discussion
 
 When you describe a problem, a technical puzzle, or say things like "let's discuss", "help me analyze", "I'm stuck on a decision" — Deep Discuss kicks in with a 7-phase structured discussion:
@@ -281,6 +316,7 @@ spec_driven_develop/
 │   │   │       ├── parallel-protocol.md      # Parallel execution protocol
 │   │   │       ├── behavioral-rules.md       # Non-negotiable workflow rules
 │   │   │       ├── github-integration.md     # GitHub Issues/Projects/PR protocol
+│   │   │       ├── adaptive-control.md      # Closed-loop adaptive control protocol
 │   │   │       └── templates/                # Document templates (one per concern)
 │   │   │           ├── analysis.md           # Phase 1: with S.U.P.E.R health assessment
 │   │   │           ├── plan.md               # Phase 3: with S.U.P.E.R design constraints
