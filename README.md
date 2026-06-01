@@ -346,6 +346,7 @@ The essential files for cross-platform use are the `SKILL.md` files and the `ref
 ## Friendly Links
 
 - [linux.do](https://linux.do)
+- [zhu1090093659/deepseek-pp](https://github.com/zhu1090093659/deepseek-pp)
 
 ## License
 

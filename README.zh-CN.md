@@ -325,6 +325,7 @@ spec_driven_develop/
 ## 友情链接
 
 - [linux.do](https://linux.do)
+- [zhu1090093659/deepseek-pp](https://github.com/zhu1090093659/deepseek-pp)
 
 ## 许可证
 
