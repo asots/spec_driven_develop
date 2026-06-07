@@ -280,6 +280,17 @@ curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/mai
 
 Agent 在每次工作会话开始时，会自动把当前阶段的待办任务加载到平台原生的任务追踪工具中（例如 Claude Code 的 TodoWrite）。你可以直接在 IDE 侧边栏里看到实时进度，不需要手动翻 Markdown 文件。在 GitHub 模式下，进度还可以在 GitHub Milestone 和 Project 看板上查看。MASTER.md 依然是跨对话的持久化本地索引。
 
+### 项目级约束与记忆
+
+对于新项目，工作流现在会在进度追踪之外创建或更新项目级 Agent 指令，并解析持久记忆 surface：
+
+- `AGENTS.md` — Codex、Cursor 以及其他能读 Markdown 的 Coding Agent 共用的项目约束
+- `CLAUDE.md` — Claude Code 专用的项目指令，并与 `AGENTS.md` 保持一致
+- 可用时优先使用 Coding Agent 原生项目记忆 — 跨会话保留的项目事实、常见坑和工程规则
+- 只有在用户明确选择或项目已有声明时，才使用 repo-local fallback 记忆文件
+
+功能和行为变更类任务默认必须规划测试。如果某个任务无法添加自动化测试，计划里必须说明原因，并写明最接近的验证命令。
+
 ### 进度导出
 
 一个可选的脚本可以把进度数据导出为结构化 JSON，方便导入到外部项目管理工具（Linear、Jira、Notion 等）：
@@ -290,13 +301,17 @@ python scripts/export-progress.py docs/progress/
 
 ### 归档
 
-当所有任务标记完成后，Agent 会把所有工作产出物（分析文档、计划文档、进度记录）归档到 `docs/archives/<项目名>/`，并更新 `docs/archives/README.md` 索引。不会删除任何东西，全部保留以便溯源。
+当所有任务标记完成后，Agent 会把所有工作产出物（分析文档、计划文档、进度记录和治理文件快照）归档到 `docs/archives/<项目名>/`，并更新 `docs/archives/README.md` 索引。活跃的根目录治理文件会继续保留，归档副本用于溯源。
 
 ## 项目结构
 
 ```
 spec_driven_develop/
+├── AGENTS.md                                  # Coding Agent 共用的项目指令
+├── CLAUDE.md                                  # Claude Code 专用项目指令
 ├── .agents/plugins/marketplace.json          # Codex 仓库级插件市场入口
+├── docs/
+│   └── archives/                              # 已完成工作流归档
 ├── plugins/spec-driven-develop/              # 独立的 Claude Code 与 Codex 插件
 │   ├── .claude-plugin/
 │   │   └── plugin.json                       # Claude Code 插件清单
@@ -315,6 +330,7 @@ spec_driven_develop/
 │   │   │           ├── analysis.md           # Phase 1：含 S.U.P.E.R 健康度评估
 │   │   │           ├── plan.md               # Phase 3：含 S.U.P.E.R 设计约束
 │   │   │           ├── progress.md           # Phase 4：跨对话进度追踪
+│   │   │           ├── governance.md         # Phase 4：指令/原生记忆 surface 模板
 │   │   │           └── archive.md            # Phase 6：工件归档
 │   │   └── deep-discuss/
 │   │       └── SKILL.md                      # 结构化深度讨论工作流

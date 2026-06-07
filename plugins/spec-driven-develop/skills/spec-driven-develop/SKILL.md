@@ -6,9 +6,9 @@ description: >-
   "rebuild in [language]", "spec-driven", or describes any large-scale project transformation
   that requires planning before coding. Also triggers on Chinese keywords: "改造", "重写",
   "迁移", "重构", "大规模", "规范驱动". Performs full project analysis, task decomposition,
-  documentation generation, progress tracking setup, and then executes the plan within
-  the same session.
-version: 1.11.0
+  documentation generation, project-level instruction and native memory surface resolution,
+  progress tracking setup, and then executes the plan within the same session.
+version: 1.11.1
 ---
 
 # Spec-Driven Develop
@@ -22,6 +22,8 @@ You are executing the **Spec-Driven Development** workflow — a standardized pi
 | Analysis output    | `docs/analysis/`             | Phase 1 analysis documents                 |
 | Plan output        | `docs/plan/`                 | Phase 3 planning documents                 |
 | Progress output    | `docs/progress/`             | Phase 4 tracking documents (incl. MASTER.md) |
+| Instruction surfaces | Resolved per project       | Project-level constraints for Codex/Cursor-compatible agents, Claude Code, and existing platform rule files |
+| Memory surface     | Native first                 | Durable project facts and cross-session decisions using the active coding agent's native memory when available; repo fallback only when explicitly selected |
 | Archive output     | `docs/archives/<project>/`   | Phase 6 archived artifacts                 |
 | Task tracking mode | Auto-detect                  | `GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY` (see below) |
 | Adaptive control   | Enabled                      | Drift thresholds: annotate=20%, replan=40%, rescope=60% of phase tasks |
@@ -42,7 +44,15 @@ See `references/github-integration.md` for the full protocol, `gh` command refer
 
 ## Before You Begin: Cross-Conversation Continuity Check
 
-**CRITICAL**: Before starting any phase, check if `docs/progress/MASTER.md` already exists in the project.
+**CRITICAL**: Before starting any phase, inventory and read any existing project-level instruction and memory surfaces:
+
+- `AGENTS.md` — shared project instructions for Codex, Cursor, and other Markdown-aware agents
+- `CLAUDE.md` — Claude Code-specific instructions
+- Platform-specific rule files that already exist (for example `.cursor/rules/`, `.windsurf/`, `.clinerules*`, `.codex/`, or equivalent)
+- The active coding agent's native project memory surface, if available
+- Any repo-local fallback memory file already declared by the project or by an existing `docs/progress/MASTER.md`
+
+Then check if `docs/progress/MASTER.md` already exists in the project.
 
 - If it **exists**: Read it immediately. You are resuming an in-progress task. Identify the **tracking mode** (`GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY`) from the `Mode` field, which phase you are in, what has been completed, and continue from the exact point where the previous conversation left off. Do NOT restart from Phase 0.
   - **If mode is GITHUB_FULL or GITHUB_STANDARD**: Also query GitHub for the latest task status, since Issues may have been closed (via merged PRs) since the last session. Use the commands in `references/github-integration.md` § "Reading Progress from GitHub". Update MASTER.md if the GitHub state is ahead of the local index.
@@ -80,7 +90,7 @@ After loading your current state, populate the platform's native task tracking t
 1. Launch `project-analyzer` sub-agents **in parallel** to analyze the codebase concurrently. Split the work by focus area:
    - **Agent 1 — Architecture & Stack**: Project structure, directory layout, technology stack, entry points, build/run commands
    - **Agent 2 — Module Inventory**: Each module's responsibility, public API surface, size, internal/external dependencies. **Must evaluate each module against all five S.U.P.E.R principles** (Single Purpose, Unidirectional Flow, Ports over Implementation, Environment-Agnostic, Replaceable Parts) and assign a per-principle compliance rating.
-   - **Agent 3 — Risks & S.U.P.E.R Health**: Transformation risks, complexity hotspots, platform-specific code, coding conventions. **Must produce a S.U.P.E.R Architecture Health Summary** evaluating the overall codebase against each principle, identifying violation hotspots that become priority targets in the transformation plan.
+   - **Agent 3 — Risks, Tests & Governance**: Transformation risks, complexity hotspots, platform-specific code, coding conventions, test coverage, and project-level instruction/memory surfaces. **Must produce a S.U.P.E.R Architecture Health Summary** evaluating the overall codebase against each principle, identifying violation hotspots that become priority targets in the transformation plan.
 
    Provide each agent with the preliminary direction from Phase 0 AND `references/super-philosophy.md` so they can assess findings against S.U.P.E.R principles in context of the intended transformation.
 
@@ -89,7 +99,7 @@ After loading your current state, populate the platform's native task tracking t
 2. Consolidate agent outputs and resolve any contradictions or gaps. Write analysis documents to `docs/analysis/` using the templates in `references/templates/analysis.md`:
    - `project-overview.md` — Architecture, tech stack, entry points, build system
    - `module-inventory.md` — Every module with: responsibility, dependencies, size, complexity rating, **S.U.P.E.R compliance score per module**
-   - `risk-assessment.md` — Technical risks, compatibility risks, complexity hotspots, **S.U.P.E.R Architecture Health Summary with violation hotspots**
+   - `risk-assessment.md` — Technical risks, compatibility risks, complexity hotspots, testing gaps, project governance gaps, **S.U.P.E.R Architecture Health Summary with violation hotspots**
 
 3. **GitHub Pre-flight Check**: Run the pre-flight detection from `references/github-integration.md` § "Pre-flight Check" to determine the task tracking mode (`GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY`). Report the detected mode to the user. If the mode is not what they expect, explain what's missing and how to upgrade (e.g., `gh auth refresh -s project`).
 
@@ -119,6 +129,8 @@ After loading your current state, populate the platform's native task tracking t
    - **Constraints**: Hard constraints (timeline, backward compatibility, specific libraries, deployment targets)?
    - **Priorities**: What matters most — performance, maintainability, feature parity, or something else? Reference the risk assessment to help the user prioritize.
    - **S.U.P.E.R priorities**: Which architectural violations should be fixed during this transformation vs. deferred?
+   - **Testing policy**: Which test layers must protect new features or behavior changes? If the project lacks tests, should the first phase establish a minimal test harness?
+   - **Project governance**: Which instruction surfaces are canonical for shared rules and platform-specific rules? Which native memory surface should receive durable project facts? If no native memory surface is available, should the workflow use an explicitly named repo-local fallback memory file?
 
 3. Summarize the refined understanding back to the user and get explicit confirmation before proceeding.
 
@@ -138,7 +150,9 @@ After loading your current state, populate the platform's native task tracking t
 
 2. The decomposition must produce:
    - Phased approach with natural phase boundaries, ordered by dependency. **Early phases should prioritize fixing S.U.P.E.R violation hotspots** identified in Phase 1, establishing clean architecture foundations before building new features.
-   - Concrete tasks for each phase, each with: description, priority (P0/P1/P2), effort (S/M/L/XL), dependencies, **S.U.P.E.R design drivers** (which principles are most relevant), acceptance criteria. **Every task's acceptance criteria implicitly includes passing the S.U.P.E.R Quick Check for its listed principles.**
+   - Concrete tasks for each phase, each with: description, priority (P0/P1/P2), effort (S/M/L/XL), dependencies, **S.U.P.E.R design drivers** (which principles are most relevant), acceptance criteria, test expectation, and memory/governance impact. **Every task's acceptance criteria implicitly includes passing the S.U.P.E.R Quick Check for its listed principles.**
+   - **Testing is default**: Every task that adds or changes user-visible features, business behavior, API contracts, schemas, migrations, parsing, routing, permissions, caching, or persistence MUST add or update relevant automated tests. Pure documentation/config tasks may mark tests as not applicable, but the reason must be explicit in the task's acceptance criteria.
+   - **Governance is default**: If a task introduces a stable engineering rule, gotcha, command, invariant, or project-specific convention, its acceptance criteria must include updating the resolved native memory surface or the explicitly selected repo fallback. If the rule affects future agents' behavior, update the resolved instruction surfaces such as `AGENTS.md`, `CLAUDE.md`, or existing platform rule files.
    - **Parallel execution lanes**: For each phase, group tasks that have no mutual dependencies into lanes that can run simultaneously. Assess merge risk (file overlap) between lanes.
    - Dependency graph as a Mermaid diagram — use subgraphs to visualize parallel lanes
    - Milestones at natural phase boundaries
@@ -183,11 +197,37 @@ After loading your current state, populate the platform's native task tracking t
 
 ## Phase 4: Progress Tracking Documentation
 
-**Goal**: Create a progress tracking system that survives across conversations. The format depends on the detected tracking mode.
+**Goal**: Create a progress tracking and project governance system that survives across conversations. The format depends on the detected tracking mode.
 
 **Actions**:
 
-Use the templates in `references/templates/progress.md` for all progress documents.
+Use the templates in `references/templates/progress.md` for progress documents and `references/templates/governance.md` for project-level instruction and memory surface records.
+
+### Project Governance Surface (all modes)
+
+Resolve governance and memory surfaces before execution starts:
+
+1. Inventory existing surfaces
+   - Shared instruction files: `AGENTS.md` or equivalent
+   - Claude Code instruction files: `CLAUDE.md`
+   - Other platform-native rule files that already exist, such as `.cursor/rules/`, `.windsurf/`, `.clinerules*`, `.codex/`, or equivalents
+   - Native project memory exposed by the active coding agent, if available
+   - Repo-local fallback memory files only if they already exist or the user explicitly selects one
+
+2. Update instruction surfaces without overwriting existing guidance
+   - Put shared, cross-agent rules in `AGENTS.md` or the project's existing shared rule surface
+   - Put Claude Code-specific instructions in `CLAUDE.md`
+   - Update existing Cursor/Windsurf/Cline/Codex rule files only when they already exist or the user asks for that platform surface
+   - Preserve user-written sections, platform-specific sections, local commands, and security constraints
+   - If an existing rule conflicts with the new plan, do not silently replace it; record the conflict in `docs/progress/MASTER.md` and ask the user at the next phase checkpoint
+
+3. Resolve the memory surface
+   - Prefer the active coding agent's native project memory mechanism when one is available
+   - If no native memory mechanism is available, do not silently create a Markdown memory file
+   - Use a repo-local fallback memory file only when the user confirms it or the project already declares one
+   - Record the resolved memory surface in `docs/progress/MASTER.md` under "Governance Status"
+
+Do not create competing truth sources. The workflow must leave behind a clear map of which files or native surfaces are authoritative for shared rules, platform-specific rules, and durable memory.
 
 ### In GITHUB_FULL or GITHUB_STANDARD mode:
 
@@ -265,6 +305,8 @@ Use the templates in `references/templates/progress.md` for all progress documen
    - `docs/plan/milestones.md`
    - `docs/progress/MASTER.md`
    - `docs/progress/phase-N-*.md` (LOCAL_ONLY mode, one per phase)
+   - Resolved instruction surfaces, such as `AGENTS.md`, `CLAUDE.md`, or existing platform rule files
+   - Resolved memory surface (native memory, existing project memory, or explicitly selected repo fallback)
    - **[GitHub modes]** GitHub Project URL, Milestone URLs, list of created Issue numbers
 
 3. Ask the user: "All preparation is complete. Ready to begin execution?"
@@ -274,7 +316,7 @@ Use the templates in `references/templates/progress.md` for all progress documen
 After user confirmation, execute tasks according to the plan:
 
 1. **Process each phase sequentially** (Phase 1 → Phase 2 → ... in the plan's phased order):
-   - For tasks in **parallel lanes**: spawn `task-executor` sub-agents simultaneously, one per lane, each in an isolated worktree. Provide each agent with: task ID, tracking mode, task description, acceptance criteria, relevant files, and coding standards from `docs/plan/task-breakdown.md`. See `references/parallel-protocol.md` for the full parallel execution protocol.
+   - For tasks in **parallel lanes**: spawn `task-executor` sub-agents simultaneously, one per lane, each in an isolated worktree. Provide each agent with: task ID, tracking mode, task description, acceptance criteria, test expectation, memory/governance impact, relevant files, coding standards from `docs/plan/task-breakdown.md`, and current context from the resolved instruction and memory surfaces. See `references/parallel-protocol.md` for the full parallel execution protocol.
    - For **sequential tasks**: execute them one by one, either directly or via `task-executor` agents.
 
 2. **After each task completion** — follow the adaptive control protocol (`references/adaptive-control.md` § 5.2):
@@ -288,6 +330,7 @@ After user confirmation, execute tasks according to the plan:
 4. **Progress updates**:
    - **GitHub modes**: PR with `closes #N` auto-closes the Issue. Update MASTER.md's "Current Status" and "Issue Mapping" sections.
    - **LOCAL_ONLY**: Check off tasks in phase files, update counts in MASTER.md.
+   - **All modes**: If the task produced durable engineering knowledge, update the resolved native memory surface or explicitly selected fallback; if it changed how future agents must work in the repo, update the resolved instruction surfaces.
 
 5. **When all tasks are complete** (all Issues closed or all checkboxes checked): proceed to Phase 6 (Archive).
 
@@ -311,6 +354,7 @@ After user confirmation, execute tasks according to the plan:
    - Move `docs/analysis/` to `docs/archives/<project-name>/analysis/`
    - Move `docs/plan/` to `docs/archives/<project-name>/plan/`
    - Move `docs/progress/` to `docs/archives/<project-name>/progress/`
+   - Copy snapshots or export references for the resolved instruction and memory surfaces into `docs/archives/<project-name>/governance/`
    - Move any other temporary files generated during development into the archive
 
 4. **[GitHub modes]** Close the GitHub Milestone for each phase (if not already closed). Optionally close the GitHub Project board. These resources remain accessible on GitHub as a permanent record.
@@ -320,7 +364,7 @@ After user confirmation, execute tasks according to the plan:
    - If it already exists, append a new entry for this project
    - Each entry should include: project name, one-line description, date range (started — completed), link to the archived MASTER.md, and **[GitHub modes]** the GitHub Project URL
 
-6. After archiving, remove the now-empty `docs/analysis/`, `docs/plan/`, and `docs/progress/` directories from the project root's `docs/` folder. Only `docs/archives/` should remain under `docs/`.
+6. After archiving, remove the now-empty `docs/analysis/`, `docs/plan/`, and `docs/progress/` directories from the project root's `docs/` folder. Keep active instruction and memory surfaces in place; only their snapshots or export references live under the archive.
 
 7. Suggest to the user that they might want to commit the archive to version control.
 

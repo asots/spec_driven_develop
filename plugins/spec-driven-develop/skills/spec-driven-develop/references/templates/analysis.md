@@ -31,6 +31,12 @@ Templates for the three documents generated in Phase 1 (Deep Project Analysis). 
 ## Build & Run
 <!-- How to build, test, and run the project currently -->
 
+## Testing Baseline
+<!-- Existing test frameworks, test commands, coverage gaps, and whether new feature work currently has a reliable place to add tests -->
+
+## Project Governance Baseline
+<!-- Existing project-level instruction and memory surfaces: AGENTS.md, CLAUDE.md, native project memory, repo-local fallback memory files, Cursor/Windsurf/Cline/Codex rules, or equivalents. Note canonical locations, gaps, and conflicts. -->
+
 ## External Integrations
 <!-- APIs, databases, services, file systems the project interacts with -->
 ```
@@ -101,6 +107,12 @@ Templates for the three documents generated in Phase 1 (Deep Project Analysis). 
 
 ## Technical Debt
 <!-- Pre-existing issues that may complicate the transformation. Include S.U.P.E.R violations as a category of technical debt. -->
+
+## Testing Risks
+<!-- Missing test harnesses, weak regression coverage, slow/flaky tests, or areas where feature work cannot be safely validated yet. -->
+
+## Project Governance Risks
+<!-- Missing or conflicting instruction/memory surfaces, stale instructions, non-native fallback files used without confirmation, or durable decisions that currently exist only in conversation context. -->
 
 ## Compatibility Concerns
 <!-- API compatibility, data format changes, deployment changes -->

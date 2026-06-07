@@ -16,6 +16,8 @@ You will receive:
 - **Task source**: Either a GitHub Issue number (GitHub modes) or inline task description (LOCAL_ONLY)
 - **Task description**: What exactly to implement
 - **Acceptance criteria**: Concrete conditions that prove the task is done
+- **Test expectation**: Required test additions/updates, or an explicit no-test rationale plus closest validation command
+- **Memory/governance impact**: Whether durable project knowledge or agent instructions must be updated, and which resolved surfaces are authoritative
 - **Source files**: Key files relevant to this task
 - **Coding standards**: Target technology conventions to follow
 - **Dependencies completed**: Which prerequisite tasks are already done (and their key outputs)
@@ -34,6 +36,7 @@ You will receive:
 - Read the relevant source files to understand the current state
 
 In all modes:
+- Read the resolved instruction and memory surfaces provided by the orchestrator. Treat them as project-level constraints. If a required resolved surface is missing or unavailable, report that explicitly instead of silently proceeding.
 - Identify the exact scope of changes needed
 - If the task touches modules you don't fully understand, read their public API surface (not the entire file)
 
@@ -53,12 +56,15 @@ In all modes:
 - Follow the coding standards provided in the input
 - Write clean, well-structured code — no placeholders, no TODOs, no half-implementations
 - If the task involves creating new files, follow existing project naming and structure conventions
+- If the task adds or changes user-visible features, business behavior, API contracts, schemas, migrations, parsing, routing, permissions, caching, or persistence, add or update relevant automated tests unless the task explicitly provides a no-test rationale
+- If you discover a durable project rule, invariant, command, or recurring gotcha, update the resolved native memory surface or explicitly selected fallback; if it changes how future agents should work in the repo, update the resolved instruction surfaces
 - Commit to one approach and execute it — do not explore multiple strategies
 
 ### 4. Verification
 
 - Run existing tests related to the modified code
-- If acceptance criteria include specific test requirements, write and run those tests
+- Write and run tests required by the task's test expectation
+- If no automated tests are applicable, run the closest static/syntax validation named in the task and explain why no test was added
 - Verify that your changes don't break existing functionality (run the project's test suite if scoped appropriately)
 - If a test fails, fix the issue — do not report partial completion
 
@@ -100,6 +106,12 @@ Return a structured completion report:
 - Ran: [test command]
 - Result: [pass/fail with summary]
 - New tests added: [list or "none"]
+- No-test rationale: [only if no tests were added]
+
+### Project Governance
+- Instruction surfaces: updated / unchanged / unavailable (list paths or native surfaces)
+- Memory surface: updated / unchanged / unavailable / fallback used (name the surface)
+- Durable rule recorded: [yes/no, brief note]
 
 ### GitHub Resources (GitHub modes only)
 - Issue: #{issue_number}

@@ -115,6 +115,8 @@ Every task Issue uses this structured body format:
 **Phase**: {phase_number} — {phase_name}
 **Priority**: {priority} | **Size**: {size} | **Lane**: {lane}
 **S.U.P.E.R Drivers**: {principles}
+**Test Expectation**: {required_tests_or_explicit_no_test_rationale}
+**Memory/Governance Impact**: {memory_or_governance_update_expectation}
 
 ### Description
 {task_description}
@@ -123,6 +125,8 @@ Every task Issue uses this structured body format:
 - [ ] {criterion_1}
 - [ ] {criterion_2}
 - [ ] Passes S.U.P.E.R Quick Check for: {principles}
+- [ ] Satisfies test expectation: {required_tests_or_explicit_no_test_rationale}
+- [ ] Updates the resolved memory or instruction surfaces if durable project knowledge or agent instructions changed
 
 ### Affected Files
 - `{file_path_1}`
@@ -227,8 +231,8 @@ cd ".claude/worktrees/$BRANCH"
 
 Or, if the platform provides a native worktree tool (e.g., Claude Code's `EnterWorktree`), use that instead.
 
-### 3. Implement and Test
-Work in the isolated worktree. Follow acceptance criteria from the Issue body.
+### 3. Implement, Test, and Update Governance
+Work in the isolated worktree. Follow acceptance criteria, test expectation, and memory/governance impact from the Issue body. Read the resolved instruction and memory surfaces before editing.
 
 ### 4. Commit, Push, and Create PR
 ```bash
@@ -252,6 +256,13 @@ closes #{issue_number}
 
 ## S.U.P.E.R Review
 - [x] Passes S.U.P.E.R Quick Check for: {principles}
+
+## Tests
+- {test_commands_and_results}
+
+## Project Governance
+- Instruction surfaces: updated / unchanged (list paths or native surfaces)
+- Memory surface: updated / unchanged / unavailable / fallback used
 
 ---
 _Part of [Spec-Driven Develop](https://github.com/zhu1090093659/spec-driven-develop) workflow_

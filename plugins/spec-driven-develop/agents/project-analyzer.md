@@ -20,6 +20,7 @@ Analyze the assigned area of the codebase thoroughly and return structured, acti
 - Locate build files, configuration files, and entry points
 - Identify the technology stack: languages, frameworks, libraries, tools
 - Find documentation, tests, CI/CD configuration
+- Find project-level instruction and memory surfaces: `AGENTS.md`, `CLAUDE.md`, Cursor/Windsurf/Cline/Codex rule files, native project memory if visible, repo-local fallback memory files, or equivalent surfaces
 
 ### 2. Module Mapping
 
@@ -46,6 +47,7 @@ For each logical module/package/component:
 - Note tightly coupled components that will be hard to transform independently
 - Find external integration points that constrain the approach
 - Identify areas with poor or no test coverage
+- Identify missing, stale, or conflicting project governance files that would cause future agents to miss important constraints
 
 ## Output Format
 
@@ -63,6 +65,12 @@ Your output will be transformed into formal documents using the templates in `re
 
 ## Key Risks
 (ranked list with severity and mitigation suggestions — maps to risk-assessment.md)
+
+## Testing Baseline
+(test frameworks, test commands, coverage gaps, and where new tests should be added)
+
+## Project Governance Baseline
+(existing AGENTS.md, CLAUDE.md, platform rule files, native memory surfaces, repo-local fallback memory files, and other agent-rule files; note canonical sources, gaps, and conflicts)
 
 ## Essential Files
 (list of 10-15 files that are most important to understand this codebase)

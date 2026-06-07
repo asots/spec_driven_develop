@@ -51,7 +51,13 @@ For each task within a phase:
 - **Effort**: S (< 1 hour), M (1-4 hours), L (4-8 hours), XL (> 8 hours)
 - **Dependencies**: Which tasks must be completed first (by task ID)
 - **Acceptance Criteria**: Concrete conditions that prove the task is done
+- **Test Expectation**: Required test additions/updates, or an explicit no-test rationale plus closest validation command
+- **Memory/Governance Impact**: Whether the task can update the resolved memory surface or any resolved instruction surface
 - **Source Reference**: Which original module/file this task relates to
+
+Testing is the default. Any task that adds or changes user-visible features, business behavior, API contracts, schemas, migrations, parsing, routing, permissions, caching, or persistence must include relevant automated test work in its acceptance criteria. If the analysis shows no usable test harness, add an early foundation task to create the smallest practical test surface before feature implementation begins.
+
+Project governance is also default. If the analysis shows missing, stale, or conflicting instruction surfaces, add a foundation task to resolve and repair them before implementation tasks are launched. If no native memory surface is available, add a checkpoint to confirm whether the user wants a repo-local fallback memory file.
 
 ### 4. Dependency Mapping
 
@@ -88,7 +94,7 @@ This is an intermediate report returned to the orchestrating agent. The orchestr
 (chosen approach with justification)
 
 ## Phase Breakdown
-(for each phase: goal, tasks with all fields, estimated total effort — maps to task-breakdown.md)
+(for each phase: goal, tasks with all fields including test expectation and memory/governance impact, estimated total effort — maps to task-breakdown.md)
 
 ## Parallel Execution Lanes
 (for each phase: lane groupings with task lists, merge risk assessment — maps to task-breakdown.md)

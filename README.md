@@ -301,6 +301,17 @@ If a session is interrupted before completion, the agent can resume by reading `
 
 When the agent starts a work session, it automatically loads the current phase's pending tasks into the platform's native task tracking tool (e.g. TodoWrite in Claude Code). You get real-time visual progress in your IDE sidebar — no need to open Markdown files manually. In GitHub modes, progress is also visible on the GitHub Milestone and Project board. MASTER.md remains the persistent local index across conversations.
 
+### Project Governance and Memory
+
+For new projects, the workflow now creates or updates project-level agent instructions and resolves the durable memory surface alongside progress tracking:
+
+- `AGENTS.md` — shared constraints for Codex, Cursor, and other Markdown-aware coding agents
+- `CLAUDE.md` — Claude Code-specific instructions, kept aligned with `AGENTS.md`
+- Native project memory surface when available — durable project facts, recurring gotchas, and engineering rules that should survive across sessions
+- Optional repo-local fallback memory file only when explicitly selected or already declared by the project
+
+Feature and behavior tasks are planned with tests by default. If a task cannot add automated tests, the plan must state why and name the closest validation command to run.
+
 ### Progress Export
 
 An optional script exports your progress data to structured JSON, making it easy to import into external project management tools (Linear, Jira, Notion, etc.):
@@ -311,13 +322,17 @@ python scripts/export-progress.py docs/progress/
 
 ### Archive
 
-When all tasks are marked complete, the agent archives all workflow artifacts (analysis, plan, progress) into `docs/archives/<project-name>/` and updates an index at `docs/archives/README.md`. Nothing is deleted — everything is preserved for traceability.
+When all tasks are marked complete, the agent archives all workflow artifacts (analysis, plan, progress, and governance snapshots) into `docs/archives/<project-name>/` and updates an index at `docs/archives/README.md`. Active root-level governance files stay in place; archived copies preserve traceability.
 
 ## Project Structure
 
 ```
 spec_driven_develop/
+├── AGENTS.md                                  # Shared project instructions for coding agents
+├── CLAUDE.md                                  # Claude Code-specific project instructions
 ├── .agents/plugins/marketplace.json          # Codex repo-local plugin marketplace
+├── docs/
+│   └── archives/                              # Completed workflow archives
 ├── plugins/spec-driven-develop/              # Self-contained Claude Code and Codex plugin
 │   ├── .claude-plugin/
 │   │   └── plugin.json                       # Claude Code plugin manifest
@@ -336,6 +351,7 @@ spec_driven_develop/
 │   │   │           ├── analysis.md           # Phase 1: with S.U.P.E.R health assessment
 │   │   │           ├── plan.md               # Phase 3: with S.U.P.E.R design constraints
 │   │   │           ├── progress.md           # Phase 4: cross-conversation tracking
+│   │   │           ├── governance.md         # Phase 4: instruction/native memory surface templates
 │   │   │           └── archive.md            # Phase 6: artifact preservation
 │   │   └── deep-discuss/
 │   │       └── SKILL.md                      # Structured deep discussion workflow

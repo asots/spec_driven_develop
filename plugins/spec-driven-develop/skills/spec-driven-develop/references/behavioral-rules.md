@@ -30,3 +30,11 @@ These rules apply to every agent and every phase in the Spec-Driven Develop work
 11. **Drift threshold triggers are automatic**. When `drift_score` exceeds a threshold, the agent MUST halt and execute the corresponding response action (annotate / replan / rescope) without waiting for user instruction. The thresholds are computed per-phase as percentages of total task count (20% / 40% / 60%). See `references/adaptive-control.md` § 3 for the response protocol.
 
 12. **Adaptive state is persistent**. Always read and write `drift_score` via the defined storage: Milestone description YAML block in GitHub modes, or the "Adaptive Control State" section in MASTER.md for LOCAL_ONLY. Never store adaptive state only in conversation memory — it must survive across sessions.
+
+13. **Project governance surface resolution is mandatory**. Every spec-driven run must resolve shared instruction surfaces, platform-specific instruction surfaces, and the durable memory surface before execution begins. Prefer existing/native surfaces. Typical instruction surfaces include `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`, `.windsurf/`, `.clinerules*`, `.codex/`, or project equivalents.
+
+14. **Do not create competing truth sources**. If a project already has equivalent instruction or memory surfaces, update the canonical surfaces in place and record the resolution in MASTER.md. Use native project memory when available. Do not silently create a repo-local memory file; only use one when the project already declares it or the user explicitly selects it.
+
+15. **Feature work requires tests by default**. Any task that adds or changes user-visible features, business behavior, API contracts, schemas, migrations, parsing, routing, permissions, caching, or persistence must add or update relevant automated tests. If tests are not applicable or the project lacks a test surface, the task must state the reason and run the closest static/syntax validation available.
+
+16. **Stable learnings go to the resolved memory surface**. When execution reveals a reusable command, invariant, project convention, recurring gotcha, or future-agent rule, record it in the resolved native memory surface or the explicitly selected fallback. If it changes how agents should work in the repository, also update the resolved instruction surfaces.

@@ -1,6 +1,6 @@
 {
   "name": "spec-driven-develop",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Two complementary AI agent skills for spec-driven development and structured deep discussion.",
   "author": {
     "name": "zhu1090093659",
@@ -23,7 +23,7 @@
   "interface": {
     "displayName": "Spec-Driven Develop",
     "shortDescription": "Architecture-first planning and structured technical discussion for AI coding agents.",
-    "longDescription": "Spec-Driven Develop adds two Markdown-based workflows for Codex: a six-phase development pipeline for large project transformations (analysis, planning, tracking, and execution), and Deep Discuss for disciplined problem analysis, brainstorming, and solution design.",
+    "longDescription": "Spec-Driven Develop adds two Markdown-based workflows for Codex: a six-phase development pipeline for large project transformations (analysis, planning, project governance, tracking, and execution), and Deep Discuss for disciplined problem analysis, brainstorming, and solution design.",
     "developerName": "zhu1090093659",
     "category": "Productivity",
     "capabilities": [

@@ -22,8 +22,11 @@ For each parallel lane in the current phase:
    - **Tracking mode** (`GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY`)
    - **GitHub Issue number** (GitHub modes) or inline task description (LOCAL_ONLY)
    - Acceptance criteria
+   - Test expectation and explicit no-test rationale, if any
+   - Memory/governance impact and expected surface updates, if any
    - Relevant source file paths (from `docs/analysis/module-inventory.md`)
    - Coding standards from the sub-SKILL
+   - Current project governance context from the resolved instruction and memory surfaces
    - Summary of completed prerequisite tasks and their outputs
 
 2. Launch all lane agents **in a single message** (this is how platforms achieve true parallelism). Each agent works in an isolated worktree to prevent file conflicts.
@@ -36,6 +39,7 @@ For each parallel lane in the current phase:
    - **In GitHub modes**: Review and merge PRs sequentially, resolving any conflicts. Each merged PR auto-closes its linked Issue.
    - **In LOCAL_ONLY mode**: If agents worked in worktrees, merge their changes sequentially, resolving any conflicts
    - Run the project's full test suite to verify combined changes are coherent
+   - Verify any reported instruction or memory surface updates are consistent and do not create competing sources of truth
 
 ---
 
@@ -54,6 +58,10 @@ After consolidating parallel results:
 - If agents wrote to the same progress file, reconcile the updates (agents may have stale counts)
 - Update MASTER.md with the final accurate completion counts
 - Update the platform's native task tool to reflect all completed tasks
+
+**In all modes**:
+- Reconcile memory surface updates from parallel agents before moving on
+- Keep resolved instruction surfaces aligned if any lane changed project-level agent instructions
 
 ---
 

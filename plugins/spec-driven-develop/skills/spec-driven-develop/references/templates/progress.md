@@ -66,6 +66,14 @@ gh issue list -R {repo} --label "spec-driven" --state all --json number,title,st
 **Active Task**: Task description (Issue #NNN)
 **Blockers**: None / description
 
+## Governance Status
+<!-- Updated when project-level agent rules or durable memory change -->
+**Shared instruction surface**: `AGENTS.md` / other / unavailable
+**Claude Code instruction surface**: `CLAUDE.md` / unavailable
+**Other platform rule surfaces**: `.cursor/rules/`, `.windsurf/`, `.clinerules*`, `.codex/`, or none
+**Memory surface**: native / existing repo fallback / explicit fallback / unavailable
+**Memory fallback path**: none / `<path>`
+
 ## Next Steps
 <!-- What the agent should do next when resuming in a new conversation -->
 1. ...
@@ -117,6 +125,14 @@ Use this template when the tracking mode is `LOCAL_ONLY`. This is the original f
 **Active Task**: Task description
 **Blockers**: None / description
 
+## Governance Status
+<!-- Updated when project-level agent rules or durable memory change -->
+**Shared instruction surface**: `AGENTS.md` / other / unavailable
+**Claude Code instruction surface**: `CLAUDE.md` / unavailable
+**Other platform rule surfaces**: `.cursor/rules/`, `.windsurf/`, `.clinerules*`, `.codex/`, or none
+**Memory surface**: native / existing repo fallback / explicit fallback / unavailable
+**Memory fallback path**: none / `<path>`
+
 ## Next Steps
 <!-- What the agent should do next when resuming in a new conversation -->
 1. ...
@@ -145,11 +161,15 @@ In `LOCAL_ONLY` mode, create one per phase. In GitHub modes, these files are opt
 - [ ] **Task N.1**: Description
   - Priority: P0
   - Effort: M
+  - Test Expectation: Add/update relevant automated tests
+  - Memory Impact: Update resolved memory surface if a durable rule emerges
   - Acceptance: How to verify this is done
   - Notes: _none yet_
 - [ ] **Task N.2**: Description
   - Priority: P1
   - Effort: S
+  - Test Expectation: Not applicable: docs-only; run markdown/static validation
+  - Memory Impact: None
   - Acceptance: How to verify this is done
   - Notes: _none yet_
 
