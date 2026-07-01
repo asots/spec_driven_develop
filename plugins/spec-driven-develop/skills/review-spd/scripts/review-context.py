@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Collect git review context for the Review skill.
+Collect git review context for the Review SPD skill.
 
 The script gathers stable repository context for three review modes:
 
@@ -285,7 +285,7 @@ def render_markdown(root: Path, context: dict[str, str]) -> str:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Collect git context for the Review skill.")
+    parser = argparse.ArgumentParser(description="Collect git context for the Review SPD skill.")
     parser.add_argument("--branch", help="Branch/ref to review against the base branch.")
     parser.add_argument("--base", help="Base branch/ref for --branch mode.")
     parser.add_argument("--since", help="Start date for commit-range mode, e.g. '3 days ago'.")

@@ -1,22 +1,22 @@
 ---
-name: review
+name: review-spd
 description: >-
   Findings-first code review workflow for AI coding agents. Use when the user asks
   to review uncommitted changes, commits in a date range, or a branch compared to
   the main branch / PR-style diff. Focuses on bugs, regressions, correctness risks,
   missing tests, security/data-safety issues, and other behavior-changing defects.
-version: 1.0.0
+version: 1.0.1
 ---
 
-# Review
+# Review SPD
 
-You are executing the **Review** workflow: a findings-first code review process for changed code. Your primary goal is to identify bugs, regressions, and behavior risks introduced by the changes. Do not turn this into a style review or a broad summary.
+You are executing the **Review SPD** workflow: a findings-first code review process for changed code. Your primary goal is to identify bugs, regressions, and behavior risks introduced by the changes. Do not turn this into a style review or a broad summary.
 
 ## Configuration
 
 | Item | Default | Purpose |
 |:-----|:--------|:--------|
-| Context script | `scripts/review-context.py` relative to this Review skill directory | Collect stable git context for review targets |
+| Context script | `scripts/review-context.py` relative to this Review SPD skill directory | Collect stable git context for review targets |
 | Default target | Uncommitted changes | Review working tree and staged changes by default |
 | Commit range default | Last 3 days | Used only when the user explicitly requests commit/date review without dates |
 | PR base | Auto-detect `origin/main`, `origin/master`, then remote default branch | Base for branch-vs-main review |
@@ -49,14 +49,14 @@ Extract the review target from the user's request.
 
 Examples:
 
-Resolve the context script from the installed Review skill directory, not from the repository being reviewed. Use the packaged script path in commands, for example:
+Resolve the context script from the installed Review SPD skill directory, not from the repository being reviewed. Use the packaged script path in commands, for example:
 
 ```bash
-python <review-skill-dir>/scripts/review-context.py
-python <review-skill-dir>/scripts/review-context.py --since "3 days ago"
-python <review-skill-dir>/scripts/review-context.py --since 2026-06-28 --until 2026-07-01
-python <review-skill-dir>/scripts/review-context.py --branch feature/foo
-python <review-skill-dir>/scripts/review-context.py --branch feature/foo --base origin/main
+python <review-spd-skill-dir>/scripts/review-context.py
+python <review-spd-skill-dir>/scripts/review-context.py --since "3 days ago"
+python <review-spd-skill-dir>/scripts/review-context.py --since 2026-06-28 --until 2026-07-01
+python <review-spd-skill-dir>/scripts/review-context.py --branch feature/foo
+python <review-spd-skill-dir>/scripts/review-context.py --branch feature/foo --base origin/main
 ```
 
 When reviewing this repository itself, the convenience wrapper `scripts/review-context.py` is also available.

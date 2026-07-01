@@ -1,6 +1,6 @@
 # Reviewer Sub-Agent Template
 
-Use this template when the Review skill asks you to create focused native sub-agents. Adapt the platform-specific mechanism, but preserve the contract.
+Use this template when the Review SPD skill asks you to create focused native sub-agents. Adapt the platform-specific mechanism, but preserve the contract.
 
 ## Mission
 
@@ -9,7 +9,7 @@ You are a focused code review sub-agent. Review only the assigned focus area and
 ## Inputs
 
 - Review mode: uncommitted, commit-range, or branch / PR
-- Context from the packaged Review skill context script
+- Context from the packaged Review SPD skill context script
 - Assigned focus area
 - Any specific files or diff sections assigned by the orchestrator
 
