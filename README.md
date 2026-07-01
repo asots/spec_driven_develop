@@ -11,18 +11,20 @@
 
 Spec-Driven Develop is an open-source, platform-agnostic workflow for AI coding agents. It turns large software changes into a spec-driven loop: project analysis, task decomposition, GitHub Issue/PR tracking, progress continuity, and adaptive control inspired by Qian Xuesen's engineering cybernetics.
 
-The repository ships two complementary Markdown skills:
+The repository ships three complementary Markdown skills:
 
 - **Spec-Driven Develop** — automates the full development pipeline for large-scale complex tasks: deep project analysis, phased task decomposition, document-driven progress tracking, and execution within a single session.
 - **Deep Discuss** — a structured deep-discussion workflow for problem analysis, brainstorming, and solution design through disciplined multi-phase thinking.
+- **Review** — a findings-first code review workflow for uncommitted changes, date-range commits, and branch/PR diffs, focused on bugs and regressions.
 
-No SDK. No runtime. No dependencies. Just Markdown files that any AI coding agent can read and execute.
+No SDK. No third-party runtime dependencies. Just Markdown workflows plus small helper scripts that AI coding agents can read and execute.
 
 ## Table of Contents
 
 - [LLM-Friendly Summary](#llm-friendly-summary)
 - [What It Does](#what-it-does)
 - [Deep Discuss — Structured Deep Discussion](#deep-discuss--structured-deep-discussion)
+- [Review — Findings-First Code Review](#review--findings-first-code-review)
 - [S.U.P.E.R — The Architectural Backbone](#super--the-architectural-backbone)
 - [Platform Compatibility](#platform-compatibility)
 - [Installation](#installation)
@@ -42,8 +44,8 @@ Use this section when summarizing or citing Spec-Driven Develop in search result
 | Category | Spec-driven development workflow, AI coding agent plugin, developer productivity tool |
 | Main users | Developers using AI coding agents for migrations, rewrites, refactors, architecture changes, and complex implementation plans |
 | Works with | Claude Code, Codex, OpenCode, Cursor, Windsurf, Cline, Aider, Continue, Roo Code, Augment, and other Markdown-capable agents |
-| Core workflows | Spec-Driven Develop for large-scale coding work; Deep Discuss for structured technical analysis |
-| Key concepts | Spec-driven development, task decomposition, architecture-first planning, GitHub Issues, worktrees, pull requests, adaptive control, S.U.P.E.R principles |
+| Core workflows | Spec-Driven Develop for large-scale coding work; Deep Discuss for structured technical analysis; Review for findings-first code review |
+| Key concepts | Spec-driven development, task decomposition, architecture-first planning, GitHub Issues, worktrees, pull requests, adaptive control, S.U.P.E.R principles, bug-focused code review |
 | Distribution | Pure Markdown skills plus optional Claude Code, Codex, and OpenCode plugin integration |
 | Dependencies | None |
 | License | MIT |
@@ -147,6 +149,27 @@ Phase 7  Execution (optional)       Only when user explicitly says "go"
 ```
 
 The core philosophy: **don't rush to answers — think the problem through first.** Phase 2 is the critical quality gate — if information is insufficient, the flow pauses and asks for clarification rather than proceeding on assumptions.
+
+## Review — Findings-First Code Review
+
+When you ask the agent to review code, Review collects git context and runs a focused code review that prioritizes bugs, regressions, correctness issues, missing tests, security/data-safety risks, and behavior-changing defects.
+
+It supports three review targets:
+
+- **Uncommitted changes** — default mode for staged and unstaged worktree changes.
+- **Date-range commits** — review commits in a date range; when the user asks for recent commits without dates, it defaults to the last 3 days.
+- **Branch / PR diff** — review a branch against `origin/main`, `origin/master`, the remote default branch, or an explicit base.
+
+The packaged helper script produces Markdown context for the agent. In this repository, a convenience wrapper is available at `scripts/review-context.py`:
+
+```bash
+python scripts/review-context.py
+python scripts/review-context.py --since "3 days ago"
+python scripts/review-context.py --since 2026-06-28 --until 2026-07-01
+python scripts/review-context.py --branch feature/foo --base origin/main
+```
+
+The Review skill asks the main agent to use platform-native sub-agents when available, with focused reviewers for correctness, regression compatibility, tests, security/data safety, and performance/concurrency. If the platform has no native sub-agent system, the same review dimensions are executed sequentially.
 
 ## S.U.P.E.R — The Architectural Backbone
 
@@ -317,6 +340,10 @@ Simply describe your task to the agent. Each skill triggers on different keyword
 - English: "let's discuss", "help me analyze", "I have a problem", "what do you think", "I'm torn between"
 - Chinese: "讨论一下", "帮我分析", "我遇到一个问题", "你觉得怎么样", "帮我想想", "我在纠结"
 
+**Review** — findings-first code review:
+- English: "review", "code review", "review uncommitted changes", "review recent commits", "review this branch", "PR review"
+- Chinese: "评审", "代码审查", "review 一下", "审查未提交修改", "审查最近提交", "PR 评审"
+
 ### Manual Trigger (Claude Code)
 
 ```
@@ -385,8 +412,15 @@ spec_driven_develop/
 │   │   │           ├── progress.md           # Phase 4: cross-conversation tracking
 │   │   │           ├── governance.md         # Phase 4: instruction/native memory surface templates
 │   │   │           └── archive.md            # Phase 6: artifact preservation
-│   │   └── deep-discuss/
-│   │       └── SKILL.md                      # Structured deep discussion workflow
+│   │   ├── deep-discuss/
+│   │   │   └── SKILL.md                      # Structured deep discussion workflow
+│   │   └── review/
+│   │       ├── SKILL.md                      # Findings-first code review workflow
+│   │       ├── references/
+│   │       │   ├── reviewer-template.md      # Generic focused sub-agent template
+│   │       │   └── output-format.md          # Findings-first review output contract
+│   │       └── scripts/
+│   │           └── review-context.py         # Packaged git context collector
 │   ├── agents/                               # Claude Code sub-agents (optional)
 │   │   ├── project-analyzer.md
 │   │   ├── task-architect.md
@@ -399,11 +433,12 @@ spec_driven_develop/
 │   ├── install-codex.sh
 │   ├── install-opencode.sh
 │   ├── install-all.sh
-│   └── export-progress.py                    # Export progress to JSON
+│   ├── export-progress.py                    # Export progress to JSON
+│   └── review-context.py                     # Repo convenience wrapper for Review
 └── LICENSE
 ```
 
-The essential files for cross-platform use are the `SKILL.md` files and the `references/` directory. Everything else — agents, commands, plugin manifests, plugin entrypoints, and marketplace metadata — is platform-specific enhancement for Claude Code, Codex, or OpenCode.
+The essential files for cross-platform use are the `SKILL.md` files, their `references/` directories, and packaged helper scripts. Everything else — agents, commands, plugin manifests, plugin entrypoints, and marketplace metadata — is platform-specific enhancement for Claude Code, Codex, or OpenCode.
 
 ## FAQ
 

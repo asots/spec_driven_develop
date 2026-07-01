@@ -1,7 +1,7 @@
 {
   "name": "spec-driven-develop",
-  "version": "1.12.0",
-  "description": "Two complementary AI agent skills for spec-driven development and structured deep discussion.",
+  "version": "1.13.0",
+  "description": "Three complementary AI agent skills for spec-driven development, structured deep discussion, and findings-first code review.",
   "author": {
     "name": "zhu1090093659",
     "url": "https://github.com/zhu1090093659"
@@ -17,13 +17,16 @@
     "project-analysis",
     "deep-discuss",
     "brainstorming",
-    "problem-analysis"
+    "problem-analysis",
+    "code-review",
+    "review",
+    "bug-risk"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Spec-Driven Develop",
-    "shortDescription": "Architecture-first planning and structured technical discussion for AI coding agents.",
-    "longDescription": "Spec-Driven Develop adds two Markdown-based workflows for Codex: a six-phase development pipeline for large project transformations (analysis, planning, project governance, tracking, and execution), and Deep Discuss for disciplined problem analysis, brainstorming, and solution design.",
+    "shortDescription": "Architecture-first planning, deep discussion, and findings-first code review for AI coding agents.",
+    "longDescription": "Spec-Driven Develop adds three Markdown-based workflows for Codex: a six-phase development pipeline for large project transformations (analysis, planning, project governance, tracking, and execution), Deep Discuss for disciplined problem analysis and solution design, and Review for bug-focused code review of uncommitted changes, date-range commits, and branch/PR diffs.",
     "developerName": "zhu1090093659",
     "category": "Productivity",
     "capabilities": [
@@ -35,7 +38,8 @@
     "defaultPrompt": [
       "Use spec-driven development to plan this migration.",
       "Help me analyze this technical problem deeply.",
-      "Create a phased implementation plan for this refactor."
+      "Create a phased implementation plan for this refactor.",
+      "Review my uncommitted changes for bugs and regressions."
     ],
     "brandColor": "#3B82F6"
   }

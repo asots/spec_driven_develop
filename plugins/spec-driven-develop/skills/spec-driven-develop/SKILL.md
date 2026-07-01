@@ -8,7 +8,7 @@ description: >-
   "迁移", "重构", "大规模", "规范驱动". Performs full project analysis, task decomposition,
   documentation generation, project-level instruction and native memory surface resolution,
   progress tracking setup, and then executes the plan within the same session.
-version: 1.12.0
+version: 1.13.0
 ---
 
 # Spec-Driven Develop
