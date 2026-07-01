@@ -26,6 +26,6 @@ These instructions apply to the whole repository.
 Use the closest checks for the changed surface:
 
 - `python -m py_compile scripts/export-progress.py`
-- `bash -n scripts/install-codex.sh scripts/install-cursor.sh scripts/install-all.sh`
+- `bash -n scripts/install-codex.sh scripts/install-cursor.sh scripts/install-opencode.sh scripts/install-all.sh`
 - Targeted `rg` checks for newly required workflow language
 - `git diff --check`

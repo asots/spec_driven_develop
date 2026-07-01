@@ -1,6 +1,6 @@
 # Claude Code Instructions
 
-Read `AGENTS.md` first. It is the shared project-level instruction source for Codex, Cursor, Claude Code, and other Markdown-aware coding agents.
+Read `AGENTS.md` first. It is the shared project-level instruction source for Codex, OpenCode, Cursor, Claude Code, and other Markdown-aware coding agents.
 
 Claude Code-specific reminders:
 

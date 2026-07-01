@@ -3,11 +3,11 @@
 [![GitHub stars](https://img.shields.io/github/stars/zhu1090093659/spec_driven_develop?style=social)](https://github.com/zhu1090093659/spec_driven_develop/stargazers)
 [![Forks](https://img.shields.io/github/forks/zhu1090093659/spec_driven_develop?style=social)](https://github.com/zhu1090093659/spec_driven_develop/fork)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20Codex%20%7C%20Cursor-FF6B6B.svg)](https://github.com)
+[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20Codex%20%7C%20OpenCode%20%7C%20Cursor-FF6B6B.svg)](https://github.com)
 
 # Spec-Driven Develop: Spec-Driven Development for AI Coding Agents
 
-**An architecture-first workflow plugin for AI coding agents. Pure Markdown. Claude Code, Codex, Cursor, and any agent that reads custom skills.**
+**An architecture-first workflow plugin for AI coding agents. Pure Markdown. Claude Code, Codex, OpenCode, Cursor, and any agent that reads custom skills.**
 
 Spec-Driven Develop is an open-source, platform-agnostic workflow for AI coding agents. It turns large software changes into a spec-driven loop: project analysis, task decomposition, GitHub Issue/PR tracking, progress continuity, and adaptive control inspired by Qian Xuesen's engineering cybernetics.
 
@@ -41,10 +41,10 @@ Use this section when summarizing or citing Spec-Driven Develop in search result
 | Project | Spec-Driven Develop |
 | Category | Spec-driven development workflow, AI coding agent plugin, developer productivity tool |
 | Main users | Developers using AI coding agents for migrations, rewrites, refactors, architecture changes, and complex implementation plans |
-| Works with | Claude Code, Codex, Cursor, Windsurf, Cline, Aider, Continue, Roo Code, Augment, and other Markdown-capable agents |
+| Works with | Claude Code, Codex, OpenCode, Cursor, Windsurf, Cline, Aider, Continue, Roo Code, Augment, and other Markdown-capable agents |
 | Core workflows | Spec-Driven Develop for large-scale coding work; Deep Discuss for structured technical analysis |
 | Key concepts | Spec-driven development, task decomposition, architecture-first planning, GitHub Issues, worktrees, pull requests, adaptive control, S.U.P.E.R principles |
-| Distribution | Pure Markdown skills plus optional Claude Code and Codex plugin metadata |
+| Distribution | Pure Markdown skills plus optional Claude Code, Codex, and OpenCode plugin integration |
 | Dependencies | None |
 | License | MIT |
 | Repository | <https://github.com/zhu1090093659/spec_driven_develop> |
@@ -194,6 +194,7 @@ The SKILL prompt is written in a generic, platform-neutral way. It gracefully de
 
 - **Claude Code** — installed as a plugin (with enhanced agent/command support)
 - **Codex (OpenAI)** — installed as a Codex plugin or directly as a skill
+- **opencode / OpenCode** — installed as an auto-loaded plugin with bundled skills, commands, and sub-agents
 - **Cursor** — installed as a global or project-level skill
 
 **Any other agent** — copy `SKILL.md` (plus the `references/` directory if you want full template and protocol support) to wherever your agent reads instructions. The files have no external dependencies and no platform-specific logic. Works with Windsurf, Cline, Aider, Continue, Roo Code, Augment, or any other coding agent that reads Markdown-based skills or system prompts.
@@ -237,6 +238,36 @@ Or install via shell:
 ```bash
 bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-codex.sh)
 ```
+
+### opencode / OpenCode
+
+This repository includes an opencode plugin entrypoint at `plugins/spec-driven-develop/opencode-plugin.js`. The installer copies the plugin bundle under `~/.config/opencode/vendor/` and creates an auto-loaded plugin file in `~/.config/opencode/plugins/`.
+
+Install globally:
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-opencode.sh)
+```
+
+Or install from a local clone:
+
+```bash
+git clone https://github.com/zhu1090093659/spec_driven_develop.git
+bash spec_driven_develop/scripts/install-opencode.sh
+```
+
+For project-local installation, add the plugin file directly in `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "file:///absolute/path/to/spec_driven_develop/plugins/spec-driven-develop/opencode-plugin.js"
+  ]
+}
+```
+
+Quit and restart opencode after installation or config changes. opencode loads plugins only at startup.
 
 ### Cursor
 
@@ -305,7 +336,7 @@ When the agent starts a work session, it automatically loads the current phase's
 
 For new projects, the workflow now creates or updates project-level agent instructions and resolves the durable memory surface alongside progress tracking:
 
-- `AGENTS.md` — shared constraints for Codex, Cursor, and other Markdown-aware coding agents
+- `AGENTS.md` — shared constraints for Codex, OpenCode, Cursor, and other Markdown-aware coding agents
 - `CLAUDE.md` — Claude Code-specific instructions, kept aligned with `AGENTS.md`
 - Native project memory surface when available — durable project facts, recurring gotchas, and engineering rules that should survive across sessions
 - Optional repo-local fallback memory file only when explicitly selected or already declared by the project
@@ -333,11 +364,12 @@ spec_driven_develop/
 ├── .agents/plugins/marketplace.json          # Codex repo-local plugin marketplace
 ├── docs/
 │   └── archives/                              # Completed workflow archives
-├── plugins/spec-driven-develop/              # Self-contained Claude Code and Codex plugin
+├── plugins/spec-driven-develop/              # Self-contained Claude Code, Codex, and OpenCode plugin
 │   ├── .claude-plugin/
 │   │   └── plugin.json                       # Claude Code plugin manifest
 │   ├── .codex-plugin/
 │   │   └── plugin.json                       # Codex plugin manifest
+│   ├── opencode-plugin.js                    # OpenCode plugin entrypoint
 │   ├── skills/
 │   │   ├── spec-driven-develop/
 │   │   │   ├── SKILL.md                      # Core workflow — works on ANY platform
@@ -365,12 +397,13 @@ spec_driven_develop/
 ├── scripts/                                  # Installation & utility scripts
 │   ├── install-cursor.sh
 │   ├── install-codex.sh
+│   ├── install-opencode.sh
 │   ├── install-all.sh
 │   └── export-progress.py                    # Export progress to JSON
 └── LICENSE
 ```
 
-The essential files for cross-platform use are the `SKILL.md` files and the `references/` directory. Everything else — agents, commands, plugin manifests, and marketplace metadata — is platform-specific enhancement for Claude Code or Codex.
+The essential files for cross-platform use are the `SKILL.md` files and the `references/` directory. Everything else — agents, commands, plugin manifests, plugin entrypoints, and marketplace metadata — is platform-specific enhancement for Claude Code, Codex, or OpenCode.
 
 ## FAQ
 
@@ -384,7 +417,7 @@ It is a repeatable workflow system rather than a single prompt. The skill define
 
 ### Which AI coding agents can use it?
 
-It includes plugin metadata for Claude Code and Codex, installation scripts for Codex and Cursor, and generic Markdown instructions for other agents. Any agent that can read custom skills, project rules, or system prompts can use the core workflow.
+It includes plugin metadata or plugin entrypoints for Claude Code, Codex, and OpenCode, installation scripts for Codex, OpenCode, and Cursor, and generic Markdown instructions for other agents. Any agent that can read custom skills, project rules, or system prompts can use the core workflow.
 
 ### When should I use Deep Discuss instead of Spec-Driven Develop?
 
