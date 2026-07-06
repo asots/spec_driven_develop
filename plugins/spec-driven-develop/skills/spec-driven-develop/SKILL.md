@@ -9,7 +9,7 @@ description: >-
   local refactors belong to tav-workflow instead. Performs full project analysis, task
   decomposition, documentation generation, project-level instruction and native memory
   surface resolution, progress tracking setup, and then executes the plan within the same session.
-version: 1.14.0
+version: 1.14.1
 ---
 
 # Spec-Driven Develop
@@ -403,6 +403,7 @@ Spec-Driven Develop owns analysis, decomposition, progress scaffolding, and orch
 | Acceptance criteria + test expectation | Baseline of the Thinker verification plan |
 | S.U.P.E.R design drivers | Additional Verifier check items |
 | Relevant files / dependencies | Starting points for Thinker evidence gathering |
+| Memory/governance impact | Pre-declared candidates for the cycle's Phase 4 knowledge consolidation |
 
 **Write-back mapping — what the finished TAV cycle returns:**
 
@@ -410,6 +411,7 @@ Spec-Driven Develop owns analysis, decomposition, progress scaffolding, and orch
 |:------------|:-------------------|
 | Verifier pass | Close the Issue (PR `closes #N`) or check the checkbox; update MASTER.md "Current Status" |
 | TAV execution signals (rework iterations, Thinker returns, unplanned files touched) | Post-task telemetry: effort level and unplanned-dependency count (see `references/adaptive-control.md` § 1) |
+| Knowledge consolidation captures (at most 1-3 durable rules per cycle) | Written to the surfaces resolved under "Governance Status" in MASTER.md — durable facts to the memory surface, agent-behavior rules to the instruction surfaces (fulfills Phase 5b step 4) |
 | `[PUA-REPORT]` or blocked state | Issue comment (or phase-file note); counts toward drift annotation |
 
 **State ownership:** `docs/progress/MASTER.md` (plus GitHub Issues) is the only project-level authority. `.tav/state.json` is scoped to one task: it is created only when that single task needs cross-session recovery, it is archived or deleted when the task completes, and it never carries project-level progress.
