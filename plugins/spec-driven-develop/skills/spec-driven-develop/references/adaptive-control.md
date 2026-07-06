@@ -25,14 +25,14 @@ After completing every task and BEFORE marking it as done, the agent MUST collec
 
 ### 1.1 Actual Effort
 
-Compare estimated effort (from `task-breakdown.md`) against actual effort:
+Compare estimated effort (from `task-breakdown.md`) against actual effort. Effort is measured by **observable execution signals**, never wall-clock time — agents cannot reliably perceive elapsed time, and each task's TAV cycle already exposes these signals (rework iterations, plan returns, unplanned file touches; the `task-executor` reports them in its "Execution Signals" section):
 
-| Level | Criteria |
-|:------|:---------|
-| S | Completed in < 30 minutes, no unexpected issues |
-| M | 30 min – 2 hours, minor surprises |
-| L | 2 – 4 hours, or significant unexpected complexity |
-| XL | > 4 hours, or required fundamental re-thinking of approach |
+| Level | Execution signals |
+|:------|:------------------|
+| S | Completed as planned: no rework iterations, no unplanned files |
+| M | At most 1 Actor-Verifier rework iteration, or 1-2 unplanned files touched |
+| L | 2+ rework iterations, a return to Thinker for replanning, or 3+ unplanned files |
+| XL | Approach fundamentally re-thought (multiple Thinker returns), or the task had to be split |
 
 Record the **effort delta** as the number of levels between estimated and actual:
 - Estimated M, Actual M → delta = 0

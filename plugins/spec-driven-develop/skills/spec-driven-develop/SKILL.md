@@ -3,12 +3,13 @@ name: spec-driven-develop
 description: >-
   Automates pre-development workflow for large-scale complex tasks. Use when the user
   mentions "rewrite", "migrate", "overhaul", "refactor entire project", "transform",
-  "rebuild in [language]", "spec-driven", or describes any large-scale project transformation
-  that requires planning before coding. Also triggers on Chinese keywords: "改造", "重写",
-  "迁移", "重构", "大规模", "规范驱动". Performs full project analysis, task decomposition,
-  documentation generation, project-level instruction and native memory surface resolution,
-  progress tracking setup, and then executes the plan within the same session.
-version: 1.13.1
+  "rebuild in [language]", "spec-driven", or describes any large-scale multi-module
+  transformation that requires planning before coding. Also triggers on Chinese keywords:
+  "改造", "重写", "迁移", "整体重构", "全项目重构", "大规模", "规范驱动". Single-module or
+  local refactors belong to tav-workflow instead. Performs full project analysis, task
+  decomposition, documentation generation, project-level instruction and native memory
+  surface resolution, progress tracking setup, and then executes the plan within the same session.
+version: 1.14.0
 ---
 
 # Spec-Driven Develop
@@ -41,6 +42,21 @@ The workflow supports three task tracking modes, auto-detected via a pre-flight 
 | **LOCAL_ONLY** (fallback) | None | Original local-file workflow |
 
 See `references/github-integration.md` for the full protocol, `gh` command reference, and Issue body template.
+
+## When Not to Use
+
+Do not use this workflow for small scoped fixes, single-file edits, or changes that can be implemented cleanly without a project-wide planning pass. Use `tav-workflow` for those cases instead.
+
+### Escalation Signals
+
+Keep this list in sync with `tav-workflow` § "L2 Escalation Signals" — both skills must apply the same test. Route to `spec-driven-develop` only when **at least two** of these hold; otherwise stay with `tav-workflow`:
+
+- The change spans 3+ modules/subsystems, or breaks a public API/schema contract.
+- The work will realistically span multiple sessions or exceed ~10 files.
+- Architectural decisions are required (layering, dependency direction, technology selection).
+- Acceptance criteria cannot be defined within a single Thinker-Actor-Verifier cycle.
+
+A refactor confined to one module — however messy — is TAV territory, not spec-driven territory.
 
 ## Before You Begin: Cross-Conversation Continuity Check
 
@@ -318,9 +334,10 @@ After user confirmation, execute tasks according to the plan:
 1. **Process each phase sequentially** (Phase 1 → Phase 2 → ... in the plan's phased order):
    - For tasks in **parallel lanes**: spawn `task-executor` sub-agents simultaneously, one per lane, each in an isolated worktree. Provide each agent with: task ID, tracking mode, task description, acceptance criteria, test expectation, memory/governance impact, relevant files, coding standards from `docs/plan/task-breakdown.md`, and current context from the resolved instruction and memory surfaces. See `references/parallel-protocol.md` for the full parallel execution protocol.
    - For **sequential tasks**: execute them one by one, either directly or via `task-executor` agents.
+   - **Every task runs as one TAV cycle** (Thinker → Actor → Verifier): evidence-based plan first, minimal planned edits, then independent verification starting from the real diff. When the `tav-workflow` skill is available, load it; the `task-executor` agent prompt embeds the same discipline for platforms where it is not. The full per-task contract is in § "Boundary with TAV" below.
 
 2. **After each task completion** — follow the adaptive control protocol (`references/adaptive-control.md` § 5.2):
-   - Collect telemetry: actual effort, S.U.P.E.R score, unplanned dependencies
+   - Collect telemetry: actual effort (derived from the task's TAV execution signals: rework iterations, plan returns, unplanned files), S.U.P.E.R score, unplanned dependencies
    - Calculate task drift contribution and update cumulative `drift_score`
    - Write telemetry to Issue comment (GitHub modes) or MASTER.md (LOCAL_ONLY)
    - Check drift thresholds — if exceeded, execute the automatic response action (annotate/replan/rescope)
@@ -369,6 +386,33 @@ After user confirmation, execute tasks according to the plan:
 7. Suggest to the user that they might want to commit the archive to version control.
 
 **Output**: All artifacts preserved under `docs/archives/<project-name>/`, with an updated index at `docs/archives/README.md`. In GitHub modes, Milestones and Issues remain as a permanent record on GitHub.
+
+---
+
+## Boundary with TAV
+
+Spec-Driven Develop owns analysis, decomposition, progress scaffolding, and orchestration. `tav-workflow` owns the scoped implementation loop: during Phase 5b, one TAV cycle executes exactly one task card. This contract is mirrored in `tav-workflow` § "Operating Inside a Spec-Driven Project" — keep both sides in sync.
+
+### Handoff Contract (per task)
+
+**Input mapping — what each task card gives the TAV cycle:**
+
+| Task card field (Issue / task-breakdown.md / executor input) | TAV consumer |
+|:-------------------------------------------------------------|:-------------|
+| Task description | Thinker task definition (`user_request`) |
+| Acceptance criteria + test expectation | Baseline of the Thinker verification plan |
+| S.U.P.E.R design drivers | Additional Verifier check items |
+| Relevant files / dependencies | Starting points for Thinker evidence gathering |
+
+**Write-back mapping — what the finished TAV cycle returns:**
+
+| TAV outcome | Spec-Driven update |
+|:------------|:-------------------|
+| Verifier pass | Close the Issue (PR `closes #N`) or check the checkbox; update MASTER.md "Current Status" |
+| TAV execution signals (rework iterations, Thinker returns, unplanned files touched) | Post-task telemetry: effort level and unplanned-dependency count (see `references/adaptive-control.md` § 1) |
+| `[PUA-REPORT]` or blocked state | Issue comment (or phase-file note); counts toward drift annotation |
+
+**State ownership:** `docs/progress/MASTER.md` (plus GitHub Issues) is the only project-level authority. `.tav/state.json` is scoped to one task: it is created only when that single task needs cross-session recovery, it is archived or deleted when the task completes, and it never carries project-level progress.
 
 ---
 

@@ -126,6 +126,16 @@ After every task, the agent collects **execution telemetry** (actual effort vs. 
 
 This ensures the workflow **self-corrects** instead of blindly executing a plan that no longer matches reality.
 
+### TAV Interop (New in v1.14)
+
+Spec-Driven Develop pairs with the `tav-workflow` skill as a two-layer system: this skill owns the macro layer (analysis, decomposition, progress, drift control), TAV owns the micro layer (one evidence-based Think → Act → Verify cycle per task).
+
+- **Shared routing test**: both skills apply the same quantified "Escalation Signals" (two-of-four: 3+ modules, multi-session / ~10+ files, architectural decisions, acceptance criteria beyond one cycle), so borderline refactors route consistently.
+- **Handoff Contract**: each task card feeds the TAV cycle (description → plan, acceptance criteria → verification baseline, S.U.P.E.R drivers → extra checks); the finished cycle writes back progress plus telemetry.
+- **Telemetry from execution signals**: effort is measured by TAV-observable signals (rework iterations, plan returns, unplanned files) instead of wall-clock time, feeding the adaptive control loop with data agents can actually observe.
+
+TAV is optional — the `task-executor` agent embeds the same discipline when the skill is not installed.
+
 ## Deep Discuss — Structured Deep Discussion
 
 When you describe a problem, a technical puzzle, or say things like "let's discuss", "help me analyze", "I'm stuck on a decision" — Deep Discuss kicks in with a 7-phase structured discussion:

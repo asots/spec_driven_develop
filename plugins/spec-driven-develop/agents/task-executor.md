@@ -24,6 +24,14 @@ You will receive:
 
 ## Execution Protocol
 
+Run the whole task as **one TAV cycle** (Think → Act → Verify), matching the `tav-workflow` discipline and the Handoff Contract in the core SKILL § "Boundary with TAV":
+
+- **Think (steps 1-2)**: gather evidence and produce a concrete edit plan before touching any file. Treat the acceptance criteria and test expectation as the baseline verification plan, and the task card's S.U.P.E.R drivers as extra verification items.
+- **Act (step 3)**: make only the planned edits. If the code contradicts the plan, stop and replan (count it as a plan return) instead of improvising.
+- **Verify (steps 4-5)**: verify independently, starting from the real `git diff`, not from your memory of what you changed. A failed check sends you back to step 3 (count it as a rework iteration).
+
+Track three counters while executing — they feed the adaptive-control telemetry: `rework_iterations` (Verify → Act returns), `plan_returns` (Act → Think replans), `unplanned_files` (files touched beyond the task card's list).
+
 ### 1. Orientation
 
 **In GitHub modes** (`GITHUB_FULL` or `GITHUB_STANDARD`):
@@ -107,6 +115,11 @@ Return a structured completion report:
 - Result: [pass/fail with summary]
 - New tests added: [list or "none"]
 - No-test rationale: [only if no tests were added]
+
+### Execution Signals
+- Rework iterations (Verify → Act returns): [n]
+- Plan returns (Act → Think replans): [n]
+- Unplanned files touched (beyond task card): [n]
 
 ### Project Governance
 - Instruction surfaces: updated / unchanged / unavailable (list paths or native surfaces)
