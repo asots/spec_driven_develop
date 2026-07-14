@@ -11,7 +11,7 @@
       "name": "spec-driven-develop",
       "source": "./plugins/spec-driven-develop",
       "description": "Three complementary AI agent skills: (1) Spec-Driven Develop — automates full development workflow for large-scale complex tasks: project analysis, task decomposition, project governance, progress tracking, and execution; (2) Deep Discuss — structured deep discussion for problem analysis, brainstorming, and solution design; (3) Review SPD — findings-first code review for uncommitted changes, date-range commits, and branch/PR diffs.",
-      "version": "1.13.1",
+      "version": "1.14.0",
       "author": {
         "name": "zhu1090093659"
       },

@@ -66,27 +66,30 @@ Phase 2  Intent Refinement         Ask targeted questions grounded in analysis,
     |
 Phase 3  Task Decomposition        Break work into phases, tasks, parallel lanes —
     |                              each task annotated with S.U.P.E.R design drivers
-    |                              + create GitHub Issues, Milestones & Project board
+    |                              + plan delivery batches and create GitHub trackers
     |
 Phase 4  Progress Tracking         Generate MASTER.md as GitHub index or local tracker
     |
 Phase 5  Confirm & Execute         Present plan summary, get confirmation,
-    |                              then execute all tasks (parallel or sequential)
+    |                              execute tasks (parallel or sequential), then integrate
+    |                              coherent multi-Issue delivery batch PRs
     |                              with adaptive control feedback loop
     |
 Phase 6  Archive                   Preserve all artifacts for traceability
 ```
 
-### GitHub-Native Task Tracking (New in v1.9)
+### GitHub-Native Task Tracking and Batch PRs (Updated in v1.14)
 
-When a GitHub repository is detected, the workflow automatically creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board. Each task executor works in an isolated **worktree**, creates a **PR** linked to its Issue (`closes #N`), and the Issue auto-closes on merge.
+When a GitHub repository is detected, the workflow automatically creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board. Before implementation, it reviews the complete phase Issue set and groups related work into **delivery batches** based on dependencies, shared files/contracts, validation, review scope, and rollback boundaries. Issues remain atomic acceptance and telemetry records; a delivery batch owns the integration branch, aggregate validation, and PR.
+
+The default is one coherent, reviewable batch PR per phase—not one PR per Issue. Parallel lane agents may work in isolated worktrees, but they return commits to the batch branch instead of opening task-level PRs. The integrated PR includes one `Closes #N` line for every completed Issue. Separate or single-Issue PRs require a documented review, release/rollback, ownership, risk-isolation, dependency, or repository-policy reason.
 
 Three modes are auto-detected based on environment:
 
 | Mode | What You Get |
 |:-----|:-------------|
-| **GITHUB_FULL** | Issues + Milestones + Labels + Project board + worktree + PR |
-| **GITHUB_STANDARD** | Issues + Milestones + Labels + worktree + PR (no board) |
+| **GITHUB_FULL** | Issues + Milestones + Labels + Project board + worktrees + batch PRs |
+| **GITHUB_STANDARD** | Issues + Milestones + Labels + worktrees + batch PRs (no board) |
 | **LOCAL_ONLY** | Original Markdown-based workflow (no GitHub dependency) |
 
 The workflow gracefully degrades — if `gh` CLI is unavailable or the repo isn't on GitHub, it falls back to local-only mode automatically.

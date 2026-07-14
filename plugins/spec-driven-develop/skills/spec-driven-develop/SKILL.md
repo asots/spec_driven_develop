@@ -7,8 +7,10 @@ description: >-
   that requires planning before coding. Also triggers on Chinese keywords: "改造", "重写",
   "迁移", "重构", "大规模", "规范驱动". Performs full project analysis, task decomposition,
   documentation generation, project-level instruction and native memory surface resolution,
-  progress tracking setup, and then executes the plan within the same session.
-version: 1.13.1
+  progress tracking setup, and then executes the plan within the same session. Keeps Issues as
+  task-tracking units while batching related implementation into coherent reviewable PRs.
+metadata:
+  version: 1.14.0
 ---
 
 # Spec-Driven Develop
@@ -26,6 +28,7 @@ You are executing the **Spec-Driven Development** workflow — a standardized pi
 | Memory surface     | Native first                 | Durable project facts and cross-session decisions using the active coding agent's native memory when available; repo fallback only when explicitly selected |
 | Archive output     | `docs/archives/<project>/`   | Phase 6 archived artifacts                 |
 | Task tracking mode | Auto-detect                  | `GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY` (see below) |
+| Delivery batching  | Phase-first                  | Issues track tasks; PRs integrate coherent task batches |
 | Adaptive control   | Enabled                      | Drift thresholds: annotate=20%, replan=40%, rescope=60% of phase tasks |
 
 Templates for all generated documents are in `references/templates/`. Behavioral rules are in `references/behavioral-rules.md`. The parallel execution protocol is in `references/parallel-protocol.md`. The GitHub integration protocol is in `references/github-integration.md`. The adaptive control protocol is in `references/adaptive-control.md`.
@@ -36,8 +39,8 @@ The workflow supports three task tracking modes, auto-detected via a pre-flight 
 
 | Mode | Requirements | Capabilities |
 |:-----|:------------|:-------------|
-| **GITHUB_FULL** (default) | `gh` CLI + auth + `project` scope | Issues + Milestones + Labels + Project board + worktree + PR |
-| **GITHUB_STANDARD** (auto-fallback) | `gh` CLI + auth + `repo` scope | Issues + Milestones + Labels + worktree + PR (no board) |
+| **GITHUB_FULL** (default) | `gh` CLI + auth + `project` scope | Issues + Milestones + Labels + Project board + worktrees + batch PRs |
+| **GITHUB_STANDARD** (auto-fallback) | `gh` CLI + auth + `repo` scope | Issues + Milestones + Labels + worktrees + batch PRs (no board) |
 | **LOCAL_ONLY** (fallback) | None | Original local-file workflow |
 
 See `references/github-integration.md` for the full protocol, `gh` command reference, and Issue body template.
@@ -140,7 +143,7 @@ After loading your current state, populate the platform's native task tracking t
 
 ## Phase 3: Task Decomposition
 
-**Goal**: Break down the transformation into manageable, trackable tasks organized in phases, with explicit parallel execution lanes.
+**Goal**: Break down the transformation into manageable, trackable tasks organized in phases, with explicit parallel execution lanes and coherent delivery batches.
 
 **Actions**:
 
@@ -154,12 +157,17 @@ After loading your current state, populate the platform's native task tracking t
    - **Testing is default**: Every task that adds or changes user-visible features, business behavior, API contracts, schemas, migrations, parsing, routing, permissions, caching, or persistence MUST add or update relevant automated tests. Pure documentation/config tasks may mark tests as not applicable, but the reason must be explicit in the task's acceptance criteria.
    - **Governance is default**: If a task introduces a stable engineering rule, gotcha, command, invariant, or project-specific convention, its acceptance criteria must include updating the resolved native memory surface or the explicitly selected repo fallback. If the rule affects future agents' behavior, update the resolved instruction surfaces such as `AGENTS.md`, `CLAUDE.md`, or existing platform rule files.
    - **Parallel execution lanes**: For each phase, group tasks that have no mutual dependencies into lanes that can run simultaneously. Assess merge risk (file overlap) between lanes.
-   - Dependency graph as a Mermaid diagram — use subgraphs to visualize parallel lanes
+   - **Delivery batches**: After reviewing the complete phase task set, dependencies, affected-file overlap, shared validation surface, rollout risk, and rollback boundary, assign every task to exactly one delivery batch. Issues remain atomic tracking and telemetry units; a delivery batch is the branch, integration validation, and PR unit.
+     - Default to one coherent PR batch per phase. Do not create one PR per Issue merely because Issues are task-sized.
+     - Split a phase only when reviewability, independent release/rollback boundaries, ownership boundaries, high-risk isolation, or repository/user policy makes separate PRs materially safer. Record the reason for every split.
+     - A single-Issue batch is an exception and must be justified by the same criteria, unless the phase contains only one Issue.
+     - For each batch, record: batch ID, goal, included task IDs, dependency-ready execution waves, lanes, integration branch, combined validation, dependency order, and split rationale.
+   - Dependency graph as a Mermaid diagram — use subgraphs to visualize delivery batch boundaries and parallel lanes
    - Milestones at natural phase boundaries
 
 3. Write planning documents to `docs/plan/` using the templates in `references/templates/plan.md`:
-   - `task-breakdown.md` — All phases and tasks with full detail, including parallel lane assignments and **S.U.P.E.R design constraints**
-   - `dependency-graph.md` — Mermaid diagram showing task/phase dependencies and parallel lanes
+   - `task-breakdown.md` — All phases and tasks with full detail, including parallel lane assignments, delivery batch mapping, and **S.U.P.E.R design constraints**
+   - `dependency-graph.md` — Mermaid diagram showing task/phase dependencies, delivery batch boundaries, and parallel lanes
    - `milestones.md` — Milestone definitions with target criteria
 
 4. **GitHub Resource Synchronization** (skip if `LOCAL_ONLY` mode):
@@ -171,7 +179,7 @@ After loading your current state, populate the platform's native task tracking t
    c. **Create Issues** — one per task, using the Issue body template from `references/github-integration.md`. Assign labels and milestone. Add a 1-second delay between creations to avoid rate limits.
    d. **[GITHUB_FULL only] Create Project board** — create the Project, link it to the repo, create custom fields (Priority, Size, Phase), and add all Issues to the board. If custom field value assignment fails, log a warning and continue — the Labels already carry the same information.
 
-   After creation, record all GitHub resource URLs (Project URL, Milestone URLs, Issue number mapping) — these are needed for MASTER.md in Phase 4.
+   After creation, record all GitHub resource URLs plus the Task → Issue → Delivery Batch mapping — these are needed for MASTER.md in Phase 4. Issue creation does not imply PR creation; PRs are created only after batch integration in Phase 5.
 
 5. **Initialize Adaptive Control State** (see `references/adaptive-control.md` § 4):
 
@@ -191,7 +199,7 @@ After loading your current state, populate the platform's native task tracking t
    ```
    In `LOCAL_ONLY` mode, add the "Adaptive Control State" section to MASTER.md instead (see Phase 4).
 
-**Output**: Complete `docs/plan/` directory with three documents. Every task is annotated with its S.U.P.E.R design drivers. In GitHub modes, all tasks also exist as GitHub Issues with Labels and Milestones. Adaptive control state is initialized for each phase.
+**Output**: Complete `docs/plan/` directory with three documents. Every task is annotated with its S.U.P.E.R design drivers and delivery batch. In GitHub modes, all tasks also exist as GitHub Issues with Labels and Milestones, while PR batches remain a separate execution plan. Adaptive control state is initialized for each phase.
 
 ---
 
@@ -238,9 +246,10 @@ Do not create competing truth sources. The workflow must leave behind a clear ma
    - **GitHub Project URL** (GITHUB_FULL only)
    - Links to each analysis and plan document
    - **Milestone table**: Phase name → Milestone URL → open/closed counts
-   - **Issue mapping table**: Task ID → Issue number → status
+   - **Issue mapping table**: Task ID → Issue number → Delivery Batch → PR → status
+   - **Delivery batch table**: Batch ID → included Issues → integration branch → PR → status
    - A "Quick Status Commands" section with ready-to-run `gh` commands for querying live progress
-   - A "Current Status" section indicating which phase/task is active
+   - A "Current Status" section indicating which phase, delivery batch, and Issue set is active
    - A "Next Steps" section for the agent to quickly orient itself
 
    The MASTER.md in GitHub mode does NOT duplicate task details — those live in the GitHub Issues. It serves as a local index and entry point for cross-conversation continuity.
@@ -293,6 +302,7 @@ Do not create competing truth sources. The workflow must leave behind a clear ma
    - Task definition (from Phase 2)
    - Key findings from analysis (high-level, from Phase 1)
    - Phased plan overview with task counts (from Phase 3)
+   - Delivery batch overview with planned PR count and any split rationales (from Phase 3)
    - **Tracking mode** and what it means for the execution workflow
    - Progress tracking system description (from Phase 4)
 
@@ -307,7 +317,7 @@ Do not create competing truth sources. The workflow must leave behind a clear ma
    - `docs/progress/phase-N-*.md` (LOCAL_ONLY mode, one per phase)
    - Resolved instruction surfaces, such as `AGENTS.md`, `CLAUDE.md`, or existing platform rule files
    - Resolved memory surface (native memory, existing project memory, or explicitly selected repo fallback)
-   - **[GitHub modes]** GitHub Project URL, Milestone URLs, list of created Issue numbers
+   - **[GitHub modes]** GitHub Project URL, Milestone URLs, created Issue numbers, and planned delivery batch mapping
 
 3. Ask the user: "All preparation is complete. Ready to begin execution?"
 
@@ -315,24 +325,34 @@ Do not create competing truth sources. The workflow must leave behind a clear ma
 
 After user confirmation, execute tasks according to the plan:
 
-1. **Process each phase sequentially** (Phase 1 → Phase 2 → ... in the plan's phased order):
-   - For tasks in **parallel lanes**: spawn `task-executor` sub-agents simultaneously, one per lane, each in an isolated worktree. Provide each agent with: task ID, tracking mode, task description, acceptance criteria, test expectation, memory/governance impact, relevant files, coding standards from `docs/plan/task-breakdown.md`, and current context from the resolved instruction and memory surfaces. See `references/parallel-protocol.md` for the full parallel execution protocol.
-   - For **sequential tasks**: execute them one by one, either directly or via `task-executor` agents.
+1. **Process each phase sequentially** (Phase 1 → Phase 2 → ... in the plan's phased order). Before editing, read every open Issue in the phase and revalidate the planned delivery batches against current dependencies, affected files, review scope, and repository rules. If the mapping must change, update `task-breakdown.md`, MASTER.md, and the `Delivery Batch` field in every affected GitHub Issue body; comment the regrouping reason so all execution surfaces agree.
 
-2. **After each task completion** — follow the adaptive control protocol (`references/adaptive-control.md` § 5.2):
+2. **Process delivery batches in dependency order**:
+   - For a batch with **parallel lanes**: execute dependency-ready lanes in waves. Launch only lanes whose prerequisites are integrated, one `task-executor` per ready lane in isolated worktrees. Give every agent the full batch context plus its assigned task IDs and Issue numbers. Lane agents implement and commit their assigned work but do not create PRs. See `references/parallel-protocol.md`.
+   - For a batch with **one lane**: execute the included tasks together on the batch integration branch, or delegate the complete batch to one `task-executor` agent.
+   - Follow the repository's branch convention; otherwise use `batch/{batch_id}-{slug}` for the integration branch and `work/{batch_id}-{lane_id}-{slug}` for lane branches.
+
+3. **After each task completion** — follow the adaptive control protocol (`references/adaptive-control.md` § 5.2):
    - Collect telemetry: actual effort, S.U.P.E.R score, unplanned dependencies
    - Calculate task drift contribution and update cumulative `drift_score`
    - Write telemetry to Issue comment (GitHub modes) or MASTER.md (LOCAL_ONLY)
    - Check drift thresholds — if exceeded, execute the automatic response action (annotate/replan/rescope)
+   - For parallel lanes, executors return per-task telemetry and the orchestrator records it once during batch integration; lane agents do not race to update shared state.
 
-3. **After merging parallel lane results**: reconcile progress, sum drift contributions, and check thresholds before proceeding to the next phase.
+4. **Integrate and validate each delivery batch**:
+   - Consolidate lane branches onto the batch integration branch and reconcile overlapping changes.
+   - Run per-task checks plus the batch's combined validation and post-integration architecture checks.
+   - Verify every included Issue's acceptance criteria. Keep incomplete Issues out of the PR's closing keywords.
+   - In GitHub modes, create one PR for the batch. Map each completed Issue to its changes and tests, and add one `Closes #N` line per completed Issue. Do not create task-level PRs as an intermediate step.
+   - Immediately after PR creation, write the PR number and `in review` state to the batch row and every fully completed Issue row in MASTER.md. Keep partially covered Issues open with an explicit partial status and PR reference.
+   - A single-Issue PR is allowed only for a documented batch exception or a phase that contains one Issue.
 
-4. **Progress updates**:
-   - **GitHub modes**: PR with `closes #N` auto-closes the Issue. Update MASTER.md's "Current Status" and "Issue Mapping" sections.
+5. **Progress updates**:
+   - **GitHub modes**: the merged batch PR auto-closes all Issues named by its `Closes #N` lines. Update MASTER.md's "Current Status", "Issue Mapping", and "Delivery Batches" sections.
    - **LOCAL_ONLY**: Check off tasks in phase files, update counts in MASTER.md.
    - **All modes**: If the task produced durable engineering knowledge, update the resolved native memory surface or explicitly selected fallback; if it changed how future agents must work in the repo, update the resolved instruction surfaces.
 
-5. **When all tasks are complete** (all Issues closed or all checkboxes checked): proceed to Phase 6 (Archive).
+6. **When all tasks are complete** (all Issues closed or all checkboxes checked): proceed to Phase 6 (Archive).
 
 **Output**: All planned tasks implemented and verified.
 
