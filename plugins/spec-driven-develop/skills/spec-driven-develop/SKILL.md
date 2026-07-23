@@ -11,7 +11,7 @@ description: >-
   surface resolution, progress tracking setup, and then executes the plan within the same session. Keeps Issues as
   task-tracking units while batching related implementation into coherent reviewable PRs.
 metadata:
-  version: 1.14.1
+  version: 1.15.0
 ---
 
 # Spec-Driven Develop
@@ -113,11 +113,13 @@ After loading your current state, populate the platform's native task tracking t
 
    Provide each agent with the preliminary direction from Phase 0 AND `references/super-philosophy.md` so they can assess findings against S.U.P.E.R principles in context of the intended transformation.
 
+   **Scale the analysis to the repository.** The three-agent split above assumes each agent can deep-read its focus area. For large codebases (roughly 100+ modules or beyond ~200k LOC), partition the repository by subsystem (top-level directory or build unit), launch one Module Inventory agent per partition alongside the Architecture and Risk agents, and merge partition outputs into a subsystem-level rollup in `module-inventory.md`. Whatever the strategy, every analysis document must mark areas that were not deep-read with `coverage: shallow` — Phase 3 treats estimates for shallow-coverage areas as low-confidence and prefers smaller task granularity there.
+
    If sub-agents are not available on the current platform, perform the analysis sequentially yourself — the scope is the same either way.
 
 2. Consolidate agent outputs and resolve any contradictions or gaps. Write analysis documents to `docs/analysis/` using the templates in `references/templates/analysis.md`:
    - `project-overview.md` — Architecture, tech stack, entry points, build system
-   - `module-inventory.md` — Every module with: responsibility, dependencies, size, complexity rating, **S.U.P.E.R compliance score per module**
+   - `module-inventory.md` — Every module with: responsibility, dependencies, size, complexity rating, **S.U.P.E.R compliance score per module**, and a coverage marker (`deep` or `shallow`); large repositories add a subsystem-level rollup section
    - `risk-assessment.md` — Technical risks, compatibility risks, complexity hotspots, testing gaps, project governance gaps, **S.U.P.E.R Architecture Health Summary with violation hotspots**
 
 3. **GitHub Pre-flight Check**: Run the pre-flight detection from `references/github-integration.md` § "Pre-flight Check" to determine the task tracking mode (`GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY`). Report the detected mode to the user. If the mode is not what they expect, explain what's missing and how to upgrade (e.g., `gh auth refresh -s project`).
@@ -179,7 +181,7 @@ After loading your current state, populate the platform's native task tracking t
      - A single-Issue batch is an exception and must be justified by the same criteria, unless the phase contains only one Issue.
      - For each batch, record: batch ID, goal, included task IDs, dependency-ready execution waves, lanes, integration branch, combined validation, dependency order, and split rationale.
    - Dependency graph as a Mermaid diagram — use subgraphs to visualize delivery batch boundaries and parallel lanes
-   - Milestones at natural phase boundaries
+   - Milestones at natural phase boundaries. Every milestone criterion must be a runnable command or a concretely observable check, and every phase's final task is a **milestone acceptance task**: it runs the phase's combined regression (full applicable test suite plus each criterion) and blocks phase closure until it passes.
 
 3. Write planning documents to `docs/plan/` using the templates in `references/templates/plan.md`:
    - `task-breakdown.md` — All phases and tasks with full detail, including parallel lane assignments, delivery batch mapping, and **S.U.P.E.R design constraints**
@@ -301,6 +303,7 @@ Do not create competing truth sources. The workflow must leave behind a clear ma
    - Phases use the format: `- [ ] Phase N: <name> (0/X tasks)` with a link to either the phase file (LOCAL_ONLY) or the milestone URL (GitHub modes)
    - When a phase is fully done: `- [x] Phase N: <name> (X/X tasks)`
    - The "Current Status" section is updated by the agent at the start and end of each work session
+   - **Rolling summary**: keep full detail rows (telemetry log, Issue mapping, batch tables) only for the active phase. When a phase closes, collapse its rows into one summary line (task count, total drift, effort accuracy) and move the detail to the phase file (LOCAL_ONLY) or leave it on GitHub (GitHub modes) — MASTER.md must stay readable in one screen even on 100+ task projects
 
 **Output**: Complete `docs/progress/` directory with MASTER.md (and per-phase detail files in LOCAL_ONLY mode).
 
@@ -369,7 +372,9 @@ After user confirmation, execute tasks according to the plan:
    - **LOCAL_ONLY**: Check off tasks in phase files, update counts in MASTER.md.
    - **All modes**: If the task produced durable engineering knowledge, update the resolved native memory surface or explicitly selected fallback; if it changed how future agents must work in the repo, update the resolved instruction surfaces.
 
-6. **When all tasks are complete** (all Issues closed or all checkboxes checked): proceed to Phase 6 (Archive).
+6. **At each phase boundary**: the phase's milestone acceptance task must pass before the phase closes — a failure there is a gate failure (return to the offending batch or task, or trigger adaptive replan if it reveals plan-level drift). Close the Milestone only after it passes.
+
+7. **When all tasks are complete** (all Issues closed or all checkboxes checked): proceed to Phase 6 (Archive).
 
 **Output**: All planned tasks implemented and verified.
 
@@ -403,7 +408,9 @@ After user confirmation, execute tasks according to the plan:
 
 6. After archiving, remove the now-empty `docs/analysis/`, `docs/plan/`, and `docs/progress/` directories from the project root's `docs/` folder. Keep active instruction and memory surfaces in place; only their snapshots or export references live under the archive.
 
-7. Suggest to the user that they might want to commit the archive to version control.
+7. **Estimation calibration retrospective**: aggregate the telemetry log's effort deltas by task type and module. Where a category shows systematic underestimation (average delta ≥ +1 across 3+ tasks), distill 1-3 calibration rules (e.g. "schema-touching tasks in this repo run one effort level above estimate") and record them through the knowledge consolidation pipeline to the resolved memory surface — the next project starts from calibrated priors instead of zero.
+
+8. Suggest to the user that they might want to commit the archive to version control.
 
 **Output**: All artifacts preserved under `docs/archives/<project-name>/`, with an updated index at `docs/archives/README.md`. In GitHub modes, Milestones and Issues remain as a permanent record on GitHub.
 

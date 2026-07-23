@@ -19,6 +19,7 @@ You will receive:
 - **Tracking mode**: `GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY`
 - **Per-task details**: Description, acceptance criteria, S.U.P.E.R drivers, test expectation, and memory/governance impact
 - **Combined validation**: Aggregate test, build, lint, and smoke checks for the integrated batch
+- **Frozen shared contracts**: Cross-lane interfaces, schemas, and types you must not modify; changes to them belong to their owning task and lane
 - **Source files**: Key files relevant to the batch and assigned lane
 - **Coding standards**: Target technology conventions to follow
 - **Dependencies completed**: Prerequisite tasks/batches and their key outputs
@@ -72,6 +73,7 @@ Use an isolated worktree when available. Lane branches start from the same batch
 - Add or update automated tests for user-visible features, business behavior, APIs, schemas, migrations, parsing, routing, permissions, caching, or persistence unless a task has an explicit no-test rationale.
 - Update the resolved memory or instruction surfaces only when the assignment requires it; report the exact surface changed.
 - Do not implement unrelated Issues outside the delivery batch.
+- Commit after each completed task card rather than in one bulk commit at the end — mid-batch recovery must never depend on conversation memory.
 
 ### 4. Verification
 
@@ -154,6 +156,7 @@ Return a structured completion report:
 - **Allow useful cross-task cohesion**: Within the assigned batch/lane, resolve shared contracts and duplicated logic together instead of preserving artificial Issue boundaries.
 - **No cross-batch interference**: Report adjacent work that belongs to another batch; do not implement it.
 - **No task-level PRs**: A lane produces commits, never its own PR or closing keywords.
+- **Frozen contracts are read-only**: Never modify a contract marked frozen in your input. If your tasks cannot complete without changing it, report BLOCKED with the affected contract and Issues — do not improvise a local workaround.
 - **Conflict awareness**: Avoid unrelated reformatting and tell the orchestrator about file overlap with sibling lanes.
 - **Atomic handoff**: Complete the entire assignment or report BLOCKED with the affected task/Issue set.
 

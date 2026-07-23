@@ -78,7 +78,7 @@ For each lane:
 - **Estimated time**: Combined effort of the lane (determines wall-clock time for the phase)
 - **Merge risk**: Low / Medium / High — likelihood of merge conflicts between lanes (based on file overlap)
 
-The goal is to minimize wall-clock time per phase. If a phase has 4 tasks and 2 are independent, they form 2 parallel lanes — cutting phase duration roughly in half.
+The goal is to minimize wall-clock time per phase. If a phase has 4 tasks and 2 are independent, they form 2 parallel lanes — cutting phase duration roughly in half. Do not create a lane smaller than 2 tasks (or a single S-effort task) unless risk isolation demands it — coordination overhead outweighs the wall-clock gain; fold undersized lanes into the nearest compatible lane. Waves are capped at 4 concurrent lanes; additional ready lanes queue for the next wave.
 
 ### 6. Delivery Batch Design
 
@@ -89,7 +89,7 @@ After defining every task and lane, review the complete task set for each phase 
 
 Default to one coherent delivery batch per phase. Group tasks that share an architecture invariant, API/data contract, file hotspot, test fixture, release target, or rollback boundary. Each task belongs to exactly one batch, and dependency order must be executable within or between batches.
 
-Split a phase only when reviewability, an independent release/rollback boundary, ownership, risk isolation, a hard dependency gate, or repository/user policy makes separate PRs materially safer. Do not split mechanically by Issue count. A single-task batch requires a written rationale unless it is the only task in the phase.
+Split a phase only when reviewability, an independent release/rollback boundary, ownership, risk isolation, a hard dependency gate, or repository/user policy makes separate PRs materially safer. Reviewability is quantified: when a batch's expected integrated diff exceeds roughly 800 changed lines or 15 files, split it — a PR that cannot be reviewed in one sitting is not a valid review unit. Do not split mechanically by Issue count. A single-task batch requires a written rationale unless it is the only task in the phase.
 
 For every batch, provide:
 
@@ -100,6 +100,7 @@ For every batch, provide:
 - **Execution waves**: prerequisite work first, followed by each set of dependency-ready lanes that may run simultaneously
 - **Integration branch**: follow repo convention or use `batch/{batch_id}-{slug}`
 - **Combined validation**: targeted and aggregate test/build/smoke checks
+- **Shared contracts**: interfaces, schemas, and types crossing lane boundaries — each marked `frozen` (no lane may change it) or `owned` (a named task changes it in the earliest wave); lanes receive this list as part of their input contract
 - **Dependencies**: prerequisite batches
 - **Split or single-task rationale**: explicit reason when not using the default phase-level batch
 
@@ -111,6 +112,8 @@ Define milestones at natural phase boundaries. Each milestone should represent a
 - "Core library compiled and passing unit tests"
 - "API layer serving all endpoints with feature parity"
 - "Full integration test suite green"
+
+Every milestone criterion must be phrased as a runnable command or a concretely observable check — never a prose aspiration. Append one **milestone acceptance task** as the final task of every phase: it runs the phase's combined regression (full applicable test suite plus each criterion's command) and blocks phase closure on failure. It belongs to the phase's last delivery batch or stands alone after it.
 
 ## Output Format
 

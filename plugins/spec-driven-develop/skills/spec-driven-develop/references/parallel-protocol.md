@@ -9,7 +9,8 @@ This protocol defines how the generated sub-SKILL (and the agent using it) shoul
 At the start of each development phase, read every open Issue in that phase and consult `docs/plan/task-breakdown.md` for delivery batches and parallel lane assignments. Revalidate the planned grouping against current dependencies, file overlap, shared tests, review scope, and rollback boundaries before editing.
 
 - Process delivery batches in dependency order; do not open a PR as soon as one Issue is implemented.
-- If a batch has **multiple parallel lanes**, derive dependency-ready execution waves. Launch one `task-executor` per ready lane simultaneously, integrate that wave, then branch the next wave from the updated integration base. Each lane receives the complete batch context plus its assigned task/Issue subset.
+- If a batch has **multiple parallel lanes**, derive dependency-ready execution waves. Launch one `task-executor` per ready lane simultaneously — capped at 4 concurrent lanes per wave (or the platform's lower limit); excess ready lanes queue for the next wave. Integrate each wave, then branch the next wave from the updated integration base. Each lane receives the complete batch context plus its assigned task/Issue subset.
+- Tasks that change a shared contract (an interface, schema, or type consumed by more than one lane) run in the earliest wave — wave 0 when possible — so later lanes branch from the updated contract instead of colliding with it at integration.
 - If a batch has **only one lane**, execute the whole batch together — do not force parallelism or split it into task-level PRs.
 - If the platform does not support sub-agents, execute all tasks sequentially yourself
 
@@ -25,6 +26,7 @@ For each parallel lane in the current dependency-ready wave:
    - **Tracking mode** (`GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY`)
    - **GitHub Issue numbers** (GitHub modes) or inline task descriptions (LOCAL_ONLY)
    - Per-task acceptance criteria, test expectations, and explicit no-test rationales, if any
+   - **Frozen shared contracts**: the batch's shared-contract list (interfaces, schemas, types crossing lane boundaries), each entry marked `frozen` or `owned` by a named task; a lane must not modify a frozen contract — it reports BLOCKED for coordination instead
    - Per-task memory/governance impact and expected surface updates, if any
    - Relevant source file paths (from `docs/analysis/module-inventory.md`)
    - Coding standards from the sub-SKILL

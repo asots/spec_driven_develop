@@ -50,7 +50,7 @@ Simplified scoring: count passes out of 10. Record `super_score` (0-10) and `sup
 
 ### 1.3 Unplanned Dependencies
 
-Count the number of dependencies discovered during execution that were NOT listed in the task's "Dependencies" field in `task-breakdown.md`. This includes:
+Count the number of dependencies discovered during execution that were NOT listed in the task's "Dependencies" field in `task-breakdown.md`. Record each one with the module or file it belongs to — the replan attribution step (§ 3.2) clusters unplanned dependencies by module. This includes:
 - Files that needed modification but weren't listed in "Affected Files"
 - Tasks that should have been prerequisites but weren't identified
 - External libraries or APIs that needed changes
@@ -122,12 +122,13 @@ Thresholds are computed once at phase start (when total task count is known) and
    Remaining tasks will be re-decomposed based on execution learnings.
    ```
 3. Close all remaining unstarted Issues with label `superseded-by-replan` and reason `not_planned` (GitHub modes)
-4. **Re-enter Phase 3** (Task Decomposition) for the remaining scope only:
+4. **Attribute the drift before re-decomposing**: cluster the accumulated unplanned dependencies and effort overruns by module. Any module implicated by 2+ contributions gets an incremental re-analysis — update its `module-inventory.md` entry and S.U.P.E.R rating first. Re-planning from an uncorrected analysis reproduces the same drift.
+5. **Re-enter Phase 3** (Task Decomposition) for the remaining scope only:
    - Use completed task telemetry as input (actual effort levels inform new estimates)
    - Preserve completed tasks and their Issues — only re-plan what's left
    - Create new Issues for the re-decomposed tasks under the same Milestone
-5. Reset `drift_score` to 0 for the re-planned segment
-6. In LOCAL_ONLY mode: archive old phase file entries and create new ones
+6. Reset `drift_score` to 0 for the re-planned segment
+7. In LOCAL_ONLY mode: archive old phase file entries and create new ones
 
 ### 3.3 Level 3: Rescope (drift ≥ threshold_rescope)
 
@@ -286,4 +287,4 @@ After consolidating all sequential or parallel work in a delivery batch:
 | Phase 3 (Decomposition) | Initialize adaptive state in Milestone description. Compute thresholds. |
 | Phase 4 (Progress Tracking) | MASTER.md template includes telemetry section (LOCAL_ONLY) or telemetry reference (GitHub modes) |
 | Phase 5 (Confirm & Execute) | Every task completion triggers § 5.2. Every delivery batch integration triggers § 5.3 before its PR closes Issues. |
-| Phase 6 (Archive) | Archive includes final telemetry summary and drift history as execution retrospective. |
+| Phase 6 (Archive) | Archive includes final telemetry summary, drift history, and the estimation calibration retrospective — calibration rules go to the resolved memory surface. |
