@@ -12,7 +12,7 @@ BUNDLED_SKILLS=("spec-driven-develop" "deep-discuss" "review" "review-spd")
 
 # Extract version from SKILL.md frontmatter
 extract_version() {
-    grep -m1 '^version:' "$1" 2>/dev/null | sed 's/version:[[:space:]]*//'
+    sed -n 's/^[[:space:]]*version:[[:space:]]*//p' "$1" 2>/dev/null | sed -n '1p'
 }
 
 # Get the version currently installed
@@ -30,7 +30,7 @@ get_source_version() {
     if [ -f "$local_skill" ] 2>/dev/null; then
         extract_version "$local_skill"
     else
-        curl -sL "$RAW_URL/$SKILL_SUBPATH/SKILL.md" | grep -m1 '^version:' | sed 's/version:[[:space:]]*//'
+        curl -sL "$RAW_URL/$SKILL_SUBPATH/SKILL.md" | sed -n 's/^[[:space:]]*version:[[:space:]]*//p' | sed -n '1p'
     fi
 }
 

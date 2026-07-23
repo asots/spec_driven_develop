@@ -20,6 +20,7 @@ Use this template when the tracking mode is `GITHUB_FULL` or `GITHUB_STANDARD`. 
 ## GitHub Resources
 - **Project Board**: https://github.com/users/{user}/projects/{num} _(GITHUB_FULL only)_
 - **All Issues**: `gh issue list -R {repo} --label "spec-driven" --state all`
+- **Open Batch PRs**: `gh pr list -R {repo} --state open --search "in:title Batch"`
 
 ## References
 - [Project Overview](../analysis/project-overview.md)
@@ -38,10 +39,18 @@ Use this template when the tracking mode is `GITHUB_FULL` or `GITHUB_STANDARD`. 
 
 ## Issue Mapping
 
-| Task ID | Issue | Title | Status |
-|:--------|:------|:------|:-------|
-| T1.1    | #101  |       | open   |
-| T1.2    | #102  |       | open   |
+| Task ID | Issue | Title | Delivery Batch | PR | Status |
+|:--------|:------|:------|:---------------|:---|:-------|
+| T1.1    | #101  |       | P1-B1          | —  | open   |
+| T1.2    | #102  |       | P1-B1          | —  | awaiting batch PR |
+
+Status values may include `open`, `in progress`, `awaiting batch PR`, `in review`, `partial`, and `closed`. Implementation completion does not require a task-level PR.
+
+## Delivery Batches
+
+| Batch | Phase | Issues | Integration Branch | PR | Status |
+|:------|:------|:-------|:-------------------|:---|:-------|
+| P1-B1 | 1     | #101, #102 | `batch/p1-b1-<slug>` | — | planned |
 
 ## Quick Status Commands
 
@@ -54,6 +63,9 @@ gh issue list -R {repo} --milestone "Phase 1: {name}" --state open --json number
 
 # All spec-driven Issues
 gh issue list -R {repo} --label "spec-driven" --state all --json number,title,state,milestone
+
+# Open delivery batch PRs
+gh pr list -R {repo} --state open --search "in:title Batch" --json number,title,headRefName,url
 ```
 
 ## Phase Checklist
@@ -63,7 +75,8 @@ gh issue list -R {repo} --label "spec-driven" --state all --json number,title,st
 ## Current Status
 <!-- Updated by the agent at the start and end of each work session -->
 **Active Phase**: Phase N
-**Active Task**: Task description (Issue #NNN)
+**Active Delivery Batch**: Pn-Bn / none
+**Active Issues**: #NNN, #NNN / none
 **Blockers**: None / description
 
 ## Governance Status

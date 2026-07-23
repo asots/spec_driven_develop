@@ -12,7 +12,7 @@ PLUGIN_SUBPATH="plugins/spec-driven-develop"
 SKILL_SUBPATH="$PLUGIN_SUBPATH/skills/$PLUGIN_NAME"
 
 extract_version() {
-    grep -m1 '^version:' "$1" 2>/dev/null | sed 's/version:[[:space:]]*//'
+    sed -n 's/^[[:space:]]*version:[[:space:]]*//p' "$1" 2>/dev/null | sed -n '1p'
 }
 
 get_local_version() {
@@ -28,7 +28,7 @@ get_source_version() {
     if [ -f "$local_skill" ] 2>/dev/null; then
         extract_version "$local_skill"
     else
-        curl -sL "$RAW_URL/$SKILL_SUBPATH/SKILL.md" | grep -m1 '^version:' | sed 's/version:[[:space:]]*//'
+        curl -sL "$RAW_URL/$SKILL_SUBPATH/SKILL.md" | sed -n 's/^[[:space:]]*version:[[:space:]]*//p' | sed -n '1p'
     fi
 }
 

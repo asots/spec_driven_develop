@@ -13,7 +13,7 @@ The workflow is modeled as a **closed-loop control system**:
 | **Plant** (被控对象) | The codebase under transformation |
 | **Set point** (目标) | Phase 2 confirmed task definition + S.U.P.E.R principles |
 | **Controller** | The SKILL workflow (Phases 0-7) + this adaptive protocol |
-| **Actuator** | Task executor agents (sequential or parallel) |
+| **Actuator** | Delivery batch executors and lane workers (sequential or parallel) |
 | **Sensor** | Post-task telemetry collection |
 | **Error signal** | `drift_score` — cumulative plan-vs-reality deviation |
 
@@ -25,7 +25,7 @@ After completing every task and BEFORE marking it as done, the agent MUST collec
 
 ### 1.1 Actual Effort
 
-Compare estimated effort (from `task-breakdown.md`) against actual effort. Effort is measured by **observable execution signals**, never wall-clock time — agents cannot reliably perceive elapsed time, and each task's TAV cycle already exposes these signals (rework iterations, plan returns, unplanned file touches; the `task-executor` reports them in its "Execution Signals" section):
+Compare estimated effort (from `task-breakdown.md`) against actual effort. Effort is measured by **observable execution signals**, never wall-clock time — agents cannot reliably perceive elapsed time, and each task's TAV cycle already exposes these signals (rework iterations, plan returns, unplanned file touches; the `task-executor` reports them in its "Per-Task Execution Signals" section):
 
 | Level | Execution signals |
 |:------|:------------------|
@@ -220,7 +220,7 @@ gh api repos/{owner}/{repo}/milestones/{number} -X PATCH -f description="$NEW_DE
 
 ### 4.3 Issue Telemetry Comment Format (GitHub Modes)
 
-When a task is completed, post this structured comment on the Issue BEFORE closing it:
+When a task is implementation-complete, post this structured comment on its Issue before the delivery batch PR can close it. Telemetry remains per task/Issue even when one PR covers several Issues. An Issue may stay open in `awaiting batch PR` or `in review` state after telemetry is recorded; do not create a task-level PR merely to close it.
 
 ```markdown
 ## 📊 Execution Telemetry
@@ -253,25 +253,29 @@ At the start of every conversation, AFTER reading MASTER.md:
 
 ### 5.2 Post-Task (Inline During Execution)
 
-After every task completion:
+For sequential execution, after every task completion:
 
 1. Collect telemetry (§ 1)
 2. Calculate task drift contribution (§ 2.1)
-3. Update cumulative drift_score (§ 2.2)
-4. Write telemetry to Issue comment / MASTER.md (§ 4)
-5. Update Milestone adaptive state / MASTER.md (§ 4)
+3. Calculate the new cumulative `drift_score` (§ 2.2)
+4. Persist the updated Milestone adaptive state / MASTER.md (§ 4)
+5. Write telemetry to the Issue / MASTER.md using the updated cumulative score (§ 4)
 6. **Evaluate**: Check drift_score against thresholds (§ 3)
 7. If threshold exceeded → execute response action BEFORE starting next task
 8. If no threshold exceeded → proceed to next task
 
-### 5.3 Post-Parallel-Merge (After Consolidating Parallel Results)
+For parallel lanes, lane executors perform steps 1-2 and return per-task telemetry, but do not perform steps 3-7. The orchestrator records and applies those contributions once in § 5.3, preventing duplicate increments and concurrent MASTER.md/Milestone writes.
 
-After merging parallel lane results:
+### 5.3 Post-Delivery-Batch Integration
 
-1. Sum drift contributions from all tasks completed in this parallel batch
-2. Update cumulative drift_score
-3. Evaluate thresholds against the new cumulative score
-4. If threshold exceeded → trigger response before starting next phase
+After consolidating all sequential or parallel work in a delivery batch:
+
+1. Collect any lane telemetry not yet recorded by § 5.2
+2. Add the sum of only those unrecorded task contributions to cumulative `drift_score` once, then persist the adaptive state
+3. Write each unrecorded task's telemetry to its Issue / MASTER.md using that updated post-batch cumulative score
+4. Verify that telemetry exists for every Issue the batch PR will close
+5. Evaluate thresholds against the resulting cumulative score
+6. If a threshold is exceeded → trigger the response before starting the next delivery batch
 
 ---
 
@@ -281,5 +285,5 @@ After merging parallel lane results:
 |:---------------|:-----------------------------|
 | Phase 3 (Decomposition) | Initialize adaptive state in Milestone description. Compute thresholds. |
 | Phase 4 (Progress Tracking) | MASTER.md template includes telemetry section (LOCAL_ONLY) or telemetry reference (GitHub modes) |
-| Phase 5 (Confirm & Execute) | Every task completion triggers § 5.2. Every parallel merge triggers § 5.3. |
+| Phase 5 (Confirm & Execute) | Every task completion triggers § 5.2. Every delivery batch integration triggers § 5.3 before its PR closes Issues. |
 | Phase 6 (Archive) | Archive includes final telemetry summary and drift history as execution retrospective. |

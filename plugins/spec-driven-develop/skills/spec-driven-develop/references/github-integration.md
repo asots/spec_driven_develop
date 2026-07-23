@@ -10,8 +10,8 @@ The workflow auto-detects the best available mode via a pre-flight check. The us
 
 | Mode | Requirements | Capabilities |
 |:-----|:------------|:-------------|
-| **GITHUB_FULL** | `gh` CLI + auth + `project` scope | Issues + Milestones + Labels + Project board + worktree + PR |
-| **GITHUB_STANDARD** | `gh` CLI + auth + `repo` scope | Issues + Milestones + Labels + worktree + PR (no board) |
+| **GITHUB_FULL** | `gh` CLI + auth + `project` scope | Issues + Milestones + Labels + Project board + worktrees + batch PRs |
+| **GITHUB_STANDARD** | `gh` CLI + auth + `repo` scope | Issues + Milestones + Labels + worktrees + batch PRs (no board) |
 | **LOCAL_ONLY** | None | Original local-file workflow (no GitHub) |
 
 ---
@@ -51,8 +51,13 @@ Spec-Driven-Develop Run  →  GitHub Project (board)     [GITHUB_FULL only]
 │   │   ├── Size M        →  Label "size:M"
 │   │   └── Lane A        →  Label "lane:A"
 │   └── Task N.2          →  Issue with structured body
-└── Task execution        →  worktree + branch + PR (closes #N)
+└── Delivery Batch B1     →  integration branch + one PR
+    ├── Lane work         →  isolated worktree/branch + commits (no PR)
+    ├── Task Issues       →  atomic acceptance + telemetry records
+    └── Batch PR          →  one `Closes #N` line per completed Issue
 ```
+
+Issue and PR cardinality are intentionally different. Keep one Issue per task for planning and telemetry, then group related Issues into the smallest coherent set of phase-local delivery batches. Default to one reviewable batch PR per phase; do not create a PR merely because one Issue is implemented.
 
 ---
 
@@ -114,6 +119,7 @@ Every task Issue uses this structured body format:
 
 **Phase**: {phase_number} — {phase_name}
 **Priority**: {priority} | **Size**: {size} | **Lane**: {lane}
+**Delivery Batch**: {batch_id}
 **S.U.P.E.R Drivers**: {principles}
 **Test Expectation**: {required_tests_or_explicit_no_test_rationale}
 **Memory/Governance Impact**: {memory_or_governance_update_expectation}
@@ -212,53 +218,100 @@ If setting custom field values fails, this is non-critical — the Issue Labels 
 
 ---
 
-## Task Execution Workflow (worktree + PR)
+## Delivery Batch Execution Workflow (worktree + PR)
 
-When a task-executor agent receives an Issue to implement:
+The orchestrator owns batch boundaries, integration state, cumulative drift, and PR creation. Task executors implement complete batches or assigned lanes; they do not create task-level PRs.
 
-### 1. Read Task from Issue
+### 1. Review the Complete Phase Issue Set
+
+Before editing, list all open Issues in the active phase, then read each Issue's body and comments. Compare dependencies, affected files, shared contracts/tests, release target, review ownership, and rollback risk.
+
 ```bash
-gh issue view {issue_number} --repo "$REPO" --json title,body,labels,milestone
+gh issue list --repo "$REPO" --milestone "Phase {n}: {phase_name}" --state open --json number,title,labels
+gh issue view {issue_number} --repo "$REPO" --json number,title,body,comments,labels,milestone
 ```
 
-### 2. Create Worktree and Branch
-The branch name follows the pattern: `task/{issue_number}-{slug}`
-```bash
-BRANCH="task/{issue_number}-{slug}"
-git worktree add ".claude/worktrees/$BRANCH" -b "$BRANCH"
-cd ".claude/worktrees/$BRANCH"
-```
+Use these rules to confirm or revise delivery batches:
+
+1. Keep batches within one Phase/Milestone by default.
+2. Prefer one coherent batch for Issues that share an architecture invariant, API/data contract, file hotspot, test fixture, or release target.
+3. Keep dependency order executable inside the batch; serialize batches when one depends on another.
+4. Default to one reviewable batch PR per phase. Split only for a documented reviewability, independent release/rollback, ownership, high-risk isolation, hard dependency, or repository/user policy boundary.
+5. Do not split mechanically by Issue count. A single-Issue batch requires an explicit rationale unless it is the only Issue in the phase.
+
+Record every confirmed or revised Task → Issue → Delivery Batch mapping in `docs/plan/task-breakdown.md` and MASTER.md before implementation. If regrouping changes a previously created Issue, update its structured `**Delivery Batch**` field with `gh issue edit --body-file <updated-body-file>` while preserving the rest of the body, then comment with the reason. The Issue body, plan, and MASTER.md must never disagree about the active batch.
+
+### 2. Create the Batch Integration Branch and Worktrees
+
+Follow the repository's branch convention. If none exists, use:
+
+- Integration branch: `batch/{batch_id}-{slug}`
+- Optional lane branch: `work/{batch_id}-{lane_id}-{slug}`
+
+For a one-lane batch, work directly in one isolated worktree on the integration branch. For a genuinely parallel batch, execute dependency-ready lanes in waves. Create each wave's lane worktrees from the current integration base; integrate prerequisite commits before branching downstream waves. Every lane receives the complete batch context and its assigned Issue subset.
 
 Or, if the platform provides a native worktree tool (e.g., Claude Code's `EnterWorktree`), use that instead.
 
-### 3. Implement, Test, and Update Governance
-Work in the isolated worktree. Follow acceptance criteria, test expectation, and memory/governance impact from the Issue body. Read the resolved instruction and memory surfaces before editing.
+### 3. Implement and Commit Without Creating PRs
 
-### 4. Commit, Push, and Create PR
+Follow each Issue's acceptance criteria, test expectation, and memory/governance impact. Read the resolved instruction and memory surfaces before editing. Keep commits reviewable and reference the relevant Issues without closing them:
+
 ```bash
 git add -A
-git commit -m "feat: {task_description} (refs #{issue_number})"
-git push -u origin "$BRANCH"
+git commit -m "feat: {batch_or_lane_description} (refs #{issue_1}, refs #{issue_2})"
+```
+
+Lane agents return branch and commit references to the orchestrator. They must not run `gh pr create`, add `Closes #N`, update cumulative adaptive state, or race to edit MASTER.md.
+
+### 4. Integrate and Validate the Complete Batch
+
+The orchestrator consolidates lane commits onto the batch integration branch, resolves overlaps, and runs:
+
+- Every included Issue's targeted tests and acceptance checks
+- The batch's combined build/test/smoke validation
+- The post-integration S.U.P.E.R architecture checks from `parallel-protocol.md`
+- Per-Issue telemetry collection, followed by one cumulative drift update
+
+If an Issue is only partially covered, leave it open and use `Refs #N`; do not include a closing keyword until all acceptance criteria pass.
+
+### 5. Push and Create One Batch PR
+
+Push only the integrated batch branch, then create one PR for all completed Issues in the batch:
+
+```bash
+BATCH_BRANCH="{resolved_batch_branch}"
+git push -u origin "$BATCH_BRANCH"
 
 gh pr create \
   --repo "$REPO" \
-  --title "[T{task_id}] {task_name}" \
+  --title "[Batch {batch_id}] {batch_name}" \
   --body "$(cat <<'EOF'
-## Summary
-{brief_description_of_changes}
+## Batch Rationale
+{why_these_issues_are_one_coherent_review_and_rollback_unit}
 
-## Task Issue
-closes #{issue_number}
+## Included Issues
+Closes #{issue_1}
+Closes #{issue_2}
+Refs #{partially_covered_issue_if_any}
+
+| Issue | Task | Acceptance | Targeted Validation |
+|:------|:-----|:-----------|:--------------------|
+| #{issue_1} | {task_1} | complete | {tests_1} |
+| #{issue_2} | {task_2} | complete | {tests_2} |
 
 ## Changes
 - {change_1}
 - {change_2}
 
-## S.U.P.E.R Review
-- [x] Passes S.U.P.E.R Quick Check for: {principles}
+## Aggregate Validation
+- {combined_test_commands_and_results}
 
-## Tests
-- {test_commands_and_results}
+## S.U.P.E.R Review
+- [x] Batch passes the post-integration S.U.P.E.R checks for: {principles}
+
+## Risk and Rollback
+- Risk: {risk_summary}
+- Rollback: {rollback_plan}
 
 ## Project Governance
 - Instruction surfaces: updated / unchanged (list paths or native surfaces)
@@ -270,16 +323,30 @@ EOF
 )"
 ```
 
-### 5. Comment on Issue
+Add one standalone `Closes #N` line for every fully completed Issue. This lets one merged PR close the whole delivery batch while preserving Issue-level history.
+
+### 6. Synchronize In-Review State and Comment on Issues
+
+Immediately after the PR is created:
+
+1. Update the delivery batch row in MASTER.md with the PR number and `in review`.
+2. Update every fully completed Issue row with the PR number and `in review`.
+3. Keep each partially covered Issue open with the PR number, `partial`, and its remaining acceptance work.
+4. Comment on every included Issue using completion-accurate language:
+
 ```bash
-gh issue comment {issue_number} --repo "$REPO" --body "Implementation complete. PR: #{pr_number}"
+# Fully completed and awaiting merge
+gh issue comment {completed_issue} --repo "$REPO" --body "Fully implemented in delivery batch {batch_id}; integration PR: #{pr_number}. Pending merge."
+
+# Referenced but not complete
+gh issue comment {partial_issue} --repo "$REPO" --body "Partially covered by delivery batch {batch_id}; integration PR: #{pr_number}. This Issue remains open. Outstanding: {remaining_acceptance_work}."
 ```
 
-### 6. Cleanup
-After the PR is merged (or if the executor finishes and the orchestrator handles merging):
-```bash
-git worktree remove ".claude/worktrees/$BRANCH"
-```
+This synchronization is required before yielding the session so resume logic cannot mistake an open batch PR for unstarted work or create a duplicate PR.
+
+### 7. Cleanup
+
+After the batch PR is merged, remove its integration and lane worktrees/branches according to repository policy. Do not clean a lane before the orchestrator has integrated its commits.
 
 ---
 
@@ -301,13 +368,16 @@ gh issue list --repo "$REPO" --milestone "Phase 1: Foundation" --state closed --
 
 # Get all spec-driven Issues
 gh issue list --repo "$REPO" --label "spec-driven" --state all --json number,title,state,milestone
+
+# Get open batch PRs
+gh pr list --repo "$REPO" --state open --search "in:title Batch" --json number,title,headRefName,url
 ```
 
 ---
 
 ## Closing Issues
 
-Issues are closed automatically when their PR is merged (via `closes #N` in the PR body). Do NOT close Issues manually unless the task is cancelled or deferred.
+Issues are closed automatically when their delivery batch PR is merged. The PR body contains one `Closes #N` line per fully completed Issue, so one PR may close several Issues. Do not create single-Issue PRs by default, and do NOT close Issues manually unless the task is cancelled or deferred. Partial coverage uses `Refs #N` and leaves the Issue open.
 
 To defer a task:
 ```bash
