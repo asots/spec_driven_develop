@@ -28,7 +28,7 @@ Detection and read-only inspection do not authorize writes. Before running a mut
 | Pull-request writes | `gh pr create/edit/comment/merge/close` | PR authorization |
 | Tracker writes | Issue, Milestone, Label, Project creation/edit/comment/close | GitHub tracker-write authorization |
 
-One user response may authorize several named classes together, but never infer one class from another or from the detected tracking mode, an existing branch, an Issue, or general approval to implement. Commit authorization does not authorize branch creation, push, PR creation, or tracker writes. Phase-boundary confirmation is not write authorization unless it names the operations. Tier 2 requires branch/worktree and commit authorization before dispatch because lane integration is commit-based; without both, use Tier 0 or Tier 1 in the current/integration worktree. Creating a batch PR requires commit, push, and PR authorization; tracker comments remain separately gated.
+One user response may authorize several named classes together, but never infer one class from another or from the detected tracking mode, an existing branch, an Issue, or general approval to implement. Commit authorization does not authorize branch creation, push, PR creation, or tracker writes. Phase-boundary confirmation is not write authorization unless it names the operations. Tier 2 requires branch/worktree and commit authorization before dispatch because lane integration is commit-based; without both, use Tier 0 or Tier 1 in the current/integration worktree. Creating a batch PR requires commit, push, and PR authorization; tracker comments remain separately gated. Because GitHub-mode execution events are authoritative Issue comments, Phase 5 cannot begin in a GitHub mode until tracker-write authorization explicitly includes Issue comments; otherwise pause for that authorization or obtain the user's approval to switch to LOCAL_ONLY before execution.
 
 ---
 
@@ -69,11 +69,11 @@ Spec-Driven-Develop Run  →  GitHub Project (board)     [GITHUB_FULL only]
 │   └── Task N.2          →  Issue with structured body
 └── Delivery Batch B1     →  integration branch + one PR
     ├── Lane work         →  isolated worktree/branch + commits (no PR)
-    ├── Task Issues       →  atomic acceptance + telemetry records
+    ├── Task Issues       →  atomic acceptance + execution-event records
     └── Batch PR          →  one `Closes #N` line per completed Issue
 ```
 
-Issue and PR cardinality are intentionally different. Keep one Issue per task for planning and telemetry, then group related Issues into the smallest coherent set of phase-local delivery batches. Default to one reviewable batch PR per phase; do not create a PR merely because one Issue is implemented.
+Issue and PR cardinality are intentionally different. Keep one Issue per task for planning and execution events, then group related Issues into the smallest coherent set of phase-local delivery batches. Default to one reviewable batch PR per phase; do not create a PR merely because one Issue is implemented.
 
 ---
 
@@ -236,7 +236,7 @@ If setting custom field values fails, this is non-critical — the Issue Labels 
 
 ## Delivery Batch Execution Workflow (worktree + PR)
 
-The orchestrator owns batch boundaries, integration state, cumulative drift, and PR creation. Task executors implement complete batches or assigned lanes; they do not create task-level PRs.
+The orchestrator owns batch boundaries, integration state, execution-event responses, and PR creation. Task executors implement complete batches or assigned lanes; they do not create task-level PRs.
 
 ### 1. Review the Complete Phase Issue Set
 
@@ -254,8 +254,9 @@ Use these rules to confirm or revise delivery batches:
 3. Keep dependency order executable inside the batch; serialize batches when one depends on another.
 4. Default to one reviewable batch PR per phase. Split only for a documented reviewability, independent release/rollback, ownership, high-risk isolation, hard dependency, or repository/user policy boundary.
 5. Do not split mechanically by Issue count. A single-Issue batch requires an explicit rationale unless it is the only Issue in the phase.
+6. Reconsider and document a split when the expected integrated diff exceeds roughly 800 changed lines or 15 files; these are reviewability signals, not automatic partitioning rules.
 
-Record every confirmed or revised Task → Issue → Delivery Batch mapping in `docs/plan/task-breakdown.md` and MASTER.md before implementation. If regrouping changes a previously created Issue, update its structured `**Delivery Batch**` field with `gh issue edit --body-file <updated-body-file>` while preserving the rest of the body, then comment with the reason. The Issue body, plan, and MASTER.md must never disagree about the active batch.
+`docs/plan/task-breakdown.md` is the planning authority for Task → Issue → Delivery Batch mapping. Mirror a changed batch in the affected Issue's structured `**Delivery Batch**` field with `gh issue edit --body-file <updated-body-file>` while preserving the rest of the body, then comment with the reason when authorized. MASTER.md carries only the active batch and status summary, not a second task-by-task mapping.
 
 ### 2. Create the Batch Integration Branch and Worktrees When Authorized
 
@@ -277,7 +278,7 @@ git add -- {task_specific_paths}
 git commit -m "feat({scope}): {task_description} (refs #{issue_number})"
 ```
 
-Without commit authorization, Tier 0/1 may return a verified uncommitted integration/current worktree; Tier 2 must not start. Tier 2 lane agents return one accepted commit per task card plus branch references to the orchestrator. They must not run `gh pr create`, add `Closes #N`, update cumulative adaptive state, or race to edit MASTER.md.
+Without commit authorization, Tier 0/1 may return a verified uncommitted integration/current worktree; Tier 2 must not start. Tier 2 lane agents return one accepted commit per task card plus branch references to the orchestrator. They must not run `gh pr create`, add `Closes #N`, write Issue execution events, or race to edit MASTER.md.
 
 ### 4. Integrate and Validate the Complete Batch
 
@@ -286,7 +287,7 @@ For Tier 2, the orchestrator consolidates lane commits onto the batch integratio
 - Every included Issue's targeted tests and acceptance checks
 - The batch's combined build/test/smoke validation
 - The post-integration S.U.P.E.R architecture checks from `parallel-protocol.md`
-- Per-Issue telemetry collection, followed by one cumulative drift update
+- Per-Issue execution-event collection, recorded once by the orchestrator
 
 If an Issue is only partially covered, leave it open and use `Refs #N`; do not include a closing keyword until all acceptance criteria pass.
 
@@ -345,10 +346,9 @@ Add one standalone `Closes #N` line for every fully completed Issue. This lets o
 
 Immediately after the PR is created:
 
-1. Update the delivery batch row in MASTER.md with the PR number and `in review`.
-2. Update every fully completed Issue row with the PR number and `in review`.
-3. Keep each partially covered Issue open with the PR number, `partial`, and its remaining acceptance work.
-4. When GitHub tracker-write authorization includes Issue comments, comment on included Issues using completion-accurate language. Otherwise record the skipped external synchronization in MASTER.md and rely on the authorized PR's Issue links/closing keywords:
+1. Update the delivery batch row and Current Status in MASTER.md with the PR number and `in review`.
+2. Keep each partially covered Issue open with the PR number, `partial`, and its remaining acceptance work.
+3. When GitHub tracker-write authorization includes Issue comments, comment on included Issues using completion-accurate language. Otherwise record the skipped external synchronization in MASTER.md and rely on the authorized PR's Issue links/closing keywords:
 
 ```bash
 # Fully completed and awaiting merge
@@ -358,7 +358,7 @@ gh issue comment {completed_issue} --repo "$REPO" --body "Fully implemented in d
 gh issue comment {partial_issue} --repo "$REPO" --body "Partially covered by delivery batch {batch_id}; integration PR: #{pr_number}. This Issue remains open. Outstanding: {remaining_acceptance_work}."
 ```
 
-The local MASTER.md synchronization is required before yielding the session so resume logic cannot mistake an open batch PR for unstarted work or create a duplicate PR. Issue comments are optional unless separately authorized.
+The local MASTER.md synchronization is required before yielding the session so resume logic cannot mistake an open batch PR for unstarted work or create a duplicate PR. The in-review status comments above are optional when separately authorized; this does not relax the Phase 5 requirement for authorized structured execution-event comments on completed task Issues.
 
 ### 7. Cleanup
 

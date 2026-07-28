@@ -59,7 +59,7 @@ Your output will be transformed into formal documents using the templates in `re
 (table of languages, frameworks, tools with versions — maps to project-overview.md)
 
 ## Module Inventory
-(for each module: path, responsibility, dependencies, size, complexity — maps to module-inventory.md)
+(for each module: path, `coverage: deep|shallow`, responsibility, dependencies, size, complexity — maps to module-inventory.md; use `shallow` when only inventory-level or indirect evidence is available)
 
 ## Architecture
 (pattern, data flow description, cross-cutting concerns — maps to project-overview.md)

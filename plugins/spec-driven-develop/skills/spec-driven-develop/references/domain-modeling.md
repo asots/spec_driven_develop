@@ -33,3 +33,12 @@ Resolve the repository's existing layout before creating anything:
 - Create or update an ADR only when the decision is all three: costly to reverse, surprising without context, and the result of a genuine trade-off.
 - Record unresolved contradictions or deferred terminology in the Phase 2 task definition's notes/out-of-scope section; do not pretend they are settled.
 - Phase 3 tasks that change canonical terms or qualifying architecture decisions must include the matching glossary/ADR update in their acceptance criteria.
+
+## Skill Mapping
+
+When the active platform provides matching skills, execute this discipline through them; this reference remains the authoritative contract wherever they disagree:
+
+- `grilling` — runs the Decision-Grilling Loop: one question at a time, each led by the recommended answer, facts looked up from evidence and only decisions put to the user.
+- `domain-modeling` — performs the glossary challenge, scenario stress-testing, and inline `CONTEXT.md`/ADR write-back. Its bundled `CONTEXT-FORMAT.md` and `ADR-FORMAT.md` are the default entry formats when the repository has not established its own; existing project conventions win.
+
+When neither skill is available, apply the sections above directly — the discipline does not depend on the skills being installed.

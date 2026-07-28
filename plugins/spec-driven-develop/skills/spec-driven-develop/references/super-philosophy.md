@@ -2,7 +2,7 @@
 
 > Write code like building with LEGO — each brick has a single job, a standard interface, a clear direction, runs anywhere, and can be swapped at will.
 
-This document defines the architectural principles that guide all code written during the development phases of a Spec-Driven Develop workflow. Every agent executing tasks should internalize these principles.
+This document defines architectural defaults for development work. Apply the principles relevant to the changed boundary and project type; do not turn them into universal scoring requirements for documentation, tooling, CLI, desktop, embedded, or already-constrained code.
 
 ---
 
@@ -66,26 +66,26 @@ From Hexagonal Architecture.
 
 ---
 
-## E — Environment-Agnostic
+## E — Environment-Appropriate
 
-From 12-Factor App.
+Prefer explicit, portable configuration and dependencies, while respecting the runtime's real constraints.
 
-- Configuration injected via environment variables or config files, never hardcoded
-- All dependencies explicitly declared (requirements.txt / package.json), no implicit reliance on global system packages
-- Processes are stateless; all persistence delegated to external storage
-- Logs go to stdout, not to files
-- Same codebase runs on local machine, Cloudflare Workers, VPS, Docker
+- Configuration comes from the platform-appropriate source (environment variables, config files, OS settings, or device configuration), not hidden hardcoded assumptions
+- Dependencies are explicitly declared; required system capabilities are documented
+- Services should keep process state and persistence boundaries explicit
+- CLI, desktop, embedded, and offline software may use platform-native files, logs, persistence, and lifecycle rules when those are intentional and documented
+- Do not require stdout logging, Cloudflare Workers compatibility, or stateless processes outside a service/runtime context where they apply
 
 **Configuration precedence (high to low):**
 ```
-Environment variables > .env file > config.json > in-code defaults
+Project/runtime convention > environment variables or platform settings > config files > safe in-code defaults
 ```
 
 **Checklist:**
-- All API keys and webhook URLs read from environment variables?
+- Are credentials and configuration read from the project's approved source?
 - All dependencies explicitly declared in a dependency file?
-- No hardcoded file path assumptions?
-- Can a different machine run this code with zero modifications?
+- Are platform-specific paths, storage, and logging assumptions intentional and documented?
+- Can the supported runtime reproduce the behavior without undocumented setup?
 
 ---
 
@@ -114,15 +114,16 @@ The natural consequence and ultimate goal of S + U + P + E.
 +------------------------------------------+
 |         S.U.P.E.R Quick Check            |
 |                                          |
+|  Select the principles affected by this  |
+|  task; do not score unrelated ones.      |
 |  S  Does this module do only one thing?  |
 |  U  Is the data flow unidirectional?     |
-|  P  Are inputs/outputs schema-defined?   |
-|  E  Can it run in a different env?       |
-|  R  Can you replace it without ripple?   |
+|  P  Are relevant boundaries explicit?    |
+|  E  Does it fit the supported runtime?   |
+|  R  Can its boundary change without ripple? |
 |                                          |
-|  All Yes -> Architecture healthy         |
-|  1-2 No  -> Refactoring needed           |
-|  3+ No   -> Technical debt alert         |
+|  Record gaps only when they affect the   |
+|  task's acceptance or planned follow-up. |
 +------------------------------------------+
 ```
 
@@ -130,7 +131,7 @@ The natural consequence and ultimate goal of S + U + P + E.
 
 ## S.U.P.E.R Code Review Checklist (10 checks)
 
-Run this checklist after every task before marking it complete. This is the agent-canonical copy of the checklist also shown in the user-facing README; keep the two in sync.
+Run the checks that match the task's declared S.U.P.E.R drivers and changed boundaries. Use all ten for a cross-cutting architecture review or when the task explicitly claims broad S.U.P.E.R improvement. Keep the user-facing README aligned with this scope.
 
 | Check | Principle |
 |:------|:----------|
@@ -145,4 +146,4 @@ Run this checklist after every task before marking it complete. This is the agen
 | New modules can be replaced without changes to others | R |
 | All tests pass after the change | — |
 
-**Scoring rule:** All pass = proceed. 1-2 fail = fix before marking complete. 3+ fail = stop and refactor.
+**Decision rule:** A failed relevant check must be fixed, explicitly deferred with acceptance evidence, or turned into a follow-up task. Unrelated checks are not scored.

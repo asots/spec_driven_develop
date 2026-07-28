@@ -64,8 +64,8 @@ open | claimed | resolved | out-of-scope
 ```
 
 - **Research** obtains facts from primary sources or local evidence.
-- **Prototype** creates a cheap, explicitly disposable artifact to answer a behavior or interface question.
-- **Grilling** uses `domain-modeling.md` to resolve a human decision one question at a time.
+- **Prototype** creates a cheap, explicitly disposable artifact to answer a behavior or interface question — an interactive terminal harness for state/logic questions, or switchable UI variations for interface questions. Use the `prototype` skill when available; the artifact stays throwaway and never reaches the main branch.
+- **Grilling** uses `domain-modeling.md` to resolve a human decision one question at a time, run through the `grilling` skill when available.
 - **Investigation** runs a bounded diagnostic or disposable probe needed to expose facts for a later decision. It may not leave persistent product changes behind; any retained implementation belongs in a Phase 3 task card.
 
 ## Frontier and Fog

@@ -43,13 +43,13 @@ const loadAssets = async () => {
           },
           "task-executor": {
             description:
-              "Executes a coherent delivery batch or one assigned lane from a phased plan. Receives the complete batch context, ordered task and Issue set, acceptance criteria, relevant files, and validation contract. Implements and commits the work, but leaves integration state, cumulative telemetry, and the single batch PR to the orchestrator.",
+              "Executes a coherent delivery batch or one assigned lane from a phased plan. Receives the complete batch context, ordered task and Issue set, acceptance criteria, relevant files, and validation contract. Creates branches, worktrees, commits, or remote writes only with explicit authorization relayed by the orchestrator; returns execution events and governance proposals while leaving shared state and the single batch PR to the orchestrator.",
             mode: "subagent",
             prompt: taskExecutor,
           },
           "code-reviewer": {
             description:
-              "Reviews one execution lane's diff against its per-task acceptance criteria, commits fixes directly to the lane branch, and returns a structured verdict to the orchestrator. Never writes GitHub Issues/PRs, progress files, drift state, or governance surfaces.",
+              "Reviews one execution lane's diff against its per-task acceptance criteria, makes lane fixes only with explicit authorization relayed by the orchestrator, and returns a structured verdict. Never writes GitHub Issues/PRs, progress files, execution events, or governance surfaces.",
             mode: "subagent",
             prompt: codeReviewer,
           },

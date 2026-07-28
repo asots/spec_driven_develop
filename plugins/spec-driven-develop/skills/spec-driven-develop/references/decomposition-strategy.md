@@ -40,6 +40,6 @@ If an individual migration batch cannot remain green, keep the sequence but use 
 
 - Add only genuine blockers. A ticket with no required predecessor belongs on the current frontier.
 - Dependency order follows deployability and contract ownership, not file-system order.
-- Delivery batches may group multiple vertical slices when they form one reviewable/rollback unit; they do not erase per-task acceptance criteria or telemetry.
+- Delivery batches may group multiple vertical slices when they form one reviewable/rollback unit; they do not erase per-task acceptance criteria or execution events.
 - Each phase still ends with a milestone acceptance task that runs combined validation across all slices and expand-contract steps completed in that phase.
 - The task plan must state the delivery shape for every task. Behavior-changing exceptions name their foundation/prefactor, expand, migrate, contract, or explicit integration-gate rationale; operational tasks name their Docs, Governance, Validation, Release, or Archive category and standalone rationale.

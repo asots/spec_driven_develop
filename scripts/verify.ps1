@@ -109,8 +109,8 @@ if ($script:fail -eq $failsBefore) { Ok 'integrated discipline references resolv
 Require-Fingerprints 'SKILL.md planning/review contract' $skill @(
   'Conditional Wayfinding Gate',
   'record the selected delivery shape on every task card',
-  'branch/worktree plus commit authorization',
-  'follow the independent gates in'
+  'references/parallel-protocol.md',
+  'independent authority gates'
 )
 Require-Fingerprints 'behavioral-rules.md additions' $br @(
   '23. **Version-control and external-write authority is explicit**',
@@ -143,8 +143,12 @@ Require-Fingerprints 'parallel review contract' $parallel @(
 
 $github = Get-Content (Join-Path $skillDir 'references/github-integration.md') -Raw -Encoding UTF8
 $planTemplate = Get-Content (Join-Path $skillDir 'references/templates/plan.md') -Raw -Encoding UTF8
+$taskDefinitionTemplate = Get-Content (Join-Path $skillDir 'references/templates/task-definition.md') -Raw -Encoding UTF8
+$analysisTemplate = Get-Content (Join-Path $skillDir 'references/templates/analysis.md') -Raw -Encoding UTF8
 $wayfinding = Get-Content (Join-Path $skillDir 'references/wayfinding.md') -Raw -Encoding UTF8
 $decomposition = Get-Content (Join-Path $skillDir 'references/decomposition-strategy.md') -Raw -Encoding UTF8
+$adaptive = Get-Content (Join-Path $skillDir 'references/adaptive-control.md') -Raw -Encoding UTF8
+$super = Get-Content (Join-Path $skillDir 'references/super-philosophy.md') -Raw -Encoding UTF8
 
 Require-Fingerprints 'GitHub authority gates' $github @(
   '## Authority Gates',
@@ -162,6 +166,23 @@ Require-Fingerprints 'plan template delivery and authority contract' $planTempla
   'branch/worktree and commit authorization',
   'instead of returning uncommitted lane worktrees'
 )
+Require-Fingerprints 'Phase 2 task-definition template' $taskDefinitionTemplate @(
+  '## Goal',
+  '## Non-goals',
+  '## Acceptance Criteria',
+  '## Dependencies',
+  '## Rollback Boundary',
+  '## Testing Policy',
+  '## Governance and Memory Decision',
+  'Change this document before changing downstream task cards'
+)
+Require-Fingerprints 'analysis coverage and affected-boundary contract' ($analysisTemplate + $planTemplate + $skill) @(
+  'Coverage',
+  'deep / shallow',
+  'Affected Files',
+  'declared affected files/modules/contracts/prerequisites',
+  'task-definition.md'
+)
 Require-Fingerprints 'wayfinding boundary contract' $wayfinding @(
   'research | prototype | grilling | investigation',
   'may not leave persistent product changes behind',
@@ -177,6 +198,30 @@ Require-Fingerprints 'decomposition strategy scope' $decomposition @(
   '## Non-Behavior Operational Tasks',
   'Do not disguise maintenance or milestone work as user-visible behavior'
 )
+
+$failsBefore = $script:fail
+Require-Fingerprints 'adaptive-control event protocol' $adaptive @(
+  '## Execution Events',
+  '## Response Levels',
+  '### Watch',
+  '### Replan',
+  '### Rescope',
+  '## Canonical Storage',
+  'one authoritative task record',
+  'lightweight progress mirror'
+)
+foreach ($legacy in 'task_drift =', 'threshold_annotate', 'threshold_replan', 'threshold_rescope', 'Milestone description YAML') {
+  if ($adaptive -like "*$legacy*") { Fail "adaptive-control.md still carries legacy scoring/threshold contract: '$legacy'" }
+}
+if ($script:fail -eq $failsBefore) { Ok 'adaptive control is event-driven and free of legacy scoring thresholds' }
+
+Require-Fingerprints 'S.U.P.E.R scope contract' $super @(
+  '## E — Environment-Appropriate',
+  'Run the checks that match the task''s declared S.U.P.E.R drivers',
+  'Unrelated checks are not scored.'
+)
+if ($super -like '*Environment-Agnostic*') { Fail 'super-philosophy.md still uses the obsolete Environment-Agnostic principle' }
+else { Ok 'S.U.P.E.R is environment-appropriate and task-scoped' }
 
 if ($executor -like '*Think (steps 1-2)*' -or $executor -like '*Act (step 3)*' -or $executor -like '*refs #{issue_1}, refs #{issue_2}*' -or $executor -like '*reviewer fixes remain identified, uncommitted worktree changes*') {
   Fail 'task-executor.md still carries brittle step mapping, a multi-Issue commit, or an uncommitted Tier 2 reviewer handoff'

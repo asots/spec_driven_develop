@@ -1,6 +1,6 @@
 # Plan Document Templates
 
-Templates for the three documents generated in Phase 3 (Task Decomposition). Output to `docs/plan/`.
+`docs/plan/task-definition.md` is generated in Phase 2; the three documents below are generated in Phase 3 (Task Decomposition). All live in `docs/plan/`.
 
 ---
 
@@ -17,12 +17,12 @@ Templates for the three documents generated in Phase 3 (Task Decomposition). Out
 
 ## S.U.P.E.R Design Constraints
 
-> All tasks in this plan must produce code that conforms to S.U.P.E.R architecture principles. The following constraints apply globally:
+> Each task names only the S.U.P.E.R principles relevant to its changed boundary. The following are adaptable defaults, not a universal scorecard:
 
 - **S (Single Purpose)**: Each new module/file/function solves exactly one problem. If a task spans multiple responsibilities, decompose it further.
 - **U (Unidirectional Flow)**: Data flows input → processing → output. Dependencies point inward. No circular imports.
 - **P (Ports over Implementation)**: Define interface contracts (schemas, types) before implementation. All cross-module I/O must be serializable.
-- **E (Environment-Agnostic)**: No hardcoded config. All env-specific values from environment variables or config files.
+- **E (Environment-Appropriate)**: Configuration, paths, logs, persistence, and lifecycle follow the supported runtime's explicit convention; do not impose service-only rules on CLI, desktop, embedded, or offline work.
 - **R (Replaceable Parts)**: Each component must be replaceable without cascading changes. Validate with the replacement test: "Can I swap this with a different implementation by only touching this module?"
 
 ## Testing and Governance Constraints
@@ -33,7 +33,7 @@ Templates for the three documents generated in Phase 3 (Task Decomposition). Out
 - **Explicit test exemption**: Pure documentation/config tasks may mark tests as not applicable, but the acceptance criteria must explain why and name the closest validation command to run.
 - **Agent instruction updates**: If a task changes how future agents must work in the repository, update the resolved instruction surfaces such as `AGENTS.md`, `CLAUDE.md`, or existing platform rule files.
 - **Memory updates**: If a task introduces a durable rule, invariant, recurring gotcha, command, or project convention, update the resolved native memory surface or explicitly selected repo fallback.
-- **Issue/PR separation**: Issues are atomic task and telemetry records. Delivery batches are implementation, integration validation, and PR units. Default to one coherent batch PR per phase; every split and every single-Issue batch must have a recorded rationale unless the phase contains only one Issue.
+- **Issue/PR separation**: Issues are atomic task and execution-event records; delivery batches are implementation, integration validation, and PR units. Apply the grouping and rationale contract in `references/github-integration.md` "Delivery Batch Execution Workflow".
 - **Delivery shape**: Runtime behavior changes default to a vertical tracer slice that delivers one complete behavior path through the relevant layers. Foundation/prefactor, expand, migrate, contract, and integration-gate exceptions require a rationale. Standalone Docs, Governance, Validation, Release, or Archive tasks are allowed with a category, standalone rationale, and concrete acceptance check; follow `references/decomposition-strategy.md`.
 - **Domain write-back**: A task that changes canonical terminology, bounded-context relationships, or a qualifying architecture decision updates the relevant glossary/ADR in the same acceptance unit; follow `references/domain-modeling.md`.
 
@@ -42,15 +42,16 @@ Templates for the three documents generated in Phase 3 (Task Decomposition). Out
 **Prerequisite**: What must be done before this phase
 **S.U.P.E.R Focus**: Which S.U.P.E.R principles are most relevant to this phase (e.g., "P — defining interface contracts before implementing modules")
 
-| # | Task | Priority | Effort | Depends On | Lane | Delivery Batch | S.U.P.E.R | Test Expectation | Memory Impact | Acceptance Criteria |
-|:--|:-----|:---------|:-------|:-----------|:-----|:---------------|:----------|:-----------------|:--------------|:--------------------|
-| 1 |      | P0       | M      | —          | A    | P1-B1          | S, P      | Add/update tests | Update resolved memory surface if new invariant emerges |                     |
-| 2 | Docs: update the operator guide | P1 | S | — | B | P1-B1 | U, E | Not applicable: docs-only; run link check | None | Links and examples resolve |
-| 3 |      | P1       | S      | 1          | A    | P1-B1          | R         | Add/update regression tests | Update resolved instruction surfaces if workflow rule changes |                     |
+| # | Task | Priority | Effort | Depends On | Affected Files | Lane | Delivery Batch | S.U.P.E.R | Test Expectation | Memory Impact | Acceptance Criteria |
+|:--|:-----|:---------|:-------|:-----------|:---------------|:-----|:---------------|:----------|:-----------------|:--------------|:--------------------|
+| 1 |      | P0       | M      | —          | `src/...`, `tests/...` | A | P1-B1 | S, P | Add/update tests | Update resolved memory surface if new invariant emerges |                     |
+| 2 | Docs: update the operator guide | P1 | S | — | `docs/...` | B | P1-B1 | U, E | Not applicable: docs-only; run link check | None | Links and examples resolve |
+| 3 |      | P1       | S      | 1          | `src/...` | A | P1-B1 | R | Add/update regression tests | Update resolved instruction surfaces if workflow rule changes |                     |
 
 > **S.U.P.E.R column**: Lists which S.U.P.E.R principles are the primary design drivers for this task. The agent implementing this task must pay special attention to these principles. Every task's acceptance criteria implicitly includes: "Passes the S.U.P.E.R Quick Check for the listed principles."
 > **Test Expectation column**: Must name the expected test work or the explicit no-test rationale plus closest validation command.
 > **Memory Impact column**: Must state whether the task can affect the resolved memory surface or any resolved instruction surface.
+> **Affected Files column**: Names the expected files, modules, contracts, or prerequisites. The execution event records only items discovered beyond this declared boundary as unplanned dependencies.
 > **Delivery Batch column**: Every task belongs to exactly one planned PR batch. The batch may contain several Issues even though each task becomes its own Issue.
 > **Task description**: For runtime behavior changes, name the observable vertical behavior. Prefix behavior-shape exceptions with `Prefactor`, `Expand`, `Migrate`, `Contract`, or `Integration gate`. Prefix standalone operational work with `Docs`, `Governance`, `Validation`, `Release`, or `Archive`; every exception includes its rationale and acceptance check in the detail section.
 
@@ -68,7 +69,7 @@ Templates for the three documents generated in Phase 3 (Task Decomposition). Out
 |:------|:---------------|:----------------|:----------------------------|:-------------------|:-------------------------------------|:--------------------|:-----------|:-------------------------------|
 | P1-B1 | 1, 2, 3 / #TBD | W1: Lane A (T1 → T3) + Lane B (T2) | One coherent architecture and review unit | `batch/p1-b1-<slug>` | Tier 2; branch/worktree + commit authorization required before dispatch | targeted tests + full affected build/smoke | — | Default phase-level batch |
 
-> Review the complete phase task set before defining batches. Prefer one reviewable phase-level batch. Split only for a concrete reviewability, independent release/rollback, ownership, risk-isolation, hard dependency, or repository/user policy boundary; do not split mechanically by Issue count.
+> Review the complete phase task set before defining batches. Apply the authoritative grouping, reviewability, and split-rationale rules in `references/github-integration.md` "Delivery Batch Execution Workflow".
 
 ## Phase 2: <Phase Name>
 <!-- Same structure as Phase 1 -->

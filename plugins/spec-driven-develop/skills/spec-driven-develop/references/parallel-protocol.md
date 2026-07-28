@@ -10,7 +10,7 @@ Sub-agent dispatch is an economic decision, not a default. A sub-agent pays a co
 
 Choose per delivery batch:
 
-- **Tier 0 — orchestrator-direct (default)**: tasks are S/M effort, touch ≤ 3 files, you already hold the context, or acceptance is machine-verifiable. Execute directly on the batch integration branch. No sub-agents, no worktrees.
+- **Tier 0 — orchestrator-direct (default)**: tasks are S/M effort, touch ≤ 3 files, you already hold the context, or acceptance is machine-verifiable. Execute directly in the current or orchestrator-supplied integration worktree. No sub-agents, no worktrees unless branch/worktree authorization was explicitly granted.
 - **Tier 1 — single coder**: L/XL task bundles, heavy exploratory reading, or outputs long enough to pollute your context. Delegate the complete batch to one `task-executor`.
 - **Tier 2 — parallel lanes**: only when ALL hold — lane file sets are disjoint, each lane is ≥ L effort, each lane is independently verifiable, there are ≤ 4 lanes, and explicit branch/worktree plus commit authorization is confirmed. Launch one `task-executor` per dependency-ready lane in isolated worktrees. Without both authorizations, use Tier 0 or Tier 1 in the current/integration worktree.
 
@@ -88,7 +88,7 @@ For each parallel lane in the current dependency-ready wave:
    - **In GitHub modes**: Consolidate lane commits onto the batch integration branch (`batch/{batch_id}-{slug}` unless the repository requires another convention). Resolve conflicts there; there is exactly one integration PR for the batch.
    - **In LOCAL_ONLY mode**: If agents worked in worktrees, merge their changes sequentially, resolving any conflicts
    - Run every task's targeted checks plus the batch's combined validation to verify the integrated changes are coherent
-   - Verify each completed Issue's acceptance criteria and post its per-task telemetry (including reviewer telemetry, recorded once here). In parallel runs, the orchestrator is the single writer for cumulative drift, MASTER.md, and Milestone state.
+   - Verify each completed Issue's acceptance criteria and record its execution event once. In parallel runs, the orchestrator is the single writer for task records, MASTER.md, and response state.
    - After integration passes, create the batch PR only when separate push and PR authorization is confirmed. Include one `Closes #N` line per fully completed Issue and use `Refs #N` for partial coverage; otherwise report the locally validated integration branch/diff without remote writes.
    - Verify any reported instruction or memory surface updates are consistent and do not create competing sources of truth
 
@@ -99,19 +99,18 @@ For each parallel lane in the current dependency-ready wave:
 After the orchestrator consolidates a delivery batch:
 
 **In GitHub modes**:
-- Verify the batch PR is merged and every Issue named by a `Closes #N` line is closed
-- Query GitHub Milestones for updated open/closed counts
-- Update MASTER.md's "Issue Mapping", "Delivery Batches", and "Milestones" tables with current states
-- Update the platform's native task tool to reflect all completed tasks
+- Each Issue remains the authoritative task status and execution-event record
+- After a batch transition, update MASTER.md once with the active phase, delivery-batch status, blocker, and response level
+- Update the platform's native task tool when useful; it is not durable state
 
 **In LOCAL_ONLY mode**:
-- Apply lane completion reports to the phase progress file once; lane agents do not write shared progress state
-- Update MASTER.md with the final accurate completion counts
-- Update the platform's native task tool to reflect all completed tasks
+- Apply lane completion reports to the phase progress file once; it is the authoritative task record
+- Update MASTER.md once with final phase counts, current status, blocker, and response level
+- Update the platform's native task tool when useful; it is not durable state
 
 **In all modes**:
-- Reconcile memory surface updates from parallel agents before moving on
-- Keep resolved instruction surfaces aligned if any lane changed project-level agent instructions
+- Reconcile proposed memory-surface updates from parallel agents before moving on; lanes do not write them directly
+- Keep resolved instruction surfaces aligned only through one orchestrator-owned, authorized update after integration
 
 ---
 
@@ -136,10 +135,9 @@ Verify that parallel execution did not introduce cross-lane violations:
 - **P (Ports)**: Interface contracts at lane boundaries remain intact — if Lane A changed a module's API, Lane B's usage still conforms
 - **R (Replaceable)**: No lane created implicit coupling that makes another lane's modules harder to replace
 
-### Aggregate Telemetry
+### Aggregate Execution Events
 
-After consolidating a delivery batch's parallel results, aggregate the adaptive control telemetry:
-1. Sum only the `task_drift` contributions returned by lane agents and not already recorded
-2. Add that sum to cumulative `drift_score` once in the Milestone description (GitHub modes) or MASTER.md (LOCAL_ONLY)
-3. Evaluate thresholds against the new cumulative score
-4. If any threshold is exceeded → trigger the appropriate response (see `references/adaptive-control.md` § "Automatic Response Actions") BEFORE starting the next delivery batch
+After consolidating a delivery batch's parallel results:
+1. Record every lane's unrecorded task event once in its authoritative Issue or phase-file entry
+2. Update the MASTER.md response mirror once for the batch
+3. Apply the highest evidence-backed response in `references/adaptive-control.md` before starting the next delivery batch

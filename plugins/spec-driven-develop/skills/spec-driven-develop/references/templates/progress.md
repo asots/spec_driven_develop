@@ -33,6 +33,7 @@ Use this template when the tracking mode is `GITHUB_FULL` or `GITHUB_STANDARD`. 
 - [Project Overview](../analysis/project-overview.md)
 - [Module Inventory](../analysis/module-inventory.md)
 - [Risk Assessment](../analysis/risk-assessment.md)
+- [Confirmed Task Definition](../plan/task-definition.md)
 - [Task Breakdown](../plan/task-breakdown.md)
 - [Dependency Graph](../plan/dependency-graph.md)
 - [Milestones](../plan/milestones.md)
@@ -43,15 +44,6 @@ Use this template when the tracking mode is `GITHUB_FULL` or `GITHUB_STANDARD`. 
 |:------|:-----|:-------------|-----:|-------:|------:|
 | 1     |      | https://github.com/{owner}/{repo}/milestone/1 | N | 0 | N |
 | 2     |      | https://github.com/{owner}/{repo}/milestone/2 | N | 0 | N |
-
-## Issue Mapping
-
-| Task ID | Issue | Title | Delivery Batch | PR | Status |
-|:--------|:------|:------|:---------------|:---|:-------|
-| T1.1    | #101  |       | P1-B1          | —  | open   |
-| T1.2    | #102  |       | P1-B1          | —  | awaiting batch PR |
-
-Status values may include `open`, `in progress`, `awaiting batch PR`, `in review`, `partial`, and `closed`. Implementation completion does not require a task-level PR.
 
 ## Delivery Batches
 
@@ -85,6 +77,7 @@ gh pr list -R {repo} --state open --search "in:title Batch" --json number,title,
 **Active Delivery Batch**: Pn-Bn / none
 **Active Issues**: #NNN, #NNN / none
 **Blockers**: None / description
+**Adaptive Response**: normal / watch / replan / rescope
 
 ## Governance Status
 <!-- Updated when project-level agent rules or durable memory change -->
@@ -99,8 +92,8 @@ gh pr list -R {repo} --state open --search "in:title Batch" --json number,title,
 1. ...
 2. ...
 
-## Session Log
-<!-- Append-only log of work sessions -->
+## Recent Session Summaries
+<!-- Keep only the latest three summaries; detailed historical evidence stays in the authoritative Issue or phase file. -->
 | Date | Session | Summary |
 |:-----|:--------|:--------|
 |      |         |         |
@@ -124,6 +117,7 @@ Use this template when the tracking mode is `LOCAL_ONLY`. This is the original f
 - [Project Overview](../analysis/project-overview.md)
 - [Module Inventory](../analysis/module-inventory.md)
 - [Risk Assessment](../analysis/risk-assessment.md)
+- [Confirmed Task Definition](../plan/task-definition.md)
 - [Task Breakdown](../plan/task-breakdown.md)
 - [Dependency Graph](../plan/dependency-graph.md)
 - [Milestones](../plan/milestones.md)
@@ -144,6 +138,7 @@ Use this template when the tracking mode is `LOCAL_ONLY`. This is the original f
 **Active Phase**: Phase N
 **Active Task**: Task description
 **Blockers**: None / description
+**Adaptive Response**: normal / watch / replan / rescope
 
 ## Governance Status
 <!-- Updated when project-level agent rules or durable memory change -->
@@ -158,8 +153,8 @@ Use this template when the tracking mode is `LOCAL_ONLY`. This is the original f
 1. ...
 2. ...
 
-## Session Log
-<!-- Append-only log of work sessions -->
+## Recent Session Summaries
+<!-- Keep only the latest three summaries; detailed historical evidence stays in the authoritative phase file. -->
 | Date | Session | Summary |
 |:-----|:--------|:--------|
 |      |         |         |
@@ -179,18 +174,22 @@ In `LOCAL_ONLY` mode, create one per phase. In GitHub modes, these files are opt
 
 ## Tasks
 - [ ] **Task N.1**: Description
-  - Priority: P0
-  - Effort: M
+- Priority: P0
+- Effort: M
+  - Affected Files: `src/...`, `tests/...`
   - Test Expectation: Add/update relevant automated tests
   - Memory Impact: Update resolved memory surface if a durable rule emerges
   - Acceptance: How to verify this is done
+  - Execution Event: as-planned / reworked / replanned / blocked — evidence and unplanned dependencies
   - Notes: _none yet_
 - [ ] **Task N.2**: Description
-  - Priority: P1
-  - Effort: S
+- Priority: P1
+- Effort: S
+  - Affected Files: `docs/...`
   - Test Expectation: Not applicable: docs-only; run markdown/static validation
   - Memory Impact: None
   - Acceptance: How to verify this is done
+  - Execution Event: as-planned / reworked / replanned / blocked — evidence and unplanned dependencies
   - Notes: _none yet_
 
 ## Phase Notes

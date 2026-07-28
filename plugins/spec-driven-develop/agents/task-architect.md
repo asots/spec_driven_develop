@@ -69,21 +69,14 @@ For each lane:
 - **Lane ID**: e.g. `P2-Lane-A`, `P2-Lane-B`
 - **Tasks**: Which tasks belong to this lane
 - **Key files**: The files this lane owns, so a reviewer agent can scope its diff
-- **Estimated time**: Combined effort of the lane (determines wall-clock time for the phase)
+- **Estimated effort**: Combined effort of the lane for sequencing and dispatch decisions
 - **Merge risk**: Low / Medium / High — likelihood of merge conflicts between lanes (based on file overlap)
 
 Apply the Tier 2 admission criteria in `references/parallel-protocol.md` before creating lanes, including the explicit branch/worktree and commit-authorization prerequisites. If either authorization is not yet confirmed, mark Tier 2 as conditional and provide a Tier 0/1 fallback. Do not create a lane smaller than 2 tasks (or a single S-effort task) unless risk isolation demands it; fold undersized lanes into the nearest compatible lane. Waves are capped at 4 concurrent lanes; additional ready lanes queue for the next wave.
 
 ### 6. Delivery Batch Design
 
-After defining every task and lane, review the complete task set for each phase and create delivery batches. Keep these units distinct:
-
-- **Issue/task**: atomic planning, acceptance, status, and telemetry unit
-- **Delivery batch**: implementation context, integration branch, aggregate validation, rollback, and PR unit
-
-Default to one coherent delivery batch per phase. Group tasks that share an architecture invariant, API/data contract, file hotspot, test fixture, release target, or rollback boundary. Each task belongs to exactly one batch, and dependency order must be executable within or between batches.
-
-Split a phase only when reviewability, an independent release/rollback boundary, ownership, risk isolation, a hard dependency gate, or repository/user policy makes separate PRs materially safer. Reviewability is quantified: when a batch's expected integrated diff exceeds roughly 800 changed lines or 15 files, split it — a PR that cannot be reviewed in one sitting is not a valid review unit. Do not split mechanically by Issue count. A single-task batch requires a written rationale unless it is the only task in the phase.
+After defining every task and lane, read `references/github-integration.md` "Delivery Batch Execution Workflow". It is the authority for Issue/PR cardinality, grouping criteria, reviewability signals, and split or single-Issue rationales. This agent records the resulting batch design; it does not restate or reinterpret the admission contract.
 
 For every batch, provide:
 

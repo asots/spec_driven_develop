@@ -51,28 +51,26 @@ Templates for the three documents generated in Phase 1 (Deep Project Analysis). 
 ```markdown
 # Module Inventory
 
-| Module | Responsibility | Dependencies | Files | Lines | Complexity | S.U.P.E.R Score |
-|:-------|:---------------|:-------------|------:|------:|:-----------|:----------------|
-|        |                |              |       |       |            |                 |
+| Module | Coverage | Responsibility | Dependencies | Files | Lines | Complexity | Relevant S.U.P.E.R Findings |
+|:-------|:---------|:---------------|:-------------|------:|------:|:-----------|:--------------------------|
+|        | deep / shallow |                |              |       |       |            |                 |
 
-> **S.U.P.E.R Score**: Rate each module as 🟢 (compliant), 🟡 (partial), or 🔴 (violation) based on the five principles. Format: `S🟢 U🟡 P🔴 E🟢 R🟡`
+> **Relevant S.U.P.E.R Findings**: Record only principles implicated by the module's changed boundary or an observed hotspot. Cite the concrete risk; do not assign a five-principle aggregate score.
 
 ## Module Details
 
 ### <Module Name>
 - **Path**: `src/module_name/`
+- **Coverage**: deep / shallow
 - **Responsibility**: What this module does
 - **Public API**: Key functions/classes exposed to other modules
 - **Internal Dependencies**: Which other project modules it imports
 - **External Dependencies**: Third-party libraries it uses
 - **Complexity Rating**: Low / Medium / High / Critical
 - **Transformation Notes**: Specific challenges or considerations for this module
-- **S.U.P.E.R Assessment**:
-  - **S (Single Purpose)**: Does this module have exactly one responsibility? If not, what should be split?
-  - **U (Unidirectional Flow)**: Are dependencies one-directional? Any circular dependencies?
-  - **P (Ports over Implementation)**: Are inputs/outputs schema-defined and serializable? Are module boundaries contract-based?
-  - **E (Environment-Agnostic)**: Any hardcoded paths, embedded config, or platform-specific assumptions?
-  - **R (Replaceable Parts)**: Can this module be swapped without cascading changes? What is the replacement cost?
+- **Relevant S.U.P.E.R Assessment**: For each applicable principle, cite the changed boundary or observed risk. Do not list unrelated principles.
+
+> **Coverage rule**: Use `deep` only after direct inspection of the module's implementation and relevant call sites. Use `shallow` for inventory-level or indirect evidence; Phase 3 treats its estimates as lower confidence and prefers smaller task cards there.
 ```
 
 ---
@@ -84,20 +82,18 @@ Templates for the three documents generated in Phase 1 (Deep Project Analysis). 
 
 ## S.U.P.E.R Architecture Health Summary
 
-> Evaluate the current codebase against S.U.P.E.R principles to identify architectural risks and guide the transformation.
+> Evaluate only S.U.P.E.R principles supported by evidence to identify architectural risks and guide the transformation.
 
 | Principle | Status | Key Findings | Transformation Priority |
 |:----------|:-------|:-------------|:------------------------|
 | **S** Single Purpose | 🟢/🟡/🔴 | | High / Medium / Low |
 | **U** Unidirectional Flow | 🟢/🟡/🔴 | | High / Medium / Low |
 | **P** Ports over Implementation | 🟢/🟡/🔴 | | High / Medium / Low |
-| **E** Environment-Agnostic | 🟢/🟡/🔴 | | High / Medium / Low |
+| **E** Environment-Appropriate | evidence-backed status | | High / Medium / Low |
 | **R** Replaceable Parts | 🟢/🟡/🔴 | | High / Medium / Low |
 
-**Overall Health**: _X/5 principles healthy_ — [Healthy / Refactoring Needed / Technical Debt Alert]
-
 ### S.U.P.E.R Violation Hotspots
-<!-- List the top modules/files that violate the most S.U.P.E.R principles, ranked by severity. These become priority targets in the transformation plan. -->
+<!-- List the top evidence-backed modules/files and relevant principles, ranked by severity. These become priority targets in the transformation plan. -->
 
 ## Risk Matrix
 

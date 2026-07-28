@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Reviews one execution lane's diff against repository standards and per-task acceptance criteria, may fix small findings in the lane worktree, commits those fixes only with explicit user authorization relayed by the orchestrator, and returns a structured verdict. Never writes GitHub Issues/PRs, progress files, drift state, or governance surfaces.
+description: Reviews one execution lane's diff against repository standards and per-task acceptance criteria, may fix small findings in the lane worktree, commits those fixes only with explicit user authorization relayed by the orchestrator, and returns a structured verdict. Never writes GitHub Issues/PRs, progress files, execution-response state, or governance surfaces.
 tools: Glob, Grep, LS, Read, Write, Edit, Bash, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput
 model: sonnet
 color: red
@@ -60,7 +60,7 @@ You will receive:
 ### Machine Validation Run
 - command → result
 ### Residual Risks / Questions
-### Telemetry Inputs
+### Execution Event Inputs
 - Review effort: S/M/L/XL | Findings: N | Fix changes/commits: N
 ```
 

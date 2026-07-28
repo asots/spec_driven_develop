@@ -13,7 +13,7 @@ Spec-Driven Develop is an open-source, platform-agnostic workflow for AI coding 
 
 The repository ships three complementary Markdown skills:
 
-- **Spec-Driven Develop** — automates the full development pipeline for large-scale complex tasks: deep project analysis, phased task decomposition, document-driven progress tracking, and execution within a single session.
+- **Spec-Driven Develop** — automates the full development pipeline for large-scale complex tasks: deep project analysis, phased task decomposition, document-driven progress tracking, and execution that can resume across sessions from durable artifacts.
 - **Deep Discuss** — a structured deep-discussion workflow for problem analysis, brainstorming, and solution design through disciplined multi-phase thinking.
 - **Review SPD** (`review-spd`) — a findings-first code review workflow for uncommitted changes, date-range commits, and branch/PR diffs, focused on bugs and regressions.
 
@@ -62,7 +62,8 @@ Phase 1  Deep Analysis             Analyze architecture, inventory modules,
     |                              assess risks — with S.U.P.E.R health evaluation
     |
 Phase 2  Intent Refinement         Ask targeted questions grounded in analysis,
-    |                              confirm scope, priorities, and constraints
+    |                              confirm scope, priorities, and constraints;
+    |                              persist task-definition.md as the approved spec
     |
 Phase 3  Task Decomposition        Break work into phases, tasks, parallel lanes —
     |                              each task annotated with S.U.P.E.R design drivers
@@ -86,7 +87,7 @@ The plugin is **skills-only** — workflows are invoked through skills, not slas
 
 ### GitHub-Native Task Tracking and Batch PRs (Updated in v1.16)
 
-When a GitHub repository is detected, the workflow reports the available tracking capability. With explicit tracker-write authorization, it creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board; without that authority, the run uses `LOCAL_ONLY`. Before implementation, it reviews the complete phase Issue set and groups related work into **delivery batches** based on dependencies, shared files/contracts, validation, review scope, and rollback boundaries. Issues remain atomic acceptance and telemetry records; a delivery batch owns the integration branch, aggregate validation, and PR.
+When a GitHub repository is detected, the workflow reports the available tracking capability. With explicit tracker-write authorization, it creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board; without that authority, the run uses `LOCAL_ONLY`. Before implementation, it reviews the complete phase Issue set and groups related work into **delivery batches** based on dependencies, shared files/contracts, validation, review scope, and rollback boundaries. Issues remain atomic acceptance and execution-event records; a delivery batch owns the integration branch, aggregate validation, and PR.
 
 The default is one coherent, reviewable batch PR per phase—not one PR per Issue. Tier 2 parallel lanes start only after explicit branch/worktree and commit authorization; each lane returns one accepted atomic commit per task card and never an uncommitted cross-worktree handoff or task-level PR. Without that authority, execution stays Tier 0/1 in the current or integration worktree. Before integration, each lane passes through an independent `code-reviewer` sub-agent that reruns machine gates and reviews Standards and Spec separately. Commit, push, PR, and tracker-write authority are independent gates. The integrated PR includes one `Closes #N` line for every completed Issue. Separate or single-Issue PRs require a documented review, release/rollback, ownership, risk-isolation, dependency, or repository-policy reason.
 
@@ -102,46 +103,24 @@ The workflow gracefully degrades — if `gh` CLI is unavailable or the repo isn'
 
 ### Adaptive Control (New in v1.10)
 
-Inspired by engineering cybernetics (工程控制论), the workflow now includes a **closed-loop feedback control system** that observes execution reality and automatically corrects course when plans drift:
+Adaptive control is a compact feedback loop, not a subjective scoring formula. After each task, the agent records observable rework, plan returns, unplanned dependencies, and the focused S.U.P.E.R result for that task's declared drivers. It records evidence rather than effort deltas, global scores, or a numeric `drift_score`.
 
-```
-    Set Point (Phase 2 spec)
-          │
-          ▼
-    ┌────────────┐         drift_score + telemetry
-    │ Controller │◄────────────────────────────┐
-    │ (SKILL)    │                              │
-    └─────┬──────┘                              │
-          │ task instructions                   │ observe
-          ▼                                     │
-    ┌────────────┐                              │
-    │ Executor   │──── actual effort/SUPER/deps ┘
-    │ (Agent)    │
-    └─────┬──────┘
-          │ code changes
-          ▼
-    ┌────────────┐
-    │ Codebase   │
-    └────────────┘
-```
+| Response | Evidence | Action |
+|:---------|:---------|:-------|
+| Normal | Task completed as planned | Record the event and continue |
+| Watch | Rework or one unplanned dependency; remaining plan is credible | Annotate the affected next task or phase |
+| Replan | A plan return, split, recurring dependency, or batch result invalidates remaining cards | Stop before the next task and re-decompose remaining scope |
+| Rescope | Scope, acceptance, architecture, rollback, or authority must change | Return to Phase 2 with evidence and obtain user confirmation |
 
-After every task, the agent collects **execution telemetry** (actual effort vs. estimated, S.U.P.E.R compliance delta, unplanned dependencies) and updates a cumulative `drift_score`. When drift exceeds percentage-based thresholds:
-
-| Drift Level | Threshold | Automatic Response |
-|:------------|:----------|:-------------------|
-| Mild | ≥ 20% of phase tasks | Annotate next task with warning |
-| Significant | ≥ 40% | Halt and re-decompose remaining tasks |
-| Severe | ≥ 60% | Return to Phase 2 for scope re-evaluation |
-
-This ensures the workflow **self-corrects** instead of blindly executing a plan that no longer matches reality.
+Task Issues (GitHub modes) or phase-file entries (local mode) are authoritative; MASTER.md carries one lightweight phase/batch mirror. This keeps the workflow responsive without multiplying state writes.
 
 ### TAV Interop (New in v1.14)
 
-Spec-Driven Develop pairs with the `tav-workflow` skill as a two-layer system: this skill owns the macro layer (analysis, decomposition, progress, drift control), TAV owns the micro layer (one evidence-based Think → Act → Verify cycle per task).
+Spec-Driven Develop pairs with the `tav-workflow` skill as a two-layer system: this skill owns the macro layer (analysis, decomposition, progress, and evidence-based response control), TAV owns the micro layer (one evidence-based Think → Act → Verify cycle per task).
 
 - **Shared routing test**: both skills apply the same quantified "Escalation Signals" (two-of-four: 3+ modules, multi-session / ~10+ files, architectural decisions, acceptance criteria beyond one cycle), so borderline refactors route consistently.
-- **Handoff Contract**: each task card feeds the TAV cycle (description → plan, acceptance criteria → verification baseline, S.U.P.E.R drivers → extra checks); the finished cycle writes back progress plus telemetry.
-- **Telemetry from execution signals**: effort is measured by TAV-observable signals (rework iterations, plan returns, unplanned files) instead of wall-clock time, feeding the adaptive control loop with data agents can actually observe.
+- **Handoff Contract**: each task card feeds the TAV cycle (description → plan, acceptance criteria → verification baseline, S.U.P.E.R drivers → extra checks); the finished cycle returns progress and one execution-event payload to the orchestrator.
+- **Execution events from TAV signals**: rework iterations, plan returns, unplanned files, and focused S.U.P.E.R results provide evidence for watch, replan, or rescope responses without pretending to compute a precise effort score.
 
 TAV is optional — the `task-executor` agent embeds the same discipline when the skill is not installed.
 
@@ -207,20 +186,20 @@ S.U.P.E.R is not a footnote — it is the design philosophy that drives every ph
 
 | Principle | Meaning | How It's Enforced |
 |:----------|:--------|:------------------|
-| **S**ingle Purpose | One module, one job | Analysis phase rates each module's single-responsibility compliance. Tasks that span multiple concerns get decomposed further. |
+| **S**ingle Purpose | One module, one job | Evidence-backed hotspots identify responsibilities that need a boundary or follow-up task. |
 | **U**nidirectional Flow | Data flows one way | Architecture health check flags circular dependencies. Dependencies must point inward — outer layers depend on inner, never the reverse. |
 | **P**orts over Implementation | Contracts before code | Module inventory evaluates whether I/O is schema-defined. Task breakdown requires interface contracts before implementation tasks. |
-| **E**nvironment-Agnostic | Runs anywhere | Risk assessment catches hardcoded config and platform-specific assumptions. Config must come from environment variables or config files. |
-| **R**eplaceable Parts | Swap without ripple | Each module is rated by replacement cost. If swapping a component causes cascading changes, the architecture is broken. |
+| **E**nvironment-Appropriate | Fits its supported runtime | Risk assessment catches undocumented configuration and platform assumptions without imposing service-only rules on CLI, desktop, embedded, or offline software. |
+| **R**eplaceable Parts | Swap without ripple | Relevant boundaries are examined where replacement cost or coupling is a real transformation risk. |
 
 ### Where S.U.P.E.R Shows Up
 
 S.U.P.E.R isn't just a reference document the agent might read — it's woven into the workflow at every level:
 
-- **Phase 1 — Analysis**: Every module gets a per-principle compliance score (`S🟢 U🟡 P🔴 E🟢 R🟡`). The risk assessment includes a S.U.P.E.R Architecture Health Summary with violation hotspots.
-- **Phase 2 — Intent Refinement**: Analysis findings are presented to the user so they can make informed decisions about scope and S.U.P.E.R priorities before task decomposition begins.
+- **Phase 1 — Analysis**: Evidence-backed S.U.P.E.R findings identify relevant risk hotspots; modules are not forced into a five-principle scorecard.
+- **Phase 2 — Intent Refinement**: Analysis findings are presented to the user so they can make informed decisions about scope and S.U.P.E.R priorities before task decomposition begins; the confirmed result is persisted in `docs/plan/task-definition.md` and referenced by downstream task cards.
 - **Phase 3 — Planning**: Each task is annotated with its S.U.P.E.R design drivers (which principles matter most for that task). Early phases prioritize fixing violation hotspots before building new features.
-- **Phase 5 — Execution**: The S.U.P.E.R Code Review Checklist is run after every task before marking it complete. The adaptive control loop collects S.U.P.E.R compliance scores as part of execution telemetry:
+- **Phase 5 — Execution**: The agent runs the S.U.P.E.R checklist checks relevant to the task's declared drivers and changed boundaries. All ten apply for cross-cutting architecture work:
 
   | Check | Principle |
   |:------|:----------|
@@ -235,7 +214,7 @@ S.U.P.E.R isn't just a reference document the agent might read — it's woven in
   | New modules can be replaced without changes to others | R |
   | All tests pass after the change | — |
 
-  **All pass = proceed. 1-2 fail = fix before marking complete. 3+ fail = stop and refactor.**
+  **A failed relevant check must be fixed, explicitly deferred with acceptance evidence, or made a follow-up task. Unrelated checks are not scored.**
 
 ## Platform Compatibility
 
