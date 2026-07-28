@@ -26,22 +26,7 @@ Justify your choice based on the project's specific characteristics.
 
 ### 2. Phase Design
 
-Break the work into sequential phases. Each phase should:
-- Have a clear, testable goal
-- Be completable independently (the project should be in a working state after each phase)
-- Build on the previous phase's output
-- Take a reasonable amount of effort (not too granular, not too coarse)
-
-Typical phase patterns:
-- Phase 1: Project setup and infrastructure (build system, CI, dependencies)
-- Phase 2: Core/shared libraries and utilities
-- Phase 3: Data layer (models, storage, serialization)
-- Phase 4: Business logic layer
-- Phase 5: API/Interface layer
-- Phase 6: Integration and end-to-end testing
-- Phase 7: Migration tooling and data migration (if applicable)
-
-Adapt this to the specific project — not all phases apply to every transformation.
+Break the work into sequential phases. Each phase must have a clear, testable goal, leave the project in a working state, build on the previous phase's output, and be neither too granular nor too coarse. Adapt the phase count and boundaries to the specific project — fix S.U.P.E.R violation hotspots and foundations early.
 
 ### 3. Task Definition
 
@@ -51,7 +36,7 @@ For each task within a phase:
 - **Effort**: S (< 1 hour), M (1-4 hours), L (4-8 hours), XL (> 8 hours)
 - **Dependencies**: Which tasks must be completed first (by task ID)
 - **Delivery Batch**: Which phase-local implementation/integration/PR batch owns the task
-- **Acceptance Criteria**: Concrete conditions that prove the task is done
+- **Acceptance Criteria**: Concrete, checkbox-style conditions that prove the task is done. Each criterion must be independently verifiable by an independent reviewer agent without re-deriving intent — name exact files, commands, and expected outcomes. Reviewer agents consume these criteria as their review checklist.
 - **Test Expectation**: Required test additions/updates, or an explicit no-test rationale plus closest validation command
 - **Memory/Governance Impact**: Whether the task can update the resolved memory surface or any resolved instruction surface
 - **Source Reference**: Which original module/file this task relates to
@@ -75,10 +60,11 @@ For each phase, identify **parallel lanes** — groups of tasks that have no mut
 For each lane:
 - **Lane ID**: e.g. `P2-Lane-A`, `P2-Lane-B`
 - **Tasks**: Which tasks belong to this lane
+- **Key files**: The files this lane owns, so a reviewer agent can scope its diff
 - **Estimated time**: Combined effort of the lane (determines wall-clock time for the phase)
 - **Merge risk**: Low / Medium / High — likelihood of merge conflicts between lanes (based on file overlap)
 
-The goal is to minimize wall-clock time per phase. If a phase has 4 tasks and 2 are independent, they form 2 parallel lanes — cutting phase duration roughly in half. Do not create a lane smaller than 2 tasks (or a single S-effort task) unless risk isolation demands it — coordination overhead outweighs the wall-clock gain; fold undersized lanes into the nearest compatible lane. Waves are capped at 4 concurrent lanes; additional ready lanes queue for the next wave.
+Apply the Tier 2 admission criteria in `references/parallel-protocol.md` before creating lanes. Do not create a lane smaller than 2 tasks (or a single S-effort task) unless risk isolation demands it; fold undersized lanes into the nearest compatible lane. Waves are capped at 4 concurrent lanes; additional ready lanes queue for the next wave.
 
 ### 6. Delivery Batch Design
 
@@ -108,10 +94,7 @@ Lane workers never create PRs. The orchestrator integrates their commits and cre
 
 ### 7. Milestone Definition
 
-Define milestones at natural phase boundaries. Each milestone should represent a meaningful achievement:
-- "Core library compiled and passing unit tests"
-- "API layer serving all endpoints with feature parity"
-- "Full integration test suite green"
+Define milestones at natural phase boundaries. Each milestone represents one meaningful, verifiable achievement (e.g., a core library compiling with green unit tests, an API layer at feature parity).
 
 Every milestone criterion must be phrased as a runnable command or a concretely observable check — never a prose aspiration. Append one **milestone acceptance task** as the final task of every phase: it runs the phase's combined regression (full applicable test suite plus each criterion's command) and blocks phase closure on failure. It belongs to the phase's last delivery batch or stands alone after it.
 
@@ -130,7 +113,7 @@ This is an intermediate report returned to the orchestrating agent. The orchestr
 (for each phase: lane groupings with task lists, merge risk assessment — maps to task-breakdown.md)
 
 ## Delivery Batches
-(for each phase: batch IDs, ordered task/Issue sets, grouping rationale, execution waves, lanes, integration branch, combined validation, dependencies, and any split/single-task rationale — maps to task-breakdown.md)
+(for each phase: batch IDs, ordered task/Issue sets, grouping rationale, execution waves, lanes, integration branch, combined validation, shared contracts, dependencies, and any split/single-task rationale — maps to task-breakdown.md)
 
 ## Dependency Graph
 (Mermaid diagram — use nested subgraphs to visualize delivery batches and parallel lanes — maps to dependency-graph.md)

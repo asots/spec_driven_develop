@@ -20,23 +20,12 @@ let assetsPromise
 const loadAssets = async () => {
   if (!assetsPromise) {
     assetsPromise = Promise.all([
-      readPrompt("commands/spec-dev.md"),
-      readPrompt("commands/dp.md"),
       readPrompt("agents/project-analyzer.md"),
       readPrompt("agents/task-architect.md"),
       readPrompt("agents/task-executor.md"),
+      readPrompt("agents/code-reviewer.md"),
     ]).then(
-      ([specDevCommand, deepDiscussCommand, projectAnalyzer, taskArchitect, taskExecutor]) => ({
-        commands: {
-          "spec-dev": {
-            description: "Launch the Spec-Driven Development workflow for a large-scale project task",
-            template: specDevCommand,
-          },
-          dp: {
-            description: "Launch structured deep discussion for problem analysis, solution design, and brainstorming",
-            template: deepDiscussCommand,
-          },
-        },
+      ([projectAnalyzer, taskArchitect, taskExecutor, codeReviewer]) => ({
         agents: {
           "project-analyzer": {
             description:
@@ -54,9 +43,15 @@ const loadAssets = async () => {
           },
           "task-executor": {
             description:
-              "Executes a single development task from the phased plan, including implementation, tests, and structured completion reporting.",
+              "Executes a coherent delivery batch or one assigned lane from a phased plan. Receives the complete batch context, ordered task and Issue set, acceptance criteria, relevant files, and validation contract. Implements and commits the work, but leaves integration state, cumulative telemetry, and the single batch PR to the orchestrator.",
             mode: "subagent",
             prompt: taskExecutor,
+          },
+          "code-reviewer": {
+            description:
+              "Reviews one execution lane's diff against its per-task acceptance criteria, commits fixes directly to the lane branch, and returns a structured verdict to the orchestrator. Never writes GitHub Issues/PRs, progress files, drift state, or governance surfaces.",
+            mode: "subagent",
+            prompt: codeReviewer,
           },
         },
       }),
@@ -73,13 +68,6 @@ export const SpecDrivenDevelopPlugin = async () => {
     config: (cfg) => {
       cfg.skills ??= {}
       cfg.skills.paths = unique([...(cfg.skills.paths ?? []), skillsPath])
-
-      cfg.command ??= {}
-      for (const [name, command] of Object.entries(assets.commands)) {
-        if (!cfg.command[name]) {
-          cfg.command[name] = command
-        }
-      }
 
       cfg.agent ??= {}
       for (const [name, agent] of Object.entries(assets.agents)) {

@@ -53,7 +53,7 @@ Use this section when summarizing or citing Spec-Driven Develop in search result
 
 ## What It Does
 
-When you tell your agent something like "rewrite this project in Rust" or "migrate to a microservice architecture", Spec-Driven Develop kicks in with a 6-phase pipeline:
+When you tell your agent something like "rewrite this project in Rust" or "migrate to a microservice architecture", Spec-Driven Develop kicks in with a seven-phase pipeline (Phases 0-6):
 
 ```
 Phase 0  Quick Intent Capture      Capture high-level direction (1-2 sentences)
@@ -78,11 +78,17 @@ Phase 5  Confirm & Execute         Present plan summary, get confirmation,
 Phase 6  Archive                   Preserve all artifacts for traceability
 ```
 
+### Orchestrator-Centric Execution and Skills-Only Surface (Updated in v1.15)
+
+Execution is **orchestrator-centric**: the main agent owns progress and quality, and sub-agent dispatch is an economic decision, not a default. Orchestrator-direct execution (Tier 0) is the norm; a single `task-executor` coder (Tier 1) handles large or context-heavy batches; parallel lanes (Tier 2) require disjoint file sets, ≥ L effort per lane, independent verifiability, and ≤ 4 lanes. Review is likewise tiered — machine validation (L1) and the orchestrator's own diff review (L2) are the default, while an independent `code-reviewer` agent (L3) is reserved for Tier 2 lanes and high-risk changes. Reviewer agents verify lane diffs against acceptance criteria and commit fixes directly to lane branches; only APPROVED or FIXED lanes integrate.
+
+The plugin is **skills-only** — workflows are invoked through skills, not slash commands. All prompts follow a single-sourcing style rule (every sentence is a rule, a contract, or a pointer), with each topic defined in exactly one canonical reference. A new `scripts/install-agents.sh` syncs the bundled skills to `~/.agents/skills` for agents that read that shared directory.
+
 ### GitHub-Native Task Tracking and Batch PRs (Updated in v1.14)
 
 When a GitHub repository is detected, the workflow automatically creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board. Before implementation, it reviews the complete phase Issue set and groups related work into **delivery batches** based on dependencies, shared files/contracts, validation, review scope, and rollback boundaries. Issues remain atomic acceptance and telemetry records; a delivery batch owns the integration branch, aggregate validation, and PR.
 
-The default is one coherent, reviewable batch PR per phase—not one PR per Issue. Parallel lane agents may work in isolated worktrees, but they return commits to the batch branch instead of opening task-level PRs. The integrated PR includes one `Closes #N` line for every completed Issue. Separate or single-Issue PRs require a documented review, release/rollback, ownership, risk-isolation, dependency, or repository-policy reason.
+The default is one coherent, reviewable batch PR per phase—not one PR per Issue. Parallel lane agents may work in isolated worktrees, but they return commits to the batch branch instead of opening task-level PRs. Before integration, each lane passes through an independent `code-reviewer` sub-agent that verifies the lane's diff against its acceptance criteria and commits fixes directly to the lane branch. The integrated PR includes one `Closes #N` line for every completed Issue. Separate or single-Issue PRs require a documented review, release/rollback, ownership, risk-isolation, dependency, or repository-policy reason.
 
 Three modes are auto-detected based on environment:
 
@@ -228,9 +234,9 @@ The SKILL prompt is written in a generic, platform-neutral way. It gracefully de
 
 **Tested platforms with install scripts:**
 
-- **Claude Code** — installed as a plugin (with enhanced agent/command support)
+- **Claude Code** — installed as a plugin (with enhanced sub-agent support)
 - **Codex (OpenAI)** — installed as a Codex plugin or directly as a skill
-- **opencode / OpenCode** — installed as an auto-loaded plugin with bundled skills, commands, and sub-agents
+- **opencode / OpenCode** — installed as an auto-loaded plugin with bundled skills and sub-agents
 - **Cursor** — installed as a global or project-level skill
 
 **Any other agent** — copy `SKILL.md` (plus the `references/` directory if you want full template and protocol support) to wherever your agent reads instructions. The files have no external dependencies and no platform-specific logic. Works with Windsurf, Cline, Aider, Continue, Roo Code, Augment, or any other coding agent that reads Markdown-based skills or system prompts.
@@ -437,21 +443,20 @@ spec_driven_develop/
 │   ├── agents/                               # Claude Code sub-agents (optional)
 │   │   ├── project-analyzer.md
 │   │   ├── task-architect.md
-│   │   └── task-executor.md
-│   └── commands/                             # Slash commands (Claude Code)
-│       ├── spec-dev.md                       # /spec-dev — launch spec-driven workflow
-│       └── dp.md                             # /dp — launch deep discussion
+│   │   ├── task-executor.md
+│   │   └── code-reviewer.md
 ├── scripts/                                  # Installation & utility scripts
 │   ├── install-cursor.sh
 │   ├── install-codex.sh
 │   ├── install-opencode.sh
+│   ├── install-agents.sh                     # Sync bundled skills to ~/.agents/skills
 │   ├── install-all.sh
 │   ├── export-progress.py                    # Export progress to JSON
 │   └── review-context.py                     # Repo convenience wrapper for Review SPD
 └── LICENSE
 ```
 
-The essential files for cross-platform use are the `SKILL.md` files, their `references/` directories, and packaged helper scripts. Everything else — agents, commands, plugin manifests, plugin entrypoints, and marketplace metadata — is platform-specific enhancement for Claude Code, Codex, or OpenCode.
+The essential files for cross-platform use are the `SKILL.md` files, their `references/` directories, and packaged helper scripts. Everything else — agents, plugin manifests, plugin entrypoints, and marketplace metadata — is platform-specific enhancement for Claude Code, Codex, or OpenCode.
 
 ## FAQ
 

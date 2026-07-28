@@ -24,13 +24,10 @@
     "bug-risk"
   ],
   "skills": "./skills/",
-  "commands": [
-    "./commands/spec-dev.md",
-    "./commands/dp.md"
-  ],
   "agents": [
     "./agents/project-analyzer.md",
     "./agents/task-architect.md",
-    "./agents/task-executor.md"
+    "./agents/task-executor.md",
+    "./agents/code-reviewer.md"
   ]
 }

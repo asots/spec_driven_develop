@@ -18,7 +18,19 @@
       "homepage": "https://github.com/zhu1090093659/spec_driven_develop",
       "repository": "https://github.com/zhu1090093659/spec_driven_develop",
       "license": "MIT",
-      "keywords": ["spec-driven", "workflow", "planning", "task-decomposition", "project-analysis", "deep-discuss", "brainstorming", "problem-analysis", "code-review", "review-spd", "bug-risk"]
+      "keywords": [
+        "spec-driven",
+        "workflow",
+        "planning",
+        "task-decomposition",
+        "project-analysis",
+        "deep-discuss",
+        "brainstorming",
+        "problem-analysis",
+        "code-review",
+        "review-spd",
+        "bug-risk"
+      ]
     }
   ]
 }
