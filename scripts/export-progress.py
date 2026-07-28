@@ -29,6 +29,14 @@ def parse_master(master_path: Path) -> dict:
     # Extract dates from blockquote metadata
     started = _extract_field(text, "Started")
     last_updated = _extract_field(text, "Last Updated")
+    mode = _extract_field(text, "Mode")
+    workflow_run_id = _extract_field(text, "Workflow run ID").strip("`")
+    current_status = {
+        "active_phase": _extract_field(text, "Active Phase"),
+        "active_task": _extract_field(text, "Active Task"),
+        "blockers": _extract_field(text, "Blockers"),
+        "adaptive_response": _extract_field(text, "Adaptive Response"),
+    }
 
     # Extract phase checklist entries
     # Format: - [ ] Phase 1: <name> (0/N tasks) or - [x] Phase 1: <name> (N/N tasks)
@@ -51,6 +59,9 @@ def parse_master(master_path: Path) -> dict:
         "task": task_name,
         "started": started,
         "last_updated": last_updated,
+        "mode": mode,
+        "workflow_run_id": workflow_run_id,
+        "current_status": current_status,
         "phases": phases,
     }
 
@@ -77,7 +88,16 @@ def parse_phase_file(phase_path: Path) -> list[dict]:
 
         priority = _extract_field(block, "Priority")
         effort = _extract_field(block, "Effort")
+        delivery_batch = _extract_field(block, "Delivery Batch")
+        dependencies = _extract_field(block, "Dependencies")
+        super_drivers = _extract_field(block, "S.U.P.E.R Drivers")
+        delivery_shape = _extract_field(block, "Delivery Shape")
+        affected_files = _extract_field(block, "Affected Files")
+        test_expectation = _extract_field(block, "Test Expectation")
+        governance_impact = _extract_field(block, "Governance Impact")
+        rollback = _extract_field(block, "Rollback")
         acceptance = _extract_field(block, "Acceptance")
+        execution_event = _extract_field(block, "Execution Event")
 
         tasks.append({
             "id": task_id,
@@ -85,7 +105,16 @@ def parse_phase_file(phase_path: Path) -> list[dict]:
             "done": done,
             "priority": priority,
             "effort": effort,
+            "delivery_batch": delivery_batch,
+            "dependencies": dependencies,
+            "super_drivers": super_drivers,
+            "delivery_shape": delivery_shape,
+            "affected_files": affected_files,
+            "test_expectation": test_expectation,
+            "governance_impact": governance_impact,
+            "rollback": rollback,
             "acceptance": acceptance,
+            "execution_event": execution_event,
         })
 
     return tasks
@@ -94,8 +123,9 @@ def parse_phase_file(phase_path: Path) -> list[dict]:
 def _extract_field(text: str, field_name: str) -> str:
     """Extract a field value from '- Field: value' or '> **Field**: value' patterns."""
     patterns = [
-        rf"[-*]\s+{field_name}:\s*(.+)",
-        rf">\s+\**{field_name}\**:\s*(.+)",
+        rf"(?m)^\s*[-*]\s+{re.escape(field_name)}:\s*(.+)$",
+        rf"(?m)^\s*>\s+\**{re.escape(field_name)}\**:\s*(.+)$",
+        rf"(?m)^\s*\**{re.escape(field_name)}\**:\s*(.+)$",
     ]
     for pattern in patterns:
         m = re.search(pattern, text, re.IGNORECASE)

@@ -47,7 +47,7 @@ Spec-Driven Develop 是一个开源、平台无关的 AI Coding Agent 工作流�
 | 核心工作流 | Spec-Driven Develop 用于大规模编码任务；Deep Discuss 用于结构化技术分析；Review SPD（`review-spd`）用于 findings-first 代码审查 |
 | 关键词 | spec-driven development、domain modeling、conditional wayfinding、vertical tracer slices、expand-contract、GitHub Issues、adaptive control、S.U.P.E.R、双轴代码审查 |
 | 分发形式 | 纯 Markdown Skill，附带 Claude Code、Codex 与 OpenCode 的插件集成 |
-| 依赖 | 无 |
+| 依赖 | Markdown Skill 无运行时依赖；可选安装与校验辅助脚本按其说明需要 Bash、Git、Python 或 Node |
 | 许可证 | MIT |
 | 仓库 | <https://github.com/zhu1090093659/spec_driven_develop> |
 
@@ -79,15 +79,15 @@ Phase 5  确认并执行                展示规划摘要，获得确认，
 Phase 6  归档                      保存所有工件以便溯源
 ```
 
-### 编排者中心执行与纯 Skill 形态（v1.16 更新）
+### 编排者中心执行与纯 Skill 形态（v1.17 更新）
 
 执行采用**编排者中心**模式：主 Agent 负责整体进度与质量，子 Agent 的分派是一个经济性决策，而非默认行为。默认由编排者直接执行（Tier 0）；单个 `task-executor` coder（Tier 1）处理较大或上下文较重的批次；并行泳道（Tier 2）则要求文件集互不相交、每条泳道 ≥ L 工作量、可独立验证、泳道数 ≤ 4，并且分支/worktree 与 commit 均获明确授权。审查同样分级——机器校验（L1）与编排者自己的 diff 审查（L2）是默认，独立的 `code-reviewer` Agent（L3）只保留给 Tier 2 泳道和高风险变更。机器门禁之后，审查分别报告 Standards 与 Spec 两个轴。Tier 2 Reviewer 只能追加获授权的 fix commits；缺少授权属于协议错误，不能形成未提交泳道 handoff。只有结论为 APPROVED 或 FIXED 的泳道才会被集成。
 
 插件为**纯 Skill** 形态——工作流通过 Skill 触发，不再使用斜杠命令。所有 Prompt 遵循单一来源风格规则（每个句子只能是规则、契约或指针），每个主题只在唯一一份权威参考里定义。新增的 `scripts/install-agents.sh` 会把 bundled skills 同步到 `~/.agents/skills`，供读取该共享目录的 Agent 使用。
 
-### GitHub 原生任务追踪与批次 PR（v1.16 更新）
+### GitHub 原生任务追踪与批次 PR（v1.17 更新）
 
-检测到 GitHub 仓库时，工作流只报告可用的追踪能力。获得明确的 tracker 写入授权后，才会为每个任务创建 **GitHub Issue**，使用 **Milestone**（每个阶段一个）、**Label**（优先级、规模、泳道）组织，并可选创建 **GitHub Projects** 看板；没有该授权时，本次运行使用 `LOCAL_ONLY`。开始开发前，工作流会审视当前阶段的完整 Issue 集，再按依赖、共享文件/契约、验证范围、审查边界和回滚边界组成 **Delivery Batch（交付批次）**。Issue 继续承担原子验收和逐任务遥测；交付批次承担集成分支、整体验证和 PR。
+检测到 GitHub 仓库时，工作流只报告可用的追踪能力。获得明确的 tracker 写入授权后，才会为每个任务创建 **GitHub Issue**，使用 **Milestone**（每个阶段一个）、**Label**（优先级、规模、泳道）组织，并可选创建 **GitHub Projects** 看板。没有该授权时，已确认的 GitHub 模式会保持 `awaiting tracker-write authorization`，只有用户在 Phase 2 明确批准时才会切换为 `LOCAL_ONLY`。每次运行都有不可变的 run ID；GitHub 资源使用 `spec-run:<RUN_ID>` label 和精确的正文/标题标记来安全恢复。开始开发前，工作流会审视当前阶段的完整 Issue 集，再按依赖、共享文件/契约、验证范围、审查边界和回滚边界组成 **Delivery Batch（交付批次）**。Issue 继续承担原子验收和逐任务遥测；交付批次承担集成分支、整体验证和 PR。
 
 默认是每个阶段形成一个边界清楚、可审查的批次 PR，而不是一个 Issue 一个 PR。Tier 2 并行泳道只有在分支/worktree 与 commit 均获明确授权后才能启动；每条泳道按任务卡返回一个已验收的原子 commit，不返回跨 worktree 的未提交改动，也不创建任务级 PR。缺少这些授权时，执行降级为当前或集成 worktree 内的 Tier 0/1。整合之前，每条泳道还会经过一个独立的 `code-reviewer` 子 Agent：它重新运行机器门禁，并分别审查 Standards 与 Spec。commit、push、PR 与 tracker 写入是相互独立的授权门禁。最终集成 PR 为每个已完成 Issue 各写一行 `Closes #N`。只有在审查、独立发布/回滚、所有权、风险隔离、硬依赖或仓库策略确实要求时才拆分；单 Issue PR 同样必须记录理由。
 
@@ -95,11 +95,11 @@ Phase 6  归档                      保存所有工件以便溯源
 
 | 模式 | 你获得什么 |
 |:-----|:-----------|
-| **GITHUB_FULL** | Issues + Milestones + Labels + Project 看板 + worktrees + 批次 PR |
-| **GITHUB_STANDARD** | Issues + Milestones + Labels + worktrees + 批次 PR（无看板） |
+| **GITHUB_FULL** | Issues + Milestones + Labels + Project 看板 |
+| **GITHUB_STANDARD** | Issues + Milestones + Labels（无看板） |
 | **LOCAL_ONLY** | 原始的纯 Markdown 工作流（无 GitHub 依赖） |
 
-工作流支持优雅降级——如果 `gh` CLI 不可用或仓库不在 GitHub 上，会自动回退到本地模式。
+工作流会报告检测到的能力；已确认的 GitHub 模式无法写入追踪器时，必须显式批准模式切换。worktree、commit、push 与 PR 在每种模式中仍是独立的授权门槛。`gh` CLI 不可用或仓库不在 GitHub 上时，Phase 2 选择 `LOCAL_ONLY`。
 
 ### 自适应控制（v1.10 新增）
 
@@ -124,9 +124,9 @@ Spec-Driven Develop 与 `tav-workflow` skill 构成双层体系：本 skill 负�
 
 TAV 是可选的——未安装该 skill 时，`task-executor` agent 内嵌了同样的执行纪律。
 
-### 集成工程纪律（v1.16 新增）
+### 集成工程纪律（v1.17 新增）
 
-v1.16 将 [`asots/mattpocock-skills`](https://github.com/asots/mattpocock-skills) 快照 `ed37663cc5fbef691ddfecd080dff42f7e7e350d` 中可复用的纪律适配进现有双层架构，而不是替换任一工作流：
+v1.17 将 [`asots/mattpocock-skills`](https://github.com/asots/mattpocock-skills) 快照 `ed37663cc5fbef691ddfecd080dff42f7e7e350d` 中可复用的纪律适配进现有双层架构，而不是替换任一工作流：
 
 - **领域与决策清晰度**：Phase 1 记录 domain-model baseline；可选的 wayfinding gate 对阻塞性的研究和决策排序；Phase 2 每次只解决一个实质性的领域或架构决策，并即时回写已确认的术语表项或满足条件的 ADR。
 - **可执行拆解**：Phase 3 默认采用 vertical tracer slice。基础/预重构任务必须有真实 seam、contract 或 test-surface 理由；无法以垂直切片保持绿色的宽机械重构使用 expand → dependency-aware migrate batches → contract，中间批次不能独立保持绿色时增加明确的集成门禁。
@@ -244,30 +244,23 @@ SKILL 的 prompt 以通用、平台中立的方式编写。在缺少某些能力
 
 本仓库已经包含 Codex 插件元数据：`.agents/plugins/marketplace.json` 和 `plugins/spec-driven-develop/.codex-plugin/plugin.json`。
 
-从 GitHub 安装 Codex 插件市场：
-
-```bash
-codex plugin marketplace add zhu1090093659/spec_driven_develop --ref main
-```
-
-然后在 Codex 插件 UI 里启用 `Spec-Driven Develop`。如果你的 Codex 客户端暂时没有展示插件 UI，可以手动把下面内容加入 `~/.codex/config.toml`：
-
-```toml
-[plugins."spec-driven-develop@spec-driven-develop"]
-enabled = true
-```
-
-备选方式：在 Codex 会话中使用内置的 Skill 安装器，只安装核心 Skill：
+打开 Codex 的交互式插件管理器：
 
 ```text
-$skill-installer install https://github.com/zhu1090093659/spec_driven_develop/tree/main/plugins/spec-driven-develop/skills/spec-driven-develop
+/plugins
 ```
 
-或者通过 Shell 脚本安装：
+添加 `zhu1090093659/spec_driven_develop` 市场后，安装 `spec-driven-develop@spec-driven-develop`。如插件被禁用，请遵循 Codex UI 当前展示的 feature flag 指引；不要手工编辑内部插件配置。
+
+备选方式：在 Codex 会话中调用 `$skill-installer`，让它从本仓库的 `plugins/spec-driven-develop/skills/spec-driven-develop` 路径安装核心 Skill。
+
+或者通过 Shell 脚本安装 bundled skills：
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-codex.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-codex.sh)
 ```
+
+远程 wrapper 会自举同版本的共享安装器。安装和修复会先在暂存目录校验完整 bundled file manifest，再以事务式替换现有 bundle；下载或校验失败时保留旧安装不变。
 
 ### opencode / OpenCode
 
@@ -276,7 +269,7 @@ bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_deve
 全局安装：
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-opencode.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-opencode.sh)
 ```
 
 或者从本地 clone 安装：
@@ -302,7 +295,7 @@ bash spec_driven_develop/scripts/install-opencode.sh
 ### Cursor
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-cursor.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-cursor.sh)
 ```
 
 也可以克隆仓库后本地安装：
@@ -351,20 +344,13 @@ curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/mai
 - 英文：review-spd、use review-spd、review-spd uncommitted changes、review-spd recent commits、review-spd this branch、review-spd PR
 - 中文：review-spd、用 review-spd 评审、review-spd 审查未提交修改、review-spd 审查最近提交、review-spd PR
 
-### 手动触发（Claude Code）
-
-```
-/spec-dev rewrite this Python project in Rust
-/dp 我们的 API 响应时间最近突然变慢了
-```
-
 ### 跨对话连续性
 
 在跨多轮对话处理长周期任务时，Agent 会在每次新对话开始时读取 `docs/progress/MASTER.md`，恢复上下文并从上次中断的地方继续。在 GitHub 模式下，还会查询 GitHub 获取最新的 Issue 状态——PR 可能在上次会话后已被合并。
 
 ### 原生任务追踪
 
-Agent 在每次工作会话开始时，会自动把当前阶段的待办任务加载到平台原生的任务追踪工具中（例如 Claude Code 的 TodoWrite）。你可以直接在 IDE 侧边栏里看到实时进度，不需要手动翻 Markdown 文件。在 GitHub 模式下，进度还可以在 GitHub Milestone 和 Project 看板上查看。MASTER.md 依然是跨对话的持久化本地索引。
+Agent 在每次工作会话开始时，会在平台提供任务追踪能力时把当前阶段任务映射到原生工具（例如 `TaskCreate` / `TaskUpdate`）。你可以直接在 IDE 侧边栏里看到实时进度，不需要手动翻 Markdown 文件。在获得授权的 GitHub 模式下，进度还可以在 GitHub Milestone 和 Project 看板上查看。MASTER.md 依然是跨对话的持久化本地索引。
 
 ### 项目级约束与记忆
 
@@ -373,7 +359,7 @@ Agent 在每次工作会话开始时，会自动把当前阶段的待办任务�
 - `AGENTS.md` — Codex、OpenCode、Cursor 以及其他能读 Markdown 的 Coding Agent 共用的项目约束
 - `CLAUDE.md` — Claude Code 专用的项目指令，并与 `AGENTS.md` 保持一致
 - 可用时优先使用 Coding Agent 原生项目记忆 — 跨会话保留的项目事实、常见坑和工程规则
-- 只有在用户明确选择或项目已有声明时，才使用 repo-local fallback 记忆文件
+- 只有在用户明确选择或项目已有声明时，才使用 repo-local fallback 记忆：`docs/memory/MEMORY.md` 加上每个持久主题一个带元数据标签的条目文件
 
 功能和行为变更类任务默认必须规划测试。如果某个任务无法添加自动化测试，计划里必须说明原因，并写明最接近的验证命令。
 
@@ -387,7 +373,7 @@ python scripts/export-progress.py docs/progress/
 
 ### 归档
 
-当所有任务标记完成后，Agent 会把所有工作产出物（分析文档、计划文档、进度记录和治理文件快照）归档到 `docs/archives/<项目名>/`，并更新 `docs/archives/README.md` 索引。活跃的根目录治理文件会继续保留，归档副本用于溯源。
+当所有任务标记完成后，Agent 会先展示归档和清理计划并取得明确批准，再把工作产出物（分析文档、计划文档、进度记录、治理文件快照、任务定义以及存在时的 GitHub ledger）归档到 `docs/archives/<项目名>-<run-id>/`。归档验证成功后才能清理，并更新 `docs/archives/README.md` 索引。活跃的根目录治理文件会继续保留，归档副本用于溯源。
 
 ## 项目结构
 

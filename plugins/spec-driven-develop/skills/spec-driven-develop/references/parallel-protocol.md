@@ -22,7 +22,7 @@ Apply the cheapest review level that matches the risk:
 
 - **L1 — machine validation (always)**: targeted acceptance checks plus the batch's combined validation.
 - **L2 — orchestrator diff review (default)**: after L1, read the integrated diff through separate Standards and Spec axes and verify every Issue's acceptance criteria.
-- **L3 — independent reviewer (reserved)**: one `code-reviewer` agent per lane. Mandatory for every Tier 2 lane and for any high-risk work: contract/port format changes, logic code, or cross-surface semantic invariants. The reviewer reruns L1 commands and reports both axes separately.
+- **L3 — independent reviewer (risk-triggered)**: one `code-reviewer` agent per lane. Mandatory for every Tier 2 lane and for high-risk work: contract/port format changes, complex algorithmic or state-transition logic, or cross-surface semantic invariants. The reviewer reruns L1 commands and reports both axes separately.
 
 Writer model (see `behavioral-rules.md` rules 18-19):
 
@@ -72,7 +72,7 @@ For each parallel lane in the current dependency-ready wave:
    - The orchestrator's explicit branch/worktree and commit-authorization status; missing or unclear means Tier 2 dispatch is forbidden
 
 2. Launch all ready lane agents **in a single message** (this is how platforms achieve true parallelism). Each agent works in an isolated worktree to prevent file conflicts. Do not launch a downstream lane until its prerequisite changes are integrated.
-   - **In GitHub modes**: Follow the repository branch convention; otherwise each lane uses `work/{batch_id}-{lane_id}-{slug}`. Lane agents create one accepted atomic commit per task card and never create PRs or use closing keywords. If authorization is missing, do not launch the lane; downgrade the batch to Tier 0/1.
+   - **In GitHub modes**: Use only the orchestrator-resolved lane branch name. The canonical fallback is owned by `references/github-integration.md` and includes the workflow run ID. Lane agents create one accepted atomic commit per task card and never create PRs or use closing keywords. If authorization is missing, do not launch the lane; downgrade the batch to Tier 0/1.
    - **In LOCAL_ONLY mode**: Use worktree isolation if available; otherwise work sequentially
 
 3. When a coder returns DONE, dispatch one `code-reviewer` for the lane (L3 review) with:
@@ -85,7 +85,7 @@ For each parallel lane in the current dependency-ready wave:
 
 4. When all lanes carry verdict APPROVED or FIXED, consolidate their results:
    - Verify each lane's Review Report and re-run the Standards and Spec passes against the acceptance criteria yourself (L2)
-   - **In GitHub modes**: Consolidate lane commits onto the batch integration branch (`batch/{batch_id}-{slug}` unless the repository requires another convention). Resolve conflicts there; there is exactly one integration PR for the batch.
+   - **In GitHub modes**: Consolidate lane commits onto the orchestrator-resolved batch integration branch. Its canonical fallback is owned by `references/github-integration.md`; this protocol never reconstructs the name. Resolve conflicts there; there is exactly one integration PR for the batch.
    - **In LOCAL_ONLY mode**: If agents worked in worktrees, merge their changes sequentially, resolving any conflicts
    - Run every task's targeted checks plus the batch's combined validation to verify the integrated changes are coherent
    - Verify each completed Issue's acceptance criteria and record its execution event once. In parallel runs, the orchestrator is the single writer for task records, MASTER.md, and response state.
@@ -133,6 +133,7 @@ Verify that parallel execution did not introduce cross-lane violations:
 - **S (Single Purpose)**: No module gained responsibilities from multiple lanes
 - **U (Unidirectional Flow)**: No circular dependencies introduced between code touched by different lanes
 - **P (Ports)**: Interface contracts at lane boundaries remain intact — if Lane A changed a module's API, Lane B's usage still conforms
+- **E (Environment-Appropriate)**: Configuration, paths, lifecycle, persistence, and logging remain valid for every supported runtime touched across lanes
 - **R (Replaceable)**: No lane created implicit coupling that makes another lane's modules harder to replace
 
 ### Aggregate Execution Events

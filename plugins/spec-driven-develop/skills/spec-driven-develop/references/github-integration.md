@@ -6,13 +6,15 @@ This document defines how the Spec-Driven Develop workflow integrates with GitHu
 
 ## Operating Modes
 
-The workflow auto-detects the best available mode via a pre-flight check. The user can also force a specific mode.
+The workflow reports detected capabilities via a pre-flight check. Phase 2 records the user-confirmed tracking mode; capability detection never silently changes that selection.
 
 | Mode | Requirements | Capabilities |
 |:-----|:------------|:-------------|
-| **GITHUB_FULL** | `gh` CLI + auth + `project` scope | Issues + Milestones + Labels + Project board + worktrees + batch PRs |
-| **GITHUB_STANDARD** | `gh` CLI + auth + `repo` scope | Issues + Milestones + Labels + worktrees + batch PRs (no board) |
-| **LOCAL_ONLY** | None | Original local-file workflow (no GitHub) |
+| **GITHUB_FULL** | `gh` CLI + auth + `project` scope | Remote task tracker: Issues + Milestones + Labels + Project board |
+| **GITHUB_STANDARD** | `gh` CLI + auth + `repo` scope | Remote task tracker: Issues + Milestones + Labels (no board) |
+| **LOCAL_ONLY** | None | Local task tracker: plan and phase files (no remote tracker) |
+
+Tracking modes do not grant or describe branch/worktree creation, commits, pushes, pull requests, or tracker writes. Those are independent authority gates below; LOCAL_ONLY may still use an authorized local branch or worktree.
 
 ---
 
@@ -29,6 +31,24 @@ Detection and read-only inspection do not authorize writes. Before running a mut
 | Tracker writes | Issue, Milestone, Label, Project creation/edit/comment/close | GitHub tracker-write authorization |
 
 One user response may authorize several named classes together, but never infer one class from another or from the detected tracking mode, an existing branch, an Issue, or general approval to implement. Commit authorization does not authorize branch creation, push, PR creation, or tracker writes. Phase-boundary confirmation is not write authorization unless it names the operations. Tier 2 requires branch/worktree and commit authorization before dispatch because lane integration is commit-based; without both, use Tier 0 or Tier 1 in the current/integration worktree. Creating a batch PR requires commit, push, and PR authorization; tracker comments remain separately gated. Because GitHub-mode execution events are authoritative Issue comments, Phase 5 cannot begin in a GitHub mode until tracker-write authorization explicitly includes Issue comments; otherwise pause for that authorization or obtain the user's approval to switch to LOCAL_ONLY before execution.
+
+---
+
+## Run Isolation and Recovery
+
+Every GitHub-backed workflow attempt has one immutable `RUN_ID` from the confirmed task definition, for example `spd-20260728-api-migration-a1b2`. Before the first tracker write, create `docs/plan/github-sync.md` from `references/templates/github-sync.md` and record its `prepared` state. This ledger is an identity/recovery aid, not a second progress authority.
+
+Use all of these markers together:
+
+- Run label: `spec-run:<RUN_ID>` on every task Issue.
+- Issue marker: `<!-- spec-run:<RUN_ID>; task:<TASK_ID> -->` in every Issue body.
+- Milestone title: `[<RUN_ID>] Phase N: <name>`.
+- Project title: `Spec: <project-name> [<RUN_ID>]`.
+- Integration branch prefix: `batch/<RUN_ID>/`.
+
+For each remote resource, first query candidates scoped by the run marker, then verify the exact marker/title, reuse an exact match, or create exactly one resource. Immediately write the resource number, URL, and state to the ledger before attempting the next resource. On interruption, resume from the ledger and re-query remote state; never create a second resource merely because the conversation lost context. Keep generic `priority:*`, `size:*`, `phase:*`, `lane:*`, and `spec-driven` labels reusable across runs, but never use them alone to identify a run.
+
+Never copy secrets, tokens, cookies, authorization headers, connection strings, private user data, or full sensitive logs into an Issue body, comment, Project field, or the recovery ledger. Store a compact redacted evidence summary and a local evidence pointer instead.
 
 ---
 
@@ -61,7 +81,8 @@ If the detected mode differs from the user's preference, inform them and explain
 
 ```
 Spec-Driven-Develop Run  →  GitHub Project (board)     [GITHUB_FULL only]
-├── Phase N               →  Milestone "Phase N: <name>"
+├── Run marker            →  Label "spec-run:<RUN_ID>"
+├── Phase N               →  Milestone "[<RUN_ID>] Phase N: <name>"
 │   ├── Task N.1          →  Issue with structured body
 │   │   ├── Priority P0   →  Label "priority:P0"
 │   │   ├── Size M        →  Label "size:M"
@@ -89,14 +110,17 @@ gh label create "priority:P0" --color "d73a4a" --description "Critical — must 
 gh label create "priority:P1" --color "e4e669" --description "Important — do soon" --repo "$REPO" --force
 gh label create "priority:P2" --color "0e8a16" --description "Nice to have" --repo "$REPO" --force
 
-# Size labels
-gh label create "size:S" --color "c5def5" --description "Small — hours" --repo "$REPO" --force
-gh label create "size:M" --color "bfd4f2" --description "Medium — a day" --repo "$REPO" --force
-gh label create "size:L" --color "d4c5f9" --description "Large — days" --repo "$REPO" --force
-gh label create "size:XL" --color "f9d0c4" --description "Extra large — a week+" --repo "$REPO" --force
+# Relative scope labels (not time estimates)
+gh label create "size:S" --color "c5def5" --description "Localized, one clear boundary" --repo "$REPO" --force
+gh label create "size:M" --color "bfd4f2" --description "One independently verifiable behavior slice" --repo "$REPO" --force
+gh label create "size:L" --color "d4c5f9" --description "Recoverable multi-step task card" --repo "$REPO" --force
+gh label create "size:XL" --color "f9d0c4" --description "Delivery-batch scope; split before task execution" --repo "$REPO" --force
 
 # Spec-driven workflow label
 gh label create "spec-driven" --color "1d76db" --description "Managed by Spec-Driven Develop workflow" --repo "$REPO" --force
+
+# Per-run label (the ledger records the exact run ID before this write)
+gh label create "spec-run:$RUN_ID" --color "5319e7" --description "Spec-Driven workflow run $RUN_ID" --repo "$REPO" --force
 ```
 
 Phase labels are created dynamically based on the actual phase names:
@@ -113,16 +137,16 @@ gh label create "lane:A" --color "fef2c0" --description "Parallel lane A" --repo
 
 ## Milestone Creation
 
-`gh` has no native `milestone create` subcommand. Use the REST API:
+`gh` has no native `milestone create` subcommand. Use the REST API. First list milestones in every state and reuse only an exact run-scoped title; otherwise create one and immediately record its number and URL in `github-sync.md`:
 
 ```bash
 gh api repos/{owner}/{repo}/milestones \
-  -f title="Phase 1: Foundation" \
+  -f title="[$RUN_ID] Phase 1: Foundation" \
   -f description="Phase 1 goal description" \
   -f state="open"
 ```
 
-To list milestones: `gh api repos/{owner}/{repo}/milestones --jq '.[].title'`
+To list milestones in every state: `gh api "repos/{owner}/{repo}/milestones?state=all" --jq '.[].title'`
 
 ---
 
@@ -133,6 +157,7 @@ Every task Issue uses this structured body format:
 ```markdown
 ## Task: {task_id} — {task_name}
 
+**Workflow Run ID**: `{run_id}`
 **Phase**: {phase_number} — {phase_name}
 **Priority**: {priority} | **Size**: {size} | **Lane**: {lane}
 **Delivery Batch**: {batch_id}
@@ -158,17 +183,18 @@ Every task Issue uses this structured body format:
 - Depends on: {dependency_issue_refs or "None"}
 
 ---
-_Managed by [Spec-Driven Develop](https://github.com/zhu1090093659/spec-driven-develop) workflow_
+<!-- spec-run:{run_id}; task:{task_id} -->
+_Managed by [Spec-Driven Develop](https://github.com/zhu1090093659/spec_driven_develop) workflow_
 ```
 
-Create an Issue with:
+Before creating an Issue, list candidates with `--label "spec-run:$RUN_ID" --state all`, inspect any same task ID/body marker, and reuse only the exact `<!-- spec-run:$RUN_ID; task:$TASK_ID -->` match. Create an Issue only when no such match exists:
 ```bash
 gh issue create \
   --repo "$REPO" \
   --title "[T{task_id}] {task_name}" \
   --body "$ISSUE_BODY" \
-  --label "spec-driven,priority:{p},size:{s},phase:{n},lane:{lane}" \
-  --milestone "Phase {n}: {phase_name}"
+  --label "spec-driven,spec-run:$RUN_ID,priority:{p},size:{s},phase:{n},lane:{lane}" \
+  --milestone "[$RUN_ID] Phase {n}: {phase_name}"
 ```
 
 Add a 1-second delay between Issue creations to avoid secondary rate limits.
@@ -180,8 +206,13 @@ Add a 1-second delay between Issue creations to avoid secondary rate limits.
 ### Create Project and Link to Repo
 
 ```bash
-# Create project (returns project number)
-PROJECT_NUM=$(gh project create --owner "@me" --title "Spec: {project_name}" --format json | jq -r '.number')
+# First obtain `PROJECT_NUM_FROM_EXACT_RUN_LOOKUP` by checking the ledger and exact project title.
+# Create only when no exact run-scoped project exists, then immediately record it in the ledger.
+PROJECT_TITLE="Spec: {project_name} [$RUN_ID]"
+PROJECT_NUM="${PROJECT_NUM_FROM_EXACT_RUN_LOOKUP:-}"
+if [ -z "$PROJECT_NUM" ]; then
+  PROJECT_NUM=$(gh project create --owner "@me" --title "$PROJECT_TITLE" --format json | jq -r '.number')
+fi
 
 # Link to repository
 gh project link "$PROJECT_NUM" --owner "@me" --repo "$REPO"
@@ -198,8 +229,8 @@ gh project field-create "$PROJECT_NUM" --owner "$OWNER" --name "Priority" --data
 # Size field
 gh project field-create "$PROJECT_NUM" --owner "$OWNER" --name "Size" --data-type "SINGLE_SELECT" --single-select-options "S,M,L,XL"
 
-# Phase field
-gh project field-create "$PROJECT_NUM" --owner "$OWNER" --name "Phase" --data-type "SINGLE_SELECT" --single-select-options "Phase 1,Phase 2,Phase 3"
+# Phase field: generate options from the confirmed plan, do not hard-code a phase count.
+gh project field-create "$PROJECT_NUM" --owner "$OWNER" --name "Phase" --data-type "SINGLE_SELECT" --single-select-options "$PHASE_OPTIONS"
 ```
 
 ### Add Issues to Project
@@ -243,7 +274,7 @@ The orchestrator owns batch boundaries, integration state, execution-event respo
 Before editing, list all open Issues in the active phase, then read each Issue's body and comments. Compare dependencies, affected files, shared contracts/tests, release target, review ownership, and rollback risk.
 
 ```bash
-gh issue list --repo "$REPO" --milestone "Phase {n}: {phase_name}" --state open --json number,title,labels
+gh issue list --repo "$REPO" --label "spec-run:$RUN_ID" --milestone "[$RUN_ID] Phase {n}: {phase_name}" --state open --json number,title,labels
 gh issue view {issue_number} --repo "$REPO" --json number,title,body,comments,labels,milestone
 ```
 
@@ -256,14 +287,14 @@ Use these rules to confirm or revise delivery batches:
 5. Do not split mechanically by Issue count. A single-Issue batch requires an explicit rationale unless it is the only Issue in the phase.
 6. Reconsider and document a split when the expected integrated diff exceeds roughly 800 changed lines or 15 files; these are reviewability signals, not automatic partitioning rules.
 
-`docs/plan/task-breakdown.md` is the planning authority for Task → Issue → Delivery Batch mapping. Mirror a changed batch in the affected Issue's structured `**Delivery Batch**` field with `gh issue edit --body-file <updated-body-file>` while preserving the rest of the body, then comment with the reason when authorized. MASTER.md carries only the active batch and status summary, not a second task-by-task mapping.
+`docs/plan/task-breakdown.md` is the planning authority for Task → Issue → Delivery Batch mapping. Mirror a changed batch in the affected Issue's structured `**Delivery Batch**` field with `gh issue edit --body-file <updated-body-file>` while preserving the rest of the body and its run marker, then comment with the reason when authorized. Immediately update the matching ledger row; MASTER.md carries only the active batch and status summary, not a second task-by-task mapping.
 
 ### 2. Create the Batch Integration Branch and Worktrees When Authorized
 
 Only create branches or worktrees when branch/worktree authorization is explicit. Otherwise keep Tier 0/1 work in the current worktree. When authorized, follow the repository's branch convention; if none exists, use:
 
-- Integration branch: `batch/{batch_id}-{slug}`
-- Optional lane branch: `work/{batch_id}-{lane_id}-{slug}`
+- Integration branch: `batch/{run_id}/{batch_id}-{slug}`
+- Optional lane branch: `work/{run_id}/{batch_id}-{lane_id}-{slug}`
 
 For a one-lane batch, work directly in one isolated worktree on the integration branch. For a genuinely parallel batch, first confirm both branch/worktree and commit authorization, then execute dependency-ready lanes in waves. Create each wave's lane worktrees from the current integration base; integrate prerequisite commits before branching downstream waves. Every lane receives the complete batch context and its assigned Issue subset.
 
@@ -335,7 +366,7 @@ Refs #{partially_covered_issue_if_any}
 - Memory surface: updated / unchanged / unavailable / fallback used
 
 ---
-_Part of [Spec-Driven Develop](https://github.com/zhu1090093659/spec-driven-develop) workflow_
+_Part of [Spec-Driven Develop](https://github.com/zhu1090093659/spec_driven_develop) workflow_
 EOF
 )"
 ```
@@ -346,7 +377,7 @@ Add one standalone `Closes #N` line for every fully completed Issue. This lets o
 
 Immediately after the PR is created:
 
-1. Update the delivery batch row and Current Status in MASTER.md with the PR number and `in review`.
+1. Update the delivery batch row and Current Status in MASTER.md plus the matching ledger row with the PR number and `in review`.
 2. Keep each partially covered Issue open with the PR number, `partial`, and its remaining acceptance work.
 3. When GitHub tracker-write authorization includes Issue comments, comment on included Issues using completion-accurate language. Otherwise record the skipped external synchronization in MASTER.md and rely on the authorized PR's Issue links/closing keywords:
 
@@ -373,20 +404,20 @@ New-session continuity protocol (when MASTER.md indicates a GitHub mode):
 ```bash
 REPO="owner/repo"
 
-# Get all milestones with completion stats
-gh api repos/{owner}/{repo}/milestones --jq '.[] | "\(.title): \(.open_issues) open, \(.closed_issues) closed"'
+# Get milestones in every state, then retain only exact titles prefixed with "[$RUN_ID]"
+gh api "repos/{owner}/{repo}/milestones?state=all" --jq '.[] | "\(.title): \(.open_issues) open, \(.closed_issues) closed"'
 
 # Get open tasks for a specific phase
-gh issue list --repo "$REPO" --milestone "Phase 1: Foundation" --state open --json number,title
+gh issue list --repo "$REPO" --label "spec-run:$RUN_ID" --milestone "[$RUN_ID] Phase 1: Foundation" --state open --json number,title
 
 # Get closed tasks for a specific phase
-gh issue list --repo "$REPO" --milestone "Phase 1: Foundation" --state closed --json number,title
+gh issue list --repo "$REPO" --label "spec-run:$RUN_ID" --milestone "[$RUN_ID] Phase 1: Foundation" --state closed --json number,title
 
-# Get all spec-driven Issues
-gh issue list --repo "$REPO" --label "spec-driven" --state all --json number,title,state,milestone
+# Get all Issues for this run
+gh issue list --repo "$REPO" --label "spec-run:$RUN_ID" --state all --json number,title,state,milestone
 
 # Get open batch PRs
-gh pr list --repo "$REPO" --state open --search "in:title Batch" --json number,title,headRefName,url
+gh pr list --repo "$REPO" --state open --search "head:batch/$RUN_ID/" --json number,title,headRefName,url
 ```
 
 ---

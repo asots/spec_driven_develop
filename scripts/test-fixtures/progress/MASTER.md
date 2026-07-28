@@ -4,6 +4,7 @@
 > **Started**: 2026-01-01
 > **Last Updated**: 2026-01-01
 > **Mode**: LOCAL_ONLY
+> **Workflow run ID**: `spd-20260101-exporter-fixture-a1b2`
 
 ## References
 - [Task Breakdown](../plan/task-breakdown.md)
@@ -22,6 +23,7 @@
 **Active Phase**: Phase 1
 **Active Task**: Create the progress fixture tree
 **Blockers**: None
+**Adaptive Response**: normal — no unplanned dependency
 
 ## Governance Status
 <!-- Updated when project-level agent rules or durable memory change -->
@@ -36,8 +38,7 @@
 1. Complete Task 1.1
 2. Complete Task 1.2
 
-## Session Log
-<!-- Append-only log of work sessions -->
-| Date | Session | Summary |
-|:-----|:--------|:--------|
-|      |         |         |
+## Execution Events
+| Task | Outcome | Evidence | Response |
+|:-----|:--------|:---------|:---------|
+| T1.1 | as-planned | fixture created | normal |

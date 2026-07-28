@@ -22,12 +22,13 @@ Use this template when the tracking mode is `GITHUB_FULL` or `GITHUB_STANDARD`. 
 > **Started**: YYYY-MM-DD
 > **Last Updated**: YYYY-MM-DD
 > **Mode**: GITHUB_FULL | GITHUB_STANDARD
+> **Workflow run ID**: `spd-YYYYMMDD-<project-slug>-<short-id>`
 > **Repo**: owner/repo
 
 ## GitHub Resources
 - **Project Board**: https://github.com/users/{user}/projects/{num} _(GITHUB_FULL only)_
-- **All Issues**: `gh issue list -R {repo} --label "spec-driven" --state all`
-- **Open Batch PRs**: `gh pr list -R {repo} --state open --search "in:title Batch"`
+- **All Issues for this run**: `gh issue list -R {repo} --label "spec-run:{run-id}" --state all`
+- **Open Batch PRs for this run**: `gh pr list -R {repo} --state open --search "head:batch/{run-id}/"`
 
 ## References
 - [Project Overview](../analysis/project-overview.md)
@@ -37,6 +38,7 @@ Use this template when the tracking mode is `GITHUB_FULL` or `GITHUB_STANDARD`. 
 - [Task Breakdown](../plan/task-breakdown.md)
 - [Dependency Graph](../plan/dependency-graph.md)
 - [Milestones](../plan/milestones.md)
+- [GitHub Sync Ledger](../plan/github-sync.md)
 
 ## Milestones
 
@@ -49,22 +51,22 @@ Use this template when the tracking mode is `GITHUB_FULL` or `GITHUB_STANDARD`. 
 
 | Batch | Phase | Issues | Integration Branch | PR | Status |
 |:------|:------|:-------|:-------------------|:---|:-------|
-| P1-B1 | 1     | #101, #102 | `batch/p1-b1-<slug>` | — | planned |
+| P1-B1 | 1     | #101, #102 | `batch/<run-id>/p1-b1-<slug>` | — | planned |
 
 ## Quick Status Commands
 
 ```bash
-# Phase progress (all milestones)
-gh api repos/{owner}/{repo}/milestones --jq '.[] | "\(.title): \(.open_issues) open, \(.closed_issues) closed"'
+# Phase progress (filter the run-scoped milestone titles)
+gh api "repos/{owner}/{repo}/milestones?state=all" --jq '.[] | "\(.title): \(.open_issues) open, \(.closed_issues) closed"'
 
 # Open tasks for a phase
-gh issue list -R {repo} --milestone "Phase 1: {name}" --state open --json number,title
+gh issue list -R {repo} --label "spec-run:{run-id}" --milestone "[{run-id}] Phase 1: {name}" --state open --json number,title
 
 # All spec-driven Issues
-gh issue list -R {repo} --label "spec-driven" --state all --json number,title,state,milestone
+gh issue list -R {repo} --label "spec-run:{run-id}" --state all --json number,title,state,milestone
 
 # Open delivery batch PRs
-gh pr list -R {repo} --state open --search "in:title Batch" --json number,title,headRefName,url
+gh pr list -R {repo} --state open --search "head:batch/{run-id}/" --json number,title,headRefName,url
 ```
 
 ## Phase Checklist
@@ -85,7 +87,7 @@ gh pr list -R {repo} --state open --search "in:title Batch" --json number,title,
 **Claude Code instruction surface**: `CLAUDE.md` / unavailable
 **Other platform rule surfaces**: `.cursor/rules/`, `.windsurf/`, `.clinerules*`, `.codex/`, or none
 **Memory surface**: native / existing repo fallback / explicit fallback / unavailable
-**Memory fallback path**: none / `<path>`
+**Memory fallback path**: none / `docs/memory/` / `<path>`
 
 ## Next Steps
 <!-- What the agent should do next when resuming in a new conversation -->
@@ -112,6 +114,7 @@ Use this template when the tracking mode is `LOCAL_ONLY`. This is the original f
 > **Started**: YYYY-MM-DD
 > **Last Updated**: YYYY-MM-DD
 > **Mode**: LOCAL_ONLY
+> **Workflow run ID**: `spd-YYYYMMDD-<project-slug>-<short-id>`
 
 ## References
 - [Project Overview](../analysis/project-overview.md)
@@ -146,7 +149,7 @@ Use this template when the tracking mode is `LOCAL_ONLY`. This is the original f
 **Claude Code instruction surface**: `CLAUDE.md` / unavailable
 **Other platform rule surfaces**: `.cursor/rules/`, `.windsurf/`, `.clinerules*`, `.codex/`, or none
 **Memory surface**: native / existing repo fallback / explicit fallback / unavailable
-**Memory fallback path**: none / `<path>`
+**Memory fallback path**: none / `docs/memory/` / `<path>`
 
 ## Next Steps
 <!-- What the agent should do next when resuming in a new conversation -->
@@ -174,20 +177,30 @@ In `LOCAL_ONLY` mode, create one per phase. In GitHub modes, these files are opt
 
 ## Tasks
 - [ ] **Task N.1**: Description
-- Priority: P0
-- Effort: M
+  - Priority: P0
+  - Effort: M
+  - Delivery Batch: P1-B1
+  - Dependencies: None
+  - S.U.P.E.R Drivers: S, P
+  - Delivery Shape: Vertical tracer slice
   - Affected Files: `src/...`, `tests/...`
   - Test Expectation: Add/update relevant automated tests
-  - Memory Impact: Update resolved memory surface if a durable rule emerges
+  - Governance Impact: Update resolved memory surface if a durable rule emerges
+  - Rollback: Revert this task's isolated change without reverting unrelated batch work
   - Acceptance: How to verify this is done
   - Execution Event: as-planned / reworked / replanned / blocked — evidence and unplanned dependencies
   - Notes: _none yet_
 - [ ] **Task N.2**: Description
-- Priority: P1
-- Effort: S
+  - Priority: P1
+  - Effort: S
+  - Delivery Batch: P1-B1
+  - Dependencies: Task N.1
+  - S.U.P.E.R Drivers: U, E
+  - Delivery Shape: Docs standalone task — no runtime behavior change
   - Affected Files: `docs/...`
   - Test Expectation: Not applicable: docs-only; run markdown/static validation
-  - Memory Impact: None
+  - Governance Impact: None
+  - Rollback: Revert the documentation-only task
   - Acceptance: How to verify this is done
   - Execution Event: as-planned / reworked / replanned / blocked — evidence and unplanned dependencies
   - Notes: _none yet_

@@ -8,7 +8,7 @@ These rules apply to every agent and every phase in the Spec-Driven Develop work
 
 2. **Confirm only meaningful boundaries**. Confirm the task definition in Phase 2, obtain execution confirmation before Phase 5, and stop for a changed scope, acceptance criterion, architecture, irreversible action, or new authority. Routine phase transitions do not require a user interruption.
 
-3. **Record durable decisions, not narration**. Write confirmed scope, rationale, blockers, and plan-invalidating evidence to the canonical progress surface; do not duplicate routine reasoning across Notes, telemetry, and MASTER.md.
+3. **Record durable decisions, not narration**. Write confirmed scope, rationale, blockers, and plan-invalidating evidence to the canonical progress surface; do not duplicate routine reasoning across Notes, telemetry, and MASTER.md. Persist only compact redacted evidence: never copy secrets, credentials, private user data, or full sensitive logs into local or remote workflow records.
 
 4. **Progress updates are mandatory**. After task completion or batch integration, update the authoritative task record and its lightweight progress mirror according to `references/parallel-protocol.md` "Progress Synchronization". A merged batch PR closes every completed Issue with its own `Closes #N` line.
 
@@ -22,7 +22,7 @@ These rules apply to every agent and every phase in the Spec-Driven Develop work
 
 9. **Use the platform's structured question tool when user input is needed**. Use it for a clarification, a required confirmation, or a genuine decision; do not manufacture routine phase-boundary questions. If the platform lacks such a tool, ask in plain text and wait for an explicit reply.
 
-10. **Execution events are mandatory**. After every task, record observable rework, plan-return, dependency, and focused S.U.P.E.R signals before marking it done. The fields and storage are defined in `references/adaptive-control.md`.
+10. **Execution events are mandatory**. After every task, record observable rework, plan-return, dependency, and focused S.U.P.E.R signals before marking it done. The fields and storage are defined in `references/adaptive-control.md`; remote comments and local state carry only sanitized summaries plus evidence pointers.
 
 11. **Plan-invalidating signals require action**. Apply the adaptive protocol's watch, replan, or rescope response before beginning the next unstarted task. A rescope that changes user-approved scope or acceptance still requires the user's decision.
 
@@ -44,9 +44,9 @@ These rules apply to every agent and every phase in the Spec-Driven Develop work
 
 20. **Spec changes flow spec-first**. The user-confirmed spec and acceptance documents are, together with the project-level progress carrier, the single source of truth. When requirements change, update the spec first, then re-derive or adjust task cards — never patch tasks ad hoc while the spec goes stale. Every spec must state goals, non-goals, acceptance criteria, dependencies, and rollback boundaries.
 
-21. **Task cards must be executable and reversible**. Every task card must be completable in a single session, have explicit dependencies, carry runnable acceptance commands, and be independently rollbackable. If a card cannot meet these conditions, fix the decomposition — do not widen the task's scope instead. Acceptance criteria are fixed before execution starts and must not be relaxed mid-task; the Verifier judges independently from the actual diff, affected call sites, and command output — never from the Actor's self-report.
+21. **Task cards must be executable and reversible**. Every task card must fit one recoverable TAV cycle, have explicit dependencies, carry runnable acceptance commands, and be independently rollbackable. `XL` is a delivery-batch scope, never an executable task-card size; split it before implementation. A task card may use durable checkpoints across sessions, but it must remain one coherent acceptance and rollback unit. If a card cannot meet these conditions, fix the decomposition — do not widen the task's scope instead. Acceptance criteria are fixed before execution starts and must not be relaxed mid-task; the Verifier judges independently from the actual diff, affected call sites, and command output — never from the Actor's self-report.
 
-22. **Escalate to the user with evidence**. The following always require an explicit user decision: changes to the spec or acceptance criteria, architectural or irreversible operations, and how to proceed after the same blocker fails twice with the same error fingerprint. Attach concrete evidence when escalating; never silently widen your own authority or scope.
+22. **Escalate with evidence and keep verification separate from authority**. A second consecutive failure of the same blocker fingerprint always triggers verification escalation: an independent review when available plus a Thinker re-plan before more implementation. It requires an explicit user decision only when the safe next step changes the spec or acceptance criteria, architecture, rollback boundary, irreversible operation, or external authority. Attach concrete evidence when escalating; never silently widen your own authority or scope.
 
 23. **Version-control and external-write authority is explicit**. Create commits only after the user explicitly authorizes them, and only for task cards that passed acceptance — one atomic commit per card, referencing the task ID for traceability. Commit authorization does not authorize branch creation, push, PR creation, or Issue/Milestone/Project edits or comments; each operation class must be explicitly named, although one user statement may authorize several named classes together. After each milestone, distill only reproducible process problems into rule revisions, not one-off incidents.
 

@@ -6,11 +6,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "=== Installing spec-driven-develop ==="
 echo ""
 
-echo "[1/3] Installing to Cursor..."
+echo "[1/4] Installing to Cursor..."
 bash "$SCRIPT_DIR/install-cursor.sh"
 echo ""
 
-echo "[2/3] Installing to Codex..."
+echo "[2/4] Installing to Codex..."
 bash "$SCRIPT_DIR/install-codex.sh"
 echo ""
 

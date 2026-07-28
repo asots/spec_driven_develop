@@ -1,17 +1,18 @@
 ---
 name: spec-driven-develop
 description: >-
-  Automates pre-development workflow for large-scale complex tasks. Use when the user
-  mentions "rewrite", "migrate", "overhaul", "refactor entire project", "transform",
-  "rebuild in [language]", "spec-driven", or describes any large-scale, multi-module
-  project transformation that requires planning before coding. Also triggers on Chinese keywords:
-  "改造", "重写", "迁移", "重构", "整体重构", "全项目重构", "大规模", "规范驱动". Single-module or
-  local refactors belong to tav-workflow instead. Performs full project analysis, task
+  Automates pre-development workflow for large-scale complex tasks. Use for spec-driven
+  work or broad rewrites, migrations, overhauls, and refactors only when at least two L2
+  escalation signals hold (3+ modules or a public contract break; multi-session or ~10+ files;
+  architectural decisions; acceptance cannot fit one TAV cycle). Chinese examples include
+  "整体重构", "全项目重构", "跨模块迁移", "架构级改造", "大规模", and "规范驱动". A bare
+  rewrite/refactor/migration keyword is not sufficient; single-module work belongs to
+  tav-workflow. Performs full project analysis, task
   decomposition, documentation generation, project-level instruction and native memory
-  surface resolution, progress tracking setup, and then executes the plan within the same session. Keeps Issues as
+  surface resolution, progress tracking setup, and then executes the plan across recoverable sessions when needed. Keeps Issues as
   task-tracking units while batching related implementation into coherent reviewable PRs.
 metadata:
-  version: 1.17.0
+  version: 1.18.0
 ---
 
 # Spec-Driven Develop
@@ -29,8 +30,8 @@ You are executing the **Spec-Driven Development** workflow — a seven-phase pip
 | Progress output | `docs/progress/` | Phase 4 tracking documents (incl. MASTER.md) |
 | Instruction surfaces | Resolved per project | Project-level constraints for agents (see Phase 4) |
 | Memory surface | Declared surface → native → explicit repo fallback | Durable facts use the project-declared surface first; a repo fallback is never silently created |
-| Archive output | `docs/archives/<project>/` | Phase 6 archived artifacts |
-| Task tracking mode | Auto-detect | `GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY` |
+| Archive output | `docs/archives/<project-name>/<run-id>/` | Phase 6 archived artifacts |
+| Task tracking mode | Capability-detected, user-confirmed | `GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY` |
 | Delivery batching | Phase-first | Issues track tasks; PRs integrate coherent task batches |
 | Adaptive control | Enabled | Observable execution events drive normal, watch, replan, or rescope responses |
 
@@ -48,11 +49,11 @@ You are executing the **Spec-Driven Development** workflow — a seven-phase pip
 | `references/decomposition-strategy.md` | Vertical tracer slices, prefactoring boundaries, and expand-contract for wide refactors |
 | `references/templates/` | Schemas for every generated document (including the Phase 2 task definition, analysis, plan, progress, governance, archive) |
 
-**Task tracking modes** (capabilities differ; detection and upgrade instructions live in `references/github-integration.md` § "Pre-flight Check"):
+**Task tracking modes** describe task-record surfaces only. Detection and upgrade instructions live in `references/github-integration.md` § "Pre-flight Check"; branch/worktree, commit, push, PR, and tracker-write permissions remain independent authority gates:
 
-- **GITHUB_FULL**: Issues + Milestones + Labels + Project board + worktrees + batch PRs
-- **GITHUB_STANDARD**: same minus the Project board
-- **LOCAL_ONLY**: original local-file workflow, no GitHub dependency
+- **GITHUB_FULL**: Issues + Milestones + Labels + Project board
+- **GITHUB_STANDARD**: Issues + Milestones + Labels, without a Project board
+- **LOCAL_ONLY**: local plan and phase files, without a remote tracker
 
 ## When Not to Use
 
@@ -75,11 +76,13 @@ A refactor confined to one module — however messy — is TAV territory, not sp
 
 Then check if `docs/progress/MASTER.md` already exists:
 
-- If it **exists**: Read it immediately. You are resuming an in-progress task. Identify the tracking mode, current phase, and completed work; continue from the exact point where the previous conversation left off. Do NOT restart from Phase 0.
-  - **In GitHub modes**: Also query GitHub for the latest task status — see `references/github-integration.md` § "Reading Progress from GitHub". Update MASTER.md if GitHub state is ahead of the local index.
+- If it **exists**: Read it immediately, then compare its task name, workflow run ID, and latest session summary with the current request. Resume only when they describe the same approved workflow and the state is not stale (more than 7 days without a matching user request). If it is stale or describes a different task, ask the user before resuming, replacing, or archiving it. Do NOT restart from Phase 0 without that decision.
+  - **In GitHub modes**: Also query GitHub for the latest status scoped to the recorded workflow run ID — see `references/github-integration.md` § "Reading Progress from GitHub". Update MASTER.md if remote state is ahead of the local index.
 - If it **does not exist**: This is a fresh start. Proceed to Phase 0.
 
-After loading your current state, populate the platform's native task tracking tool (e.g. TodoWrite) with the active phase's pending tasks: content = task description, status = in-progress for the active task, priority mapped P0=high, P1=medium, P2=low. If no native task tool is available, skip this step — MASTER.md alone is sufficient.
+An archived snapshot does not replace the active root-level recovery entry while remote synchronization or cleanup remains pending. If `MASTER.md` is a tombstone, follow its archive pointer and resume the recorded pending operation rather than starting fresh.
+
+After loading your current state, populate the platform's native task tracking tool when available (for example, `TaskCreate` / `TaskUpdate`) with the active phase's pending tasks: content = task description, status = in-progress for the active task, priority mapped P0=high, P1=medium, P2=low. If no native task tool is available, skip this step — MASTER.md alone is sufficient.
 
 ---
 
@@ -151,7 +154,7 @@ After Phase 1, evaluate whether the analyzed destination can be turned into a co
 
 4. Summarize the refined understanding, including resolved domain terms/decisions and any deferred ambiguity, then get explicit confirmation.
 
-**Output**: Write the authoritative confirmed definition to `docs/plan/task-definition.md` using `references/templates/task-definition.md`. This is the single spec source for Phases 3-6; `task-breakdown.md`, phase files, and Issue bodies reference it rather than restating or redefining approved scope. Include any glossary/ADR updates made through `references/domain-modeling.md`.
+**Output**: Write the authoritative confirmed definition to `docs/plan/task-definition.md` using `references/templates/task-definition.md`. Generate one immutable workflow run ID and record it there before Phase 3; it scopes any GitHub resources and recovery ledger for this workflow attempt. This is the single spec source for Phases 3-6; `task-breakdown.md`, phase files, and Issue bodies reference it rather than restating or redefining approved scope. Include any glossary/ADR updates made through `references/domain-modeling.md`.
 
 ---
 
@@ -172,10 +175,10 @@ After Phase 1, evaluate whether the analyzed destination can be turned into a co
    - **Delivery batches** per `references/behavioral-rules.md` rule 17: assign every task to exactly one batch and record ID, goal, task IDs, execution waves, lanes, integration branch, combined validation, dependency order, shared contracts, and split rationale.
    - **Dependency graph** as a Mermaid diagram (subgraphs for batch boundaries and lanes) and **milestones** at phase boundaries. Every milestone criterion must be a runnable command or concretely observable check; each phase ends with a milestone acceptance task that runs the combined regression and blocks closure on failure.
 4. Write `docs/plan/` documents from `references/templates/plan.md`: `task-breakdown.md`, `dependency-graph.md`, `milestones.md`. They must link to the confirmed `task-definition.md`, not duplicate its scope or acceptance terms.
-5. **GitHub Resource Synchronization**: capability detection is read-only. Create Labels → Milestones → Issues → [GITHUB_FULL only] Project board only after explicit GitHub tracker-write authorization, using the exact commands and Issue body template in `references/github-integration.md`. Add a 1-second delay between Issue creations and record all URLs plus the Task → Issue → Delivery Batch mapping for Phase 4. If authorization is not granted, select `LOCAL_ONLY` for this run; Issue creation never implies commit, push, or PR authorization.
+5. **GitHub Resource Synchronization**: capability detection is read-only. Before the first authorized GitHub write, create `docs/plan/github-sync.md` from `references/templates/github-sync.md` with the immutable run ID, repository, planned markers, and `prepared` state. Create Labels → Milestones → Issues → [GITHUB_FULL only] Project board only after explicit GitHub tracker-write authorization, using the exact idempotent lookup and Issue body protocol in `references/github-integration.md`. After each successful remote create or reuse, immediately record the stable ID and URL in the ledger before continuing. If authorization is not granted, preserve the confirmed tracking mode, record `awaiting tracker-write authorization`, and stop before external writes. Switch to `LOCAL_ONLY` only through a user-approved Phase 2 task-definition update. Issue creation never implies commit, push, or PR authorization.
 6. **Establish adaptive records**: configure the authoritative task record and lightweight progress mirror per `references/adaptive-control.md`. Do not create numeric drift thresholds or Milestone YAML state.
 
-**Output**: Complete `docs/plan/` (`task-definition.md`, `task-breakdown.md`, `dependency-graph.md`, `milestones.md`); in GitHub modes, all tasks exist as labeled, milestoned Issues with their authoritative event record and lightweight progress mirror configured.
+**Output**: Complete `docs/plan/` (`task-definition.md`, `task-breakdown.md`, `dependency-graph.md`, `milestones.md`). In GitHub modes, report remote state precisely: `prepared` or `awaiting_authorization` when resources are only planned locally, `syncing`/`blocked` for partial work, and `complete` only when every task exists as a labeled, milestoned Issue and all in-scope resource identities are recorded.
 
 ---
 
@@ -245,7 +248,7 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
    - Consolidate reviewed lane branches onto the batch integration branch; reconcile overlaps.
    - Run per-task checks plus combined validation and post-integration architecture checks.
    - Verify every included Issue's acceptance criteria yourself (L2). Keep incomplete Issues out of closing keywords.
-   - When commit, push, and PR authorization are all explicit, create exactly one batch PR with one `Closes #N` per completed Issue. Immediately write the PR number and `in review` state to the batch row and every completed Issue row in MASTER.md; keep partial Issues open with explicit partial status. Without those authorizations, stop after local integration validation and report the ready branch/diff without remote writes.
+   - When commit, push, and PR authorization are all explicit, create exactly one batch PR with one `Closes #N` per completed Issue. Immediately write the PR number and `in review` state to the batch row and `Current Status` in MASTER.md; keep partial Issues open with explicit partial status in their authoritative Issue records. Without those authorizations, stop after local integration validation and report the ready branch/diff without remote writes.
    - A single-Issue PR is allowed only for a documented exception or a one-Issue phase.
 
 6. **Progress updates**:
@@ -263,23 +266,23 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
 
 ## Phase 6: Archive
 
-**Trigger**: All tasks have passed local acceptance and integrated validation, and are either closed in the authorized GitHub workflow or explicitly recorded as `locally validated — awaiting remote sync`; LOCAL_ONLY tasks have all checkboxes `[x]`.
+**Trigger**: All tasks have passed local acceptance and integrated validation. GitHub-mode tasks are either closed in the authorized remote workflow or explicitly recorded as `locally validated — awaiting remote sync`; LOCAL_ONLY tasks have all checkboxes `[x]`.
 
 **Goal**: Archive all workflow artifacts for traceability, then clean up working directories.
 
 **Actions**:
 
-1. Announce completion to the user.
-2. Determine the archive directory name from the Phase 2 task name (lowercase, hyphens, no special characters): `docs/archives/<project-name>/`. Target structure and index template: `references/templates/archive.md`.
-3. Move `docs/analysis/`, `docs/plan/`, and `docs/progress/` into the archive; copy snapshots or export references for the resolved instruction and memory surfaces into `docs/archives/<project-name>/governance/`; move any other temporary workflow files.
-4. **[GitHub modes]** With explicit GitHub tracker-write authorization, close each phase's Milestone (if not already closed) and optionally close the Project board. Otherwise leave remote state unchanged and record the pending archive synchronization locally.
-5. Create or update `docs/archives/README.md` with an entry: project name, one-line description, date range, link to archived MASTER.md, and (GitHub modes) the Project URL.
-6. Remove the now-empty `docs/analysis/`, `docs/plan/`, `docs/progress/` directories. Keep active instruction and memory surfaces in place; only their snapshots live under the archive.
-7. **Execution retrospective**: where multiple completed tasks expose the same dependency, contract, or planning mistake, distill 1-3 evidence-backed calibration rules and record them through the knowledge-consolidation pipeline to the resolved memory surface.
+1. Determine the canonical collision-safe archive path from the Phase 2 task name and workflow run ID: `docs/archives/<project-name>/<run-id>/`. Resolve its absolute path and confirm it remains under `docs/archives/`; never merge into an existing archive directory.
+2. Present the archive and cleanup plan, then obtain explicit authorization for the move/copy and removal operations. Do not announce completion yet.
+3. If remote synchronization remains pending, create a copy-only archive snapshot and keep the active root-level `docs/progress/MASTER.md` plus `github-sync.md` in place. Otherwise copy or move `docs/analysis/`, `docs/plan/`, and `docs/progress/` into the new archive. Include `task-definition.md`, `github-sync.md` when present, and a `governance/surface-resolution.md` export containing the resolved instruction and memory surfaces. Copy snapshots or export notes only for active instruction and memory surfaces; keep their live locations untouched.
+4. Verify the archive structure, required artifacts, relative links, and expected source-to-archive file counts before any cleanup. If verification fails, leave the original workflow artifacts in place and report the failure.
+5. **[GitHub modes]** With explicit GitHub tracker-write authorization, close each phase's Milestone (if not already closed) and optionally close the Project board. Otherwise leave remote state unchanged and record the pending archive synchronization locally.
+6. Create or update `docs/archives/README.md` with an entry: project name, one-line description, date range, link to archived MASTER.md, workflow run ID, and (GitHub modes) the Project URL.
+7. Remove source workflow directories only after archive verification, explicit cleanup authorization from step 2, and completion of all required remote synchronization. With remote work pending, cleanup is forbidden; retain the active recovery entry and report the exact next remote operation. Keep active instruction and memory surfaces in place; only their snapshots live under the archive.
+8. **Execution retrospective**: where multiple completed tasks expose the same dependency, contract, or planning mistake, distill 1-3 evidence-backed calibration rules and record them through the knowledge-consolidation pipeline to the resolved memory surface.
+9. Announce completion, report the archive path and any pending remote synchronization, then suggest the user commit the archive to version control.
 
-8. Suggest the user commit the archive to version control.
-
-**Output**: All artifacts under `docs/archives/<project-name>/` with an updated `docs/archives/README.md` index.
+**Output**: All artifacts under `docs/archives/<project-name>/<run-id>/` with an updated `docs/archives/README.md` index; when remote synchronization is pending, the root-level recovery entry remains active.
 
 ---
 
@@ -297,6 +300,7 @@ Spec-Driven Develop owns analysis, decomposition, delivery-batch orchestration, 
 | Acceptance criteria + test expectation | Baseline of the Thinker verification plan |
 | S.U.P.E.R design drivers | Additional Verifier check items |
 | Relevant files / dependencies | Starting points for Thinker evidence gathering |
+| Delivery batch, delivery shape, and rollback boundary | Execution order, scope boundary, and safe recovery constraints |
 | Memory/governance impact | Pre-declared candidates for the cycle's Phase 4 knowledge consolidation |
 
 **Write-back mapping — what the finished TAV cycle returns:**

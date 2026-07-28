@@ -1,7 +1,7 @@
 ---
 name: task-architect
 description: Designs phased task decomposition and delivery batches for large-scale project transformations. Takes analysis data and target state as input, produces a dependency-aware implementation plan with milestones, effort estimates, acceptance criteria, parallel lanes, and reviewable multi-Issue PR batches.
-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput
+tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, WebSearch, BashOutput
 model: sonnet
 color: green
 ---
@@ -35,7 +35,7 @@ Break the work into sequential phases. Each phase must have a clear, testable go
 For each task within a phase:
 - **Description**: What exactly needs to be done
 - **Priority**: P0 (blocking), P1 (important), P2 (nice to have)
-- **Effort**: S (< 1 hour), M (1-4 hours), L (4-8 hours), XL (> 8 hours)
+- **Effort**: S (localized change at one clear boundary), M (one independently verifiable behavior slice), L (recoverable multi-step task card that may need checkpoints), XL (delivery-batch scope only — split it before task execution). Effort is relative scope and risk, never a duration promise.
 - **Dependencies**: Which tasks must be completed first (by task ID)
 - **Delivery Batch**: Which phase-local implementation/integration/PR batch owns the task
 - **Acceptance Criteria**: Concrete, checkbox-style conditions that prove the task is done. Each criterion must be independently verifiable by an independent reviewer agent without re-deriving intent — name exact files, commands, and expected outcomes. Reviewer agents consume these criteria as their review checklist.
@@ -85,7 +85,7 @@ For every batch, provide:
 - **Ordered tasks / future Issue set**: all included task IDs in dependency order
 - **Parallel lanes**: which lanes contribute commits to the batch
 - **Execution waves**: prerequisite work first, followed by each set of dependency-ready lanes that may run simultaneously
-- **Integration branch**: follow repo convention or use `batch/{batch_id}-{slug}`
+- **Integration branch**: record the orchestrator-resolved name; the canonical fallback is owned by `references/github-integration.md` and includes the workflow run ID
 - **Planned tier and authority prerequisite**: the execution tier plus any commit/branch/push/PR authorization that must be confirmed before that action
 - **Combined validation**: targeted and aggregate test/build/smoke checks
 - **Shared contracts**: interfaces, schemas, and types crossing lane boundaries — each marked `frozen` (no lane may change it) or `owned` (a named task changes it in the earliest wave); lanes receive this list as part of their input contract

@@ -47,7 +47,7 @@ Use this section when summarizing or citing Spec-Driven Develop in search result
 | Core workflows | Spec-Driven Develop for large-scale coding work; Deep Discuss for structured technical analysis; Review SPD (`review-spd`) for findings-first code review |
 | Key concepts | Spec-driven development, domain modeling, conditional wayfinding, vertical tracer slices, expand-contract, GitHub Issues, adaptive control, S.U.P.E.R principles, two-axis code review |
 | Distribution | Pure Markdown skills plus optional Claude Code, Codex, and OpenCode plugin integration |
-| Dependencies | None |
+| Dependencies | The Markdown skills have no runtime dependency; optional install and validation helpers require Bash, Git, Python, or Node as documented by their scripts |
 | License | MIT |
 | Repository | <https://github.com/zhu1090093659/spec_driven_develop> |
 
@@ -79,15 +79,15 @@ Phase 5  Confirm & Execute         Present plan summary, get confirmation,
 Phase 6  Archive                   Preserve all artifacts for traceability
 ```
 
-### Orchestrator-Centric Execution and Skills-Only Surface (Updated in v1.16)
+### Orchestrator-Centric Execution and Skills-Only Surface (Updated in v1.17)
 
 Execution is **orchestrator-centric**: the main agent owns progress and quality, and sub-agent dispatch is an economic decision, not a default. Orchestrator-direct execution (Tier 0) is the norm; a single `task-executor` coder (Tier 1) handles large or context-heavy batches; parallel lanes (Tier 2) require disjoint file sets, ≥ L effort per lane, independent verifiability, ≤ 4 lanes, and explicit branch/worktree plus commit authorization. Review is likewise tiered — machine validation (L1) and the orchestrator's own diff review (L2) are the default, while an independent `code-reviewer` agent (L3) is reserved for Tier 2 lanes and high-risk changes. After machine gates, review reports separate Standards and Spec axes. A Tier 2 reviewer may add only append-only authorized fix commits; missing authority is a protocol error, not an uncommitted lane handoff. Only APPROVED or FIXED lanes integrate.
 
 The plugin is **skills-only** — workflows are invoked through skills, not slash commands. All prompts follow a single-sourcing style rule (every sentence is a rule, a contract, or a pointer), with each topic defined in exactly one canonical reference. A new `scripts/install-agents.sh` syncs the bundled skills to `~/.agents/skills` for agents that read that shared directory.
 
-### GitHub-Native Task Tracking and Batch PRs (Updated in v1.16)
+### GitHub-Native Task Tracking and Batch PRs (Updated in v1.17)
 
-When a GitHub repository is detected, the workflow reports the available tracking capability. With explicit tracker-write authorization, it creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board; without that authority, the run uses `LOCAL_ONLY`. Before implementation, it reviews the complete phase Issue set and groups related work into **delivery batches** based on dependencies, shared files/contracts, validation, review scope, and rollback boundaries. Issues remain atomic acceptance and execution-event records; a delivery batch owns the integration branch, aggregate validation, and PR.
+When a GitHub repository is detected, the workflow reports the available tracking capability. With explicit tracker-write authorization, it creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board. Without that authority, a confirmed GitHub mode remains pending as `awaiting tracker-write authorization`; it switches to `LOCAL_ONLY` only when the user explicitly approves that Phase 2 choice. Each run receives an immutable run ID, and GitHub resources use its `spec-run:<RUN_ID>` label and exact body/title markers for safe recovery. Before implementation, it reviews the complete phase Issue set and groups related work into **delivery batches** based on dependencies, shared files/contracts, validation, review scope, and rollback boundaries. Issues remain atomic acceptance and execution-event records; a delivery batch owns the integration branch, aggregate validation, and PR.
 
 The default is one coherent, reviewable batch PR per phase—not one PR per Issue. Tier 2 parallel lanes start only after explicit branch/worktree and commit authorization; each lane returns one accepted atomic commit per task card and never an uncommitted cross-worktree handoff or task-level PR. Without that authority, execution stays Tier 0/1 in the current or integration worktree. Before integration, each lane passes through an independent `code-reviewer` sub-agent that reruns machine gates and reviews Standards and Spec separately. Commit, push, PR, and tracker-write authority are independent gates. The integrated PR includes one `Closes #N` line for every completed Issue. Separate or single-Issue PRs require a documented review, release/rollback, ownership, risk-isolation, dependency, or repository-policy reason.
 
@@ -95,11 +95,11 @@ Three modes are auto-detected based on environment:
 
 | Mode | What You Get |
 |:-----|:-------------|
-| **GITHUB_FULL** | Issues + Milestones + Labels + Project board + worktrees + batch PRs |
-| **GITHUB_STANDARD** | Issues + Milestones + Labels + worktrees + batch PRs (no board) |
+| **GITHUB_FULL** | Issues + Milestones + Labels + Project board |
+| **GITHUB_STANDARD** | Issues + Milestones + Labels (no board) |
 | **LOCAL_ONLY** | Original Markdown-based workflow (no GitHub dependency) |
 
-The workflow gracefully degrades — if `gh` CLI is unavailable or the repo isn't on GitHub, it falls back to local-only mode automatically.
+The workflow reports the detected capability and asks for an explicit approved mode switch when a confirmed GitHub mode cannot write trackers. Worktrees, commits, pushes, and PRs remain separate authority-gated operations in every mode. If `gh` is unavailable or the repository is not on GitHub, it selects `LOCAL_ONLY` during Phase 2.
 
 ### Adaptive Control (New in v1.10)
 
@@ -124,9 +124,9 @@ Spec-Driven Develop pairs with the `tav-workflow` skill as a two-layer system: t
 
 TAV is optional — the `task-executor` agent embeds the same discipline when the skill is not installed.
 
-### Integrated Engineering Disciplines (New in v1.16)
+### Integrated Engineering Disciplines (New in v1.17)
 
-Version 1.16 adapts reusable disciplines from [`asots/mattpocock-skills`](https://github.com/asots/mattpocock-skills) snapshot `ed37663cc5fbef691ddfecd080dff42f7e7e350d` into the existing two-layer architecture rather than replacing either workflow:
+Version 1.17 adapts reusable disciplines from [`asots/mattpocock-skills`](https://github.com/asots/mattpocock-skills) snapshot `ed37663cc5fbef691ddfecd080dff42f7e7e350d` into the existing two-layer architecture rather than replacing either workflow:
 
 - **Domain and decision clarity**: Phase 1 records a domain-model baseline; an optional wayfinding gate orders blocking research and decisions; Phase 2 resolves one material domain or architecture decision at a time and writes back confirmed glossary terms or justified ADRs.
 - **Executable decomposition**: Phase 3 defaults to vertical tracer slices. Foundation work needs a real seam, contract, or test-surface rationale; wide mechanical refactors use expand → dependency-aware migrate batches → contract, with an explicit integration gate when intermediate batches cannot stay green.
@@ -244,30 +244,23 @@ After installation, run `/reload-plugins` to activate.
 
 This repository includes Codex plugin metadata at `.agents/plugins/marketplace.json` and `plugins/spec-driven-develop/.codex-plugin/plugin.json`.
 
-Install the Codex plugin marketplace from GitHub:
-
-```bash
-codex plugin marketplace add zhu1090093659/spec_driven_develop --ref main
-```
-
-Then enable `Spec-Driven Develop` from the Codex plugin UI. If your Codex client does not expose the plugin UI yet, add this to `~/.codex/config.toml`:
-
-```toml
-[plugins."spec-driven-develop@spec-driven-develop"]
-enabled = true
-```
-
-Alternative: install only the core skill with the built-in skill installer inside a Codex session:
+Open Codex's interactive plugin manager:
 
 ```text
-$skill-installer install https://github.com/zhu1090093659/spec_driven_develop/tree/main/plugins/spec-driven-develop/skills/spec-driven-develop
+/plugins
 ```
 
-Or install via shell:
+Add the `zhu1090093659/spec_driven_develop` marketplace, then install `spec-driven-develop@spec-driven-develop`. Follow the Codex UI's current feature-flag guidance if plugins are disabled; do not edit internal plugin configuration by hand.
+
+Alternative: invoke `$skill-installer` in a Codex session and ask it to install the core skill from this repository's `plugins/spec-driven-develop/skills/spec-driven-develop` path.
+
+Or install the bundled skills via shell:
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-codex.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-codex.sh)
 ```
+
+The remote wrapper bootstraps its matching shared installer. Install and repair operations validate the complete bundled file manifest in a staging directory before transactionally replacing an existing bundle; a download or validation failure leaves the previous installation untouched.
 
 ### opencode / OpenCode
 
@@ -276,7 +269,7 @@ This repository includes an opencode plugin entrypoint at `plugins/spec-driven-d
 Install globally:
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-opencode.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-opencode.sh)
 ```
 
 Or install from a local clone:
@@ -302,7 +295,7 @@ Quit and restart opencode after installation or config changes. opencode loads p
 ### Cursor
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-cursor.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-cursor.sh)
 ```
 
 Or clone the repo and run locally:
@@ -351,20 +344,13 @@ Simply describe your task to the agent. Each skill triggers on different keyword
 - English: "review-spd", "use review-spd", "review-spd uncommitted changes", "review-spd recent commits", "review-spd this branch", "review-spd PR"
 - Chinese: "review-spd", "用 review-spd 评审", "review-spd 审查未提交修改", "review-spd 审查最近提交", "review-spd PR"
 
-### Manual Trigger (Claude Code)
-
-```
-/spec-dev rewrite this Python project in Rust
-/dp Our API response times have been spiking recently
-```
-
 ### Cross-Conversation Continuity
 
 If a session is interrupted before completion, the agent can resume by reading `docs/progress/MASTER.md` at the start of a new session to restore context and continue from where it left off. In GitHub modes, it also queries GitHub for the latest Issue states — PRs may have been merged since the last session.
 
 ### Native Task Tracking
 
-When the agent starts a work session, it automatically loads the current phase's pending tasks into the platform's native task tracking tool (e.g. TodoWrite in Claude Code). You get real-time visual progress in your IDE sidebar — no need to open Markdown files manually. In GitHub modes, progress is also visible on the GitHub Milestone and Project board. MASTER.md remains the persistent local index across conversations.
+When the agent starts a work session, it maps current phase tasks to the platform's native task tracking tool when one is available (for example, `TaskCreate` / `TaskUpdate`). You get real-time visual progress in your IDE sidebar — no need to open Markdown files manually. In authorized GitHub modes, progress is also visible on the GitHub Milestone and Project board. MASTER.md remains the persistent local index across conversations.
 
 ### Project Governance and Memory
 
@@ -373,7 +359,7 @@ For new projects, the workflow now creates or updates project-level agent instru
 - `AGENTS.md` — shared constraints for Codex, OpenCode, Cursor, and other Markdown-aware coding agents
 - `CLAUDE.md` — Claude Code-specific instructions, kept aligned with `AGENTS.md`
 - Native project memory surface when available — durable project facts, recurring gotchas, and engineering rules that should survive across sessions
-- Optional repo-local fallback memory file only when explicitly selected or already declared by the project
+- Optional repo-local fallback memory only when explicitly selected or already declared: `docs/memory/MEMORY.md` plus one metadata-tagged entry file per durable topic
 
 Feature and behavior tasks are planned with tests by default. If a task cannot add automated tests, the plan must state why and name the closest validation command to run.
 
@@ -387,7 +373,7 @@ python scripts/export-progress.py docs/progress/
 
 ### Archive
 
-When all tasks are marked complete, the agent archives all workflow artifacts (analysis, plan, progress, and governance snapshots) into `docs/archives/<project-name>/` and updates an index at `docs/archives/README.md`. Active root-level governance files stay in place; archived copies preserve traceability.
+When all tasks are marked complete, the agent first presents an archive and cleanup plan for explicit approval. It then archives workflow artifacts (analysis, plan, progress, governance snapshots, the task definition, and the GitHub ledger when present) into `docs/archives/<project-name>-<run-id>/`, verifies the archive before cleanup, and updates `docs/archives/README.md`. Active root-level governance files stay in place; archived copies preserve traceability.
 
 ## Project Structure
 

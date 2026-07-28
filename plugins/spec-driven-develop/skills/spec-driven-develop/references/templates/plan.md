@@ -13,7 +13,9 @@
 - **Total Phases**: N
 - **Total Tasks**: N
 - **Planned Delivery Batches / PRs**: N
-- **Estimated Total Effort**: S/M/L/XL
+- **Relative Total Scope**: S/M/L/XL (not a duration estimate)
+
+> **Task-size scale**: S = localized change at one clear boundary; M = one independently verifiable behavior slice; L = recoverable multi-step task card that may need checkpoints; XL = delivery-batch scope only and must be split before task execution.
 
 ## S.U.P.E.R Design Constraints
 
@@ -42,17 +44,18 @@
 **Prerequisite**: What must be done before this phase
 **S.U.P.E.R Focus**: Which S.U.P.E.R principles are most relevant to this phase (e.g., "P — defining interface contracts before implementing modules")
 
-| # | Task | Priority | Effort | Depends On | Affected Files | Lane | Delivery Batch | S.U.P.E.R | Test Expectation | Memory Impact | Acceptance Criteria |
-|:--|:-----|:---------|:-------|:-----------|:---------------|:-----|:---------------|:----------|:-----------------|:--------------|:--------------------|
-| 1 |      | P0       | M      | —          | `src/...`, `tests/...` | A | P1-B1 | S, P | Add/update tests | Update resolved memory surface if new invariant emerges |                     |
-| 2 | Docs: update the operator guide | P1 | S | — | `docs/...` | B | P1-B1 | U, E | Not applicable: docs-only; run link check | None | Links and examples resolve |
-| 3 |      | P1       | S      | 1          | `src/...` | A | P1-B1 | R | Add/update regression tests | Update resolved instruction surfaces if workflow rule changes |                     |
+| # | Task | Priority | Effort | Depends On | Affected Files | Lane | Delivery Batch | Delivery Shape | S.U.P.E.R | Test Expectation | Governance Impact | Rollback | Acceptance Criteria |
+|:--|:-----|:---------|:-------|:-----------|:---------------|:-----|:---------------|:---------------|:----------|:-----------------|:------------------|:---------|:--------------------|
+| 1 |      | P0       | M      | —          | `src/...`, `tests/...` | A | P1-B1 | Vertical tracer slice | S, P | Add/update tests | Update resolved memory surface if new invariant emerges | Revert this task's isolated change |                     |
+| 2 | Docs: update the operator guide | P1 | S | — | `docs/...` | B | P1-B1 | Docs standalone task | U, E | Not applicable: docs-only; run link check | None | Revert docs-only change | Links and examples resolve |
+| 3 |      | P1 | S | 1 | `src/...` | A | P1-B1 | Vertical tracer slice | R | Add/update regression tests | Update resolved instruction surfaces if workflow rule changes | Revert task-specific change |                     |
 
 > **S.U.P.E.R column**: Lists which S.U.P.E.R principles are the primary design drivers for this task. The agent implementing this task must pay special attention to these principles. Every task's acceptance criteria implicitly includes: "Passes the S.U.P.E.R Quick Check for the listed principles."
 > **Test Expectation column**: Must name the expected test work or the explicit no-test rationale plus closest validation command.
-> **Memory Impact column**: Must state whether the task can affect the resolved memory surface or any resolved instruction surface.
+> **Governance Impact column**: Must state whether the task can affect the resolved memory surface or any resolved instruction surface.
 > **Affected Files column**: Names the expected files, modules, contracts, or prerequisites. The execution event records only items discovered beyond this declared boundary as unplanned dependencies.
 > **Delivery Batch column**: Every task belongs to exactly one planned PR batch. The batch may contain several Issues even though each task becomes its own Issue.
+> **Delivery Shape and Rollback columns**: State the vertical-slice or permitted exception rationale, plus the smallest safe reversal boundary for the task.
 > **Task description**: For runtime behavior changes, name the observable vertical behavior. Prefix behavior-shape exceptions with `Prefactor`, `Expand`, `Migrate`, `Contract`, or `Integration gate`. Prefix standalone operational work with `Docs`, `Governance`, `Validation`, `Release`, or `Archive`; every exception includes its rationale and acceptance check in the detail section.
 
 ### Parallel Lanes
@@ -67,7 +70,7 @@
 
 | Batch | Tasks / Issues | Execution Waves | Goal and Grouping Rationale | Integration Branch | Planned Tier / Authority Prerequisite | Combined Validation | Depends On | Split / Single-Issue Rationale |
 |:------|:---------------|:----------------|:----------------------------|:-------------------|:-------------------------------------|:--------------------|:-----------|:-------------------------------|
-| P1-B1 | 1, 2, 3 / #TBD | W1: Lane A (T1 → T3) + Lane B (T2) | One coherent architecture and review unit | `batch/p1-b1-<slug>` | Tier 2; branch/worktree + commit authorization required before dispatch | targeted tests + full affected build/smoke | — | Default phase-level batch |
+| P1-B1 | 1, 2, 3 / #TBD | W1: Lane A (T1 → T3) + Lane B (T2) | One coherent architecture and review unit | `batch/<run-id>/p1-b1-<slug>` | Tier 2; branch/worktree + commit authorization required before dispatch | targeted tests + full affected build/smoke | — | Default phase-level batch |
 
 > Review the complete phase task set before defining batches. Apply the authoritative grouping, reviewability, and split-rationale rules in `references/github-integration.md` "Delivery Batch Execution Workflow".
 
@@ -86,8 +89,12 @@
 graph TD
     subgraph Phase1 [Phase 1: Foundation]
         subgraph P1B1 [Delivery Batch P1-B1]
-            T1_1[Task 1.1: Description]
-            T1_2[Task 1.2: Description]
+            subgraph LaneA [Lane A]
+                T1_1[Task 1.1: Description]
+            end
+            subgraph LaneB [Lane B]
+                T1_2[Task 1.2: Description]
+            end
             T1_1 --> T1_2
         end
     end

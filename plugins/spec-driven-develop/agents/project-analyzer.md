@@ -1,7 +1,7 @@
 ---
 name: project-analyzer
 description: Performs deep codebase analysis for the Spec-Driven Develop workflow. Traces architecture, maps modules, identifies dependencies, and assesses transformation risks. Returns structured analysis data for document generation.
-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput
+tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, WebSearch, BashOutput
 model: sonnet
 color: blue
 ---

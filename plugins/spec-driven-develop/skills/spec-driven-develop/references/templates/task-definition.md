@@ -8,6 +8,9 @@ Use this template for the authoritative Phase 2 artifact at `docs/plan/task-defi
 > **Status**: Confirmed
 > **Confirmed on**: YYYY-MM-DD
 > **Tracking mode**: GITHUB_FULL | GITHUB_STANDARD | LOCAL_ONLY
+> **Workflow run ID**: `spd-YYYYMMDD-<project-slug>-<short-id>`
+
+<!-- Generate the run ID once after Phase 2 confirmation. It is immutable for this workflow attempt and scopes remote resources plus the local GitHub recovery ledger. -->
 
 ## Goal
 <!-- The user-approved outcome, expressed as observable behavior or project state. -->

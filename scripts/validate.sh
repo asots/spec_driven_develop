@@ -375,6 +375,15 @@ except json.JSONDecodeError as exc:
 errors = []
 if data.get("task") != "Exporter Smoke Fixture":
     errors.append(f"unexpected task name: {data.get('task')!r}")
+if data.get("mode") != "LOCAL_ONLY":
+    errors.append(f"unexpected mode: {data.get('mode')!r}")
+if data.get("workflow_run_id") != "spd-20260101-exporter-fixture-a1b2":
+    errors.append(f"unexpected workflow_run_id: {data.get('workflow_run_id')!r}")
+status = data.get("current_status", {})
+if status.get("blockers") != "None":
+    errors.append(f"unexpected blockers: {status.get('blockers')!r}")
+if not status.get("adaptive_response"):
+    errors.append("current_status has empty adaptive_response")
 
 phases = data.get("phases", [])
 if len(phases) != 1:
@@ -391,6 +400,11 @@ else:
             errors.append(f"task {t.get('id')} has empty priority")
         if not t.get("acceptance"):
             errors.append(f"task {t.get('id')} has empty acceptance")
+        for field in ("delivery_batch", "dependencies", "super_drivers", "delivery_shape", "affected_files", "test_expectation", "governance_impact", "rollback"):
+            if not t.get(field):
+                errors.append(f"task {t.get('id')} has empty {field}")
+        if not t.get("execution_event"):
+            errors.append(f"task {t.get('id')} has empty execution_event")
 
 if errors:
     for e in errors:
@@ -408,6 +422,32 @@ check_h() {
 }
 
 # ---------------------------------------------------------------------------
+# (i) Bundled installer manifest and process-substitution repair smoke test
+# ---------------------------------------------------------------------------
+check_i() {
+  local tmp_dir
+  tmp_dir="$(mktemp -d)"
+  local lib_url
+  if command -v cygpath >/dev/null 2>&1; then
+    lib_url="file:///$(cygpath -m "$PWD/scripts/lib/install-bundled-skills.sh")"
+  else
+    lib_url="file://$PWD/scripts/lib/install-bundled-skills.sh"
+  fi
+  SPEC_DRIVEN_INSTALLER_LIB_URL="$lib_url" \
+  SPEC_DRIVEN_SOURCE_DIR="$PWD/plugins/spec-driven-develop/skills" \
+  CODEX_HOME="$tmp_dir/codex" \
+    bash <(cat scripts/install-codex.sh) >/dev/null || { rm -rf "$tmp_dir"; return 1; }
+  rm "$tmp_dir/codex/skills/review-spd/references/output-format.md" || { rm -rf "$tmp_dir"; return 1; }
+  SPEC_DRIVEN_INSTALLER_LIB_URL="$lib_url" \
+  SPEC_DRIVEN_SOURCE_DIR="$PWD/plugins/spec-driven-develop/skills" \
+  SPEC_DRIVEN_INSTALL_YES=1 \
+  CODEX_HOME="$tmp_dir/codex" \
+    bash <(cat scripts/install-codex.sh) >/dev/null || { rm -rf "$tmp_dir"; return 1; }
+  test -s "$tmp_dir/codex/skills/review-spd/references/output-format.md" || { rm -rf "$tmp_dir"; return 1; }
+  rm -rf "$tmp_dir"
+}
+
+# ---------------------------------------------------------------------------
 # Run all checks
 # ---------------------------------------------------------------------------
 run_check a "reference existence" check_a
@@ -418,11 +458,12 @@ run_check e "ESM syntax of opencode-plugin.js" check_e
 run_check f "py_compile Python sources" check_f
 run_check g "exporter smoke test (fixture)" check_g
 run_check h "review-context UTF-8 smoke test" check_h
+run_check i "bundled installer bootstrap and repair smoke test" check_i
 
 echo
 if [ "$FAILURES" -gt 0 ]; then
   echo "validate.sh: $FAILURES check(s) FAILED" >&2
   exit 1
 fi
-echo "validate.sh: all 8 checks passed"
+echo "validate.sh: all 9 checks passed"
 exit 0

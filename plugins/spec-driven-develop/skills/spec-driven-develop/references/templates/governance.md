@@ -80,24 +80,26 @@ Claude Code-specific reminders:
 
 ---
 
-## Optional Repo Fallback Memory File
+## Optional Repo Fallback Memory Layout
 
-Use this only when no native memory surface is available and the user explicitly selects a repo-local fallback.
+Use this only when no native memory surface is available and the user explicitly selects a repo-local fallback. The fallback matches the TAV-compatible `docs/memory/` layout: one concise index plus one entry per durable rule.
 
 ```markdown
-# Project Memory
+<!-- docs/memory/MEMORY.md -->
+# Project Memory Index
 
-This file stores durable project facts and decisions because no native project memory surface was available or selected. It is not a progress log; active workflow state belongs in `docs/progress/MASTER.md` during a spec-driven run.
+- [<topic-slug>](./<topic-slug>.md) — one-line hook identifying the affected files, module, or topic.
 
-## Stable Project Facts
+<!-- docs/memory/<topic-slug>.md -->
+---
+name: <topic-slug>
+description: <one-line durable rule>
+type: fact | rule | decision | gotcha
+tags: [<keyword>]
+applies_to: ["<path-glob-or-module>"]
+---
 
-- <fact>
-
-## Durable Engineering Rules
-
-- <rule>
-
-## Recurring Gotchas
-
-- <gotcha and mitigation>
+- <durable rule> — Why: <evidence>. Apply: <when this changes future work>.
 ```
+
+Update the entry and its `MEMORY.md` index line in one edit batch. This fallback is not a progress log; active workflow state belongs in `docs/progress/MASTER.md` during a spec-driven run.
