@@ -51,8 +51,36 @@ cleanup_installer() {
 }
 trap cleanup_installer EXIT
 
+extract_version_stream() {
+    awk '
+        NR == 1 {
+            sub(/\r$/, "", $0)
+            if ($0 != "---") exit 1
+            in_frontmatter = 1
+            next
+        }
+        in_frontmatter {
+            line = $0
+            sub(/\r$/, "", line)
+            if (line == "---") exit found ? 0 : 1
+            if (line ~ /^metadata:[[:space:]]*$/) {
+                in_metadata = 1
+                next
+            }
+            if (in_metadata && line ~ /^[^[:space:]]/) in_metadata = 0
+            if (in_metadata && line ~ /^  version:[[:space:]]*/) {
+                sub(/^  version:[[:space:]]*/, "", line)
+                print line
+                found = 1
+                exit 0
+            }
+        }
+        END { if (!found) exit 1 }
+    '
+}
+
 extract_version() {
-    sed -n 's/^[[:space:]]*version:[[:space:]]*//p' "$1" 2>/dev/null | sed -n '1p'
+    extract_version_stream < "$1" 2>/dev/null
 }
 
 get_local_version() {
@@ -67,7 +95,7 @@ get_source_version() {
     if [ -f "$local_skill" ]; then
         extract_version "$local_skill"
     else
-        curl -fsSL "$RAW_URL/$SKILL_SUBPATH/SKILL.md" | sed -n 's/^[[:space:]]*version:[[:space:]]*//p' | sed -n '1p'
+        curl -fsSL "$RAW_URL/$SKILL_SUBPATH/SKILL.md" | extract_version_stream
     fi
 }
 

@@ -19,13 +19,7 @@
 
 ## S.U.P.E.R Design Constraints
 
-> Each task names only the S.U.P.E.R principles relevant to its changed boundary. The following are adaptable defaults, not a universal scorecard:
-
-- **S (Single Purpose)**: Each new module/file/function solves exactly one problem. If a task spans multiple responsibilities, decompose it further.
-- **U (Unidirectional Flow)**: Data flows input → processing → output. Dependencies point inward. No circular imports.
-- **P (Ports over Implementation)**: Define interface contracts (schemas, types) before implementation. All cross-module I/O must be serializable.
-- **E (Environment-Appropriate)**: Configuration, paths, logs, persistence, and lifecycle follow the supported runtime's explicit convention; do not impose service-only rules on CLI, desktop, embedded, or offline work.
-- **R (Replaceable Parts)**: Each component must be replaceable without cascading changes. Validate with the replacement test: "Can I swap this with a different implementation by only touching this module?"
+> Each task names only the S.U.P.E.R principles relevant to its changed boundary. Definitions, applicability rules, and the Quick Check are owned by `references/super-philosophy.md`; do not restate them in generated plans.
 
 ## Testing and Governance Constraints
 

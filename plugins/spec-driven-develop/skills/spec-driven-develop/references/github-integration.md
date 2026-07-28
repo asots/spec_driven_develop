@@ -206,38 +206,76 @@ Add a 1-second delay between Issue creations to avoid secondary rate limits.
 ### Create Project and Link to Repo
 
 ```bash
-# First obtain `PROJECT_NUM_FROM_EXACT_RUN_LOOKUP` by checking the ledger and exact project title.
-# Create only when no exact run-scoped project exists, then immediately record it in the ledger.
+OWNER="@me"
 PROJECT_TITLE="Spec: {project_name} [$RUN_ID]"
-PROJECT_NUM="${PROJECT_NUM_FROM_EXACT_RUN_LOOKUP:-}"
-if [ -z "$PROJECT_NUM" ]; then
-  PROJECT_NUM=$(gh project create --owner "@me" --title "$PROJECT_TITLE" --format json | jq -r '.number')
+
+# Lookup -> verify uniqueness -> reuse/create -> immediate ledger write.
+PROJECT_MATCH_COUNT=$(gh project list --owner "$OWNER" --limit 100 --format json \
+  --jq ".projects | map(select(.title == \"$PROJECT_TITLE\")) | length")
+if [ "$PROJECT_MATCH_COUNT" -gt 1 ]; then
+  echo "Blocked: multiple exact project-title matches for $PROJECT_TITLE" >&2
+  exit 1
+elif [ "$PROJECT_MATCH_COUNT" -eq 1 ]; then
+  PROJECT_NUM=$(gh project list --owner "$OWNER" --limit 100 --format json \
+    --jq ".projects[] | select(.title == \"$PROJECT_TITLE\") | .number")
+else
+  PROJECT_NUM=$(gh project create --owner "$OWNER" --title "$PROJECT_TITLE" --format json --jq '.number')
 fi
+PROJECT_JSON=$(gh project view "$PROJECT_NUM" --owner "$OWNER" --format json)
+# Before the next remote write, record PROJECT_NUM plus PROJECT_JSON id/url in github-sync.md.
 
 # Link to repository
-gh project link "$PROJECT_NUM" --owner "@me" --repo "$REPO"
+gh project link "$PROJECT_NUM" --owner "$OWNER" --repo "$REPO"
 ```
 
 ### Create Custom Fields
 
+For each planned field, perform exact lookup → contract check → reuse/create → immediate ledger write. An exact-name field with the wrong data type or option set is a blocking contract conflict; do not create a duplicate with the same name.
+
 ```bash
 OWNER="@me"
+FIELD_NAME="Priority"
+FIELD_TYPE="SINGLE_SELECT"
+FIELD_OPTIONS="P0,P1,P2"
 
-# Priority field (mirrors labels but enables board filtering)
-gh project field-create "$PROJECT_NUM" --owner "$OWNER" --name "Priority" --data-type "SINGLE_SELECT" --single-select-options "P0,P1,P2"
-
-# Size field
-gh project field-create "$PROJECT_NUM" --owner "$OWNER" --name "Size" --data-type "SINGLE_SELECT" --single-select-options "S,M,L,XL"
-
-# Phase field: generate options from the confirmed plan, do not hard-code a phase count.
-gh project field-create "$PROJECT_NUM" --owner "$OWNER" --name "Phase" --data-type "SINGLE_SELECT" --single-select-options "$PHASE_OPTIONS"
+FIELD_MATCH_COUNT=$(gh project field-list "$PROJECT_NUM" --owner "$OWNER" --limit 100 --format json \
+  --jq ".fields | map(select(.name == \"$FIELD_NAME\")) | length")
+if [ "$FIELD_MATCH_COUNT" -gt 1 ]; then
+  echo "Blocked: multiple exact field-name matches for $FIELD_NAME" >&2
+  exit 1
+elif [ "$FIELD_MATCH_COUNT" -eq 1 ]; then
+  FIELD_JSON=$(gh project field-list "$PROJECT_NUM" --owner "$OWNER" --limit 100 --format json \
+    --jq ".fields[] | select(.name == \"$FIELD_NAME\")")
+  # Verify FIELD_JSON dataType/options match the confirmed plan before reuse.
+else
+  FIELD_JSON=$(gh project field-create "$PROJECT_NUM" --owner "$OWNER" \
+    --name "$FIELD_NAME" --data-type "$FIELD_TYPE" \
+    --single-select-options "$FIELD_OPTIONS" --format json)
+fi
+# Before creating or looking up the next field, record FIELD_JSON id, parent project ID,
+# lookup evidence, and reused/created state in github-sync.md.
 ```
+
+Repeat the same protocol for `Size` (`S,M,L,XL`) and `Phase` (options generated from the confirmed plan, never a hard-coded phase count).
 
 ### Add Issues to Project
 
+Use the Issue URL/content ID as the stable identity. Never call `item-add` until an exact lookup confirms that the Issue is absent from the Project.
+
 ```bash
-# For each created Issue URL:
-gh project item-add "$PROJECT_NUM" --owner "$OWNER" --url "$ISSUE_URL"
+ITEM_MATCH_COUNT=$(gh project item-list "$PROJECT_NUM" --owner "$OWNER" --limit 100 --format json \
+  --jq ".items | map(select(.content.url == \"$ISSUE_URL\")) | length")
+if [ "$ITEM_MATCH_COUNT" -gt 1 ]; then
+  echo "Blocked: Issue appears more than once in the Project: $ISSUE_URL" >&2
+  exit 1
+elif [ "$ITEM_MATCH_COUNT" -eq 1 ]; then
+  ITEM_JSON=$(gh project item-list "$PROJECT_NUM" --owner "$OWNER" --limit 100 --format json \
+    --jq ".items[] | select(.content.url == \"$ISSUE_URL\")")
+else
+  ITEM_JSON=$(gh project item-add "$PROJECT_NUM" --owner "$OWNER" --url "$ISSUE_URL" --format json)
+fi
+# Before processing the next Issue, record ITEM_JSON id, the Issue content ID/URL,
+# lookup evidence, and reused/created state in github-sync.md.
 ```
 
 Setting custom field values on items requires GraphQL node IDs. Retrieve them with:
@@ -261,7 +299,7 @@ gh project item-edit \
   --single-select-option-id "$OPTION_ID"
 ```
 
-If setting custom field values fails, this is non-critical — the Issue Labels already carry the same information (priority, size, phase). Log a warning and continue.
+Field or item identity lookup/create failures are blocking because recovery would otherwise be ambiguous. After every field and item identity is recorded, a failure to set a custom field value may be downgraded to a warning only when the Issue Labels already carry the same priority, size, and phase values; record the failed command and evidence in `github-sync.md` before continuing.
 
 ---
 

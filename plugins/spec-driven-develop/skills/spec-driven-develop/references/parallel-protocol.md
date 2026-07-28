@@ -96,21 +96,7 @@ For each parallel lane in the current dependency-ready wave:
 
 ## Progress Synchronization
 
-After the orchestrator consolidates a delivery batch:
-
-**In GitHub modes**:
-- Each Issue remains the authoritative task status and execution-event record
-- After a batch transition, update MASTER.md once with the active phase, delivery-batch status, blocker, and response level
-- Update the platform's native task tool when useful; it is not durable state
-
-**In LOCAL_ONLY mode**:
-- Apply lane completion reports to the phase progress file once; it is the authoritative task record
-- Update MASTER.md once with final phase counts, current status, blocker, and response level
-- Update the platform's native task tool when useful; it is not durable state
-
-**In all modes**:
-- Reconcile proposed memory-surface updates from parallel agents before moving on; lanes do not write them directly
-- Keep resolved instruction surfaces aligned only through one orchestrator-owned, authorized update after integration
+After the orchestrator consolidates a delivery batch, invoke `references/adaptive-control.md` "Canonical Storage" and "Controller Activation" once for the integrated results. This protocol adds only the writer boundary: lane reports are reconciled by the orchestrator, native task tools remain session aids, and any instruction or memory update is one orchestrator-owned authorized write after integration.
 
 ---
 
@@ -138,7 +124,4 @@ Verify that parallel execution did not introduce cross-lane violations:
 
 ### Aggregate Execution Events
 
-After consolidating a delivery batch's parallel results:
-1. Record every lane's unrecorded task event once in its authoritative Issue or phase-file entry
-2. Update the MASTER.md response mirror once for the batch
-3. Apply the highest evidence-backed response in `references/adaptive-control.md` before starting the next delivery batch
+After consolidating a delivery batch's parallel results, pass every unrecorded lane event to the single orchestrator invocation defined by `references/adaptive-control.md` "Controller Activation" before starting the next delivery batch.

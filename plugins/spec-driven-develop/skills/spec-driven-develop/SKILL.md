@@ -12,7 +12,7 @@ description: >-
   surface resolution, progress tracking setup, and then executes the plan across recoverable sessions when needed. Keeps Issues as
   task-tracking units while batching related implementation into coherent reviewable PRs.
 metadata:
-  version: 1.18.0
+  version: 1.19.0
 ---
 
 # Spec-Driven Develop
@@ -68,7 +68,7 @@ Keep this list in sync with `tav-workflow` § "L2 Escalation Signals" — both s
 - Architectural decisions are required (layering, dependency direction, technology selection).
 - Acceptance criteria cannot be defined within a single Thinker-Actor-Verifier cycle.
 
-A refactor confined to one module — however messy — is TAV territory, not spec-driven territory.
+A refactor confined to one module — however messy — stays at L1 (TAV territory).
 
 ## Before You Begin: Cross-Conversation Continuity Check
 
@@ -308,8 +308,12 @@ Spec-Driven Develop owns analysis, decomposition, delivery-batch orchestration, 
 | TAV outcome | Spec-Driven update |
 |:------------|:-------------------|
 | Verifier pass | TAV returns `ready for batch integration`; after integrated validation, the orchestrator marks project status and only performs authorized closure through the batch PR's `Closes #N` line or LOCAL_ONLY completion updates |
-| TAV execution signals (rework iterations, Thinker returns, unplanned files touched) | TAV returns one execution-event payload with outcome, evidence, dependencies, and focused S.U.P.E.R result; the orchestrator records it once in the authoritative surface (see `references/adaptive-control.md`) |
+| TAV execution signals (rework iterations, Thinker returns, unplanned files touched) | TAV returns one execution-event payload with Outcome, Rework, Plan returns, Unplanned dependencies, and Focused S.U.P.E.R result; the orchestrator records it once in the authoritative surface (see `references/adaptive-control.md`) |
 | Knowledge consolidation captures (at most 1-3 durable rules per cycle) | TAV returns candidates; the orchestrator reconciles and writes authorized updates to the surfaces resolved under "Governance Status" in MASTER.md — durable facts to memory, agent-behavior rules to instructions |
 | `[ESCALATION-REPORT]` or blocked state | TAV returns the event; the orchestrator records it in an authorized Issue comment or phase-file note and selects the response level |
 
-**State ownership:** `docs/progress/MASTER.md` (plus GitHub Issues) is the only project-level authority. `.tav/state.json` is scoped to one task: it is created only when that single task needs cross-session recovery, it is archived or deleted when the task completes, and it never carries project-level progress.
+**State ownership:**
+
+- `docs/progress/MASTER.md` is the project-level lightweight status authority.
+- GitHub Issues (GitHub modes) or phase-file task entries (LOCAL_ONLY) are the authoritative task-event records.
+- `.tav/state.json` is scoped to one task: it is created only when that single task needs cross-session recovery, it is archived or deleted with explicit cleanup authorization when the task completes, and it never carries project-level progress.

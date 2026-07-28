@@ -70,6 +70,22 @@ foreach ($m in $manifests) {
   } else { Fail "$m has no version field" }
 }
 
+$readmeVersionChecks = @(
+  @{ Path = 'README.md'; Pattern = '\*\*Current version\*\*:\s*([^\s—]+)'; Label = 'Current version' },
+  @{ Path = 'README.zh-CN.md'; Pattern = '\*\*当前版本\*\*：\s*([^\s—]+)'; Label = '当前版本' }
+)
+foreach ($check in $readmeVersionChecks) {
+  $text = Get-Content (Join-Path $root $check.Path) -Raw -Encoding UTF8
+  if ($text -notmatch $check.Pattern) { Fail "$($check.Path) lacks $($check.Label)" }
+  elseif ($Matches[1].Trim() -ne $skillVer) { Fail "$($check.Path) $($check.Label) != SKILL.md $skillVer" }
+  else { Ok "$($check.Path) $($check.Label) = $skillVer" }
+}
+
+$changelog = Get-Content (Join-Path $root 'CHANGELOG.md') -Raw -Encoding UTF8
+if ($changelog -notmatch ('(?m)^## Version ' + [regex]::Escape($skillVer) + ' \(')) {
+  Fail "CHANGELOG.md has no entry for current version $skillVer"
+} else { Ok "CHANGELOG.md records current version $skillVer" }
+
 # 3. Every references/... file mentioned in SKILL.md exists
 $failsBefore = $script:fail
 $refs = [regex]::Matches($skill, 'references/[\w\-./]+\.(?:md|json)') | ForEach-Object { $_.Value } | Sort-Object -Unique
@@ -149,6 +165,7 @@ $wayfinding = Get-Content (Join-Path $skillDir 'references/wayfinding.md') -Raw 
 $decomposition = Get-Content (Join-Path $skillDir 'references/decomposition-strategy.md') -Raw -Encoding UTF8
 $adaptive = Get-Content (Join-Path $skillDir 'references/adaptive-control.md') -Raw -Encoding UTF8
 $super = Get-Content (Join-Path $skillDir 'references/super-philosophy.md') -Raw -Encoding UTF8
+$archiveTemplate = Get-Content (Join-Path $skillDir 'references/templates/archive.md') -Raw -Encoding UTF8
 
 Require-Fingerprints 'GitHub authority gates' $github @(
   '## Authority Gates',
@@ -156,6 +173,12 @@ Require-Fingerprints 'GitHub authority gates' $github @(
   'Tier 2 must not start',
   'git add -- {task_specific_paths}',
   'stop after local integration validation'
+)
+Require-Fingerprints 'GitHub Project recovery contract' $github @(
+  'exact lookup → contract check → reuse/create → immediate ledger write',
+  'ITEM_MATCH_COUNT',
+  'record ITEM_JSON id',
+  'Field or item identity lookup/create failures are blocking'
 )
 if ($github -like '*git add -A*') { Fail 'github-integration.md still stages unrelated paths with git add -A' }
 elseif ($github -like '*refs #{issue_1}, refs #{issue_2}*') { Fail 'github-integration.md still demonstrates one commit referencing multiple Issues' }
@@ -173,9 +196,34 @@ Require-Fingerprints 'Phase 2 task-definition template' $taskDefinitionTemplate 
   '## Dependencies',
   '## Rollback Boundary',
   '## Testing Policy',
+  '## Domain Decisions and Write-Back',
+  '## S.U.P.E.R Priorities',
   '## Governance and Memory Decision',
   'Change this document before changing downstream task cards'
 )
+Require-Fingerprints 'archive template contract' $archiveTemplate @(
+  'docs/archives/<project-name>/<run-id>/',
+  './<project-name>/<run-id>/progress/MASTER.md',
+  'locally validated — awaiting remote sync'
+)
+if ($archiveTemplate -like '*<project-name>-<run-id>*') { Fail 'archive template still uses flattened project-run naming' }
+else { Ok 'archive template uses only the canonical nested run path' }
+
+if ($planTemplate.Contains('**S (Single Purpose)**') -or $planTemplate.Contains('**R (Replaceable Parts)**')) {
+  Fail 'plan template still redefines canonical S.U.P.E.R principles'
+} elseif ($planTemplate -notlike '*references/super-philosophy.md*') {
+  Fail 'plan template no longer cites the canonical S.U.P.E.R reference'
+} else { Ok 'plan template references S.U.P.E.R without redefining it' }
+
+if ($parallel -notlike '*references/adaptive-control.md*"Canonical Storage"*"Controller Activation"*') {
+  Fail 'parallel-protocol.md does not delegate storage and activation to adaptive-control.md'
+} else { Ok 'parallel protocol keeps only orchestration timing and writer boundaries' }
+
+if ($br -notlike '*references/parallel-protocol.md*"Writer model"*') {
+  Fail 'behavioral reviewer rule no longer cites the canonical writer model'
+} elseif ($br -like '*Reviewers never create or comment on GitHub Issues/PRs*') {
+  Fail 'behavioral-rules.md still duplicates the detailed reviewer writer model'
+} else { Ok 'behavioral reviewer rule is a concise safety boundary plus canonical pointer' }
 Require-Fingerprints 'analysis coverage and affected-boundary contract' ($analysisTemplate + $planTemplate + $skill) @(
   'Coverage',
   'deep / shallow',
@@ -273,6 +321,11 @@ if (-not (Test-Path $tavSkillPath)) {
     }
   }
 
+  $fallback = 'A refactor confined to one module — however messy — stays at L1 (TAV territory).'
+  if ($spdSec -notlike "*$fallback*" -or $tavSec -notlike "*$fallback*") {
+    Fail 'L2 fallback sentence is not verbatim-identical across repos'
+  } else { Ok 'L2 fallback sentence is verbatim-identical across repos' }
+
   # 7c. Write-back protocol fingerprint: tav must carry the delivery-batch semantics
   if ($tav -match 'Close the Issue via PR') { Fail 'tav SKILL.md still contains pre-delivery-batch wording "Close the Issue via PR"' }
   else { Ok 'tav SKILL.md free of pre-delivery-batch write-back wording' }
@@ -291,6 +344,23 @@ if (-not (Test-Path $tavSkillPath)) {
   if ($null -eq $spdBoundary) { Fail 'SKILL.md section "Boundary with TAV" not found' }
   elseif ($spdBoundary -notlike '*Closes #N*') { Fail 'spd "Boundary with TAV" missing delivery-batch fingerprint "Closes #N"' }
   else { Ok 'spd boundary section carries delivery-batch fingerprint' }
+
+  $canonicalPayload = 'Outcome, Rework, Plan returns, Unplanned dependencies, and Focused S.U.P.E.R result'
+  if ($spdBoundary -notlike "*$canonicalPayload*") { Fail 'spd boundary lacks the canonical execution-event payload' }
+  elseif ($tavOp -notlike "*$canonicalPayload*") { Fail 'tav interop section lacks the canonical execution-event payload' }
+  else { Ok 'execution-event payload is canonical and mirrored across repos' }
+
+  $statePattern = '(?ms)\*\*State ownership:\*\*\s*(.*?)(?:\n---|\z)'
+  $spdStateMatch = [regex]::Match($spdBoundary, $statePattern)
+  $tavStateMatch = [regex]::Match($tavOp, $statePattern)
+  if (-not $spdStateMatch.Success -or -not $tavStateMatch.Success) {
+    Fail 'state ownership block missing from one side of the handoff contract'
+  } else {
+    $spdState = ($spdStateMatch.Groups[1].Value -replace "`r", '').Trim()
+    $tavState = ($tavStateMatch.Groups[1].Value -replace "`r", '').Trim()
+    if ($spdState -ne $tavState) { Fail 'state ownership block differs across repos' }
+    else { Ok 'three-layer state ownership block is mirrored across repos' }
+  }
 
   # 7d. Cross-references by section name must resolve both ways
   if ($skill -notlike '*Operating Inside a Spec-Driven Project*') { Fail 'SKILL.md no longer cites tav section "Operating Inside a Spec-Driven Project"' }

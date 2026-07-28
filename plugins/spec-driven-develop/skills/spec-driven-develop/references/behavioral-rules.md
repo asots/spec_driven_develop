@@ -38,7 +38,7 @@ These rules apply to every agent and every phase in the Spec-Driven Develop work
 
 17. **Issues and PRs have different cardinality**. Issues are task, acceptance, and execution-event units; delivery batches are implementation, integration validation, and PR units. Batch design and reviewability signals live in `references/github-integration.md` "Delivery Batch Execution Workflow"; record every split or single-Issue rationale there and in the plan.
 
-18. **Reviewer commit-ownership and authority boundaries**. In the execution review loop, the per-lane code-reviewer may commit fixes only to its lane's branch (append-only, `fix:` commits referencing but never closing Issues). Reviewers never create or comment on GitHub Issues/PRs, never edit MASTER.md or drift/adaptive state, and never write instruction or memory surfaces — their Review Reports return to the orchestrator. The orchestrator remains the acceptance-verification authority and the single writer for all shared state.
+18. **Reviewer boundaries are enforced, not advisory**. The orchestrator remains the acceptance-verification authority and single writer for shared state; reviewers follow the commit, branch, external-write, and handoff rules owned by `references/parallel-protocol.md` "Writer model".
 
 19. **Sub-agent dispatch is an economic decision, not a default**. Orchestrator-direct execution is the default; admission, authority, and tiered-review criteria live exclusively in `references/parallel-protocol.md`.
 

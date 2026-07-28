@@ -2,7 +2,7 @@
 #
 # scripts/validate.sh — standing consistency guard for the spec_driven_develop repo.
 #
-# Runs eight checks and prints one PASS/FAIL line per check. Exits non-zero if any
+# Runs ten checks and prints one PASS/FAIL line per check. Exits non-zero if any
 # check fails. Safe to run from any directory: the script cds to the repo root
 # (the parent of this scripts/ directory) before doing any work.
 #
@@ -51,6 +51,9 @@
 #   (h) Review context UTF-8 smoke test — create a temporary Git repository with
 #        Chinese, arrow, and emoji characters, then run the packaged collector
 #        without relying on the host locale or stdout code page.
+#   (i) Bundled installer bootstrap/repair plus frontmatter-version smoke test.
+#   (j) Workflow contract invariants for archive, payload/state, templates,
+#       single-sourcing, and GitHub recovery semantics.
 #
 set -uo pipefail
 
@@ -427,6 +430,32 @@ check_h() {
 check_i() {
   local tmp_dir
   tmp_dir="$(mktemp -d)"
+  mkdir -p "$tmp_dir/source"
+  cp -R "$PWD/plugins/spec-driven-develop/skills/." "$tmp_dir/source/" || { rm -rf "$tmp_dir"; return 1; }
+  python_cmd - "$tmp_dir/source/spec-driven-develop/SKILL.md" <<'PY' || { rm -rf "$tmp_dir"; return 1; }
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+needle = "metadata:\n"
+if needle not in text:
+    raise SystemExit("metadata frontmatter block not found")
+path.write_text(
+    text.replace(needle, "  version: decoy-description-value\nmetadata:\n", 1),
+    encoding="utf-8",
+)
+PY
+  local expected_version
+  expected_version="$(python_cmd - <<'PY'
+import re
+from pathlib import Path
+
+text = Path("plugins/spec-driven-develop/skills/spec-driven-develop/SKILL.md").read_text(encoding="utf-8")
+frontmatter = re.match(r"^---\s*\n(.*?)\n---", text, re.DOTALL).group(1)
+print(re.search(r"^\s*version:\s*(.+?)\s*$", frontmatter, re.MULTILINE).group(1))
+PY
+)" || { rm -rf "$tmp_dir"; return 1; }
   local lib_url
   if command -v cygpath >/dev/null 2>&1; then
     lib_url="file:///$(cygpath -m "$PWD/scripts/lib/install-bundled-skills.sh")"
@@ -434,17 +463,98 @@ check_i() {
     lib_url="file://$PWD/scripts/lib/install-bundled-skills.sh"
   fi
   SPEC_DRIVEN_INSTALLER_LIB_URL="$lib_url" \
-  SPEC_DRIVEN_SOURCE_DIR="$PWD/plugins/spec-driven-develop/skills" \
+  SPEC_DRIVEN_SOURCE_DIR="$tmp_dir/source" \
   CODEX_HOME="$tmp_dir/codex" \
-    bash <(cat scripts/install-codex.sh) >/dev/null || { rm -rf "$tmp_dir"; return 1; }
+    bash <(cat scripts/install-codex.sh) >"$tmp_dir/install.log" || { rm -rf "$tmp_dir"; return 1; }
+  grep -F "v$expected_version" "$tmp_dir/install.log" >/dev/null || { rm -rf "$tmp_dir"; return 1; }
   rm "$tmp_dir/codex/skills/review-spd/references/output-format.md" || { rm -rf "$tmp_dir"; return 1; }
   SPEC_DRIVEN_INSTALLER_LIB_URL="$lib_url" \
-  SPEC_DRIVEN_SOURCE_DIR="$PWD/plugins/spec-driven-develop/skills" \
+  SPEC_DRIVEN_SOURCE_DIR="$tmp_dir/source" \
   SPEC_DRIVEN_INSTALL_YES=1 \
   CODEX_HOME="$tmp_dir/codex" \
     bash <(cat scripts/install-codex.sh) >/dev/null || { rm -rf "$tmp_dir"; return 1; }
   test -s "$tmp_dir/codex/skills/review-spd/references/output-format.md" || { rm -rf "$tmp_dir"; return 1; }
   rm -rf "$tmp_dir"
+}
+
+# ---------------------------------------------------------------------------
+# (j) Workflow contract invariants
+# ---------------------------------------------------------------------------
+check_j() {
+  python_cmd - <<'PY'
+import sys
+from pathlib import Path
+
+skill_root = Path("plugins/spec-driven-develop/skills/spec-driven-develop")
+files = {
+    "skill": skill_root / "SKILL.md",
+    "readme": Path("README.md"),
+    "readme_zh": Path("README.zh-CN.md"),
+    "archive": skill_root / "references/templates/archive.md",
+    "plan": skill_root / "references/templates/plan.md",
+    "task_definition": skill_root / "references/templates/task-definition.md",
+    "github": skill_root / "references/github-integration.md",
+    "parallel": skill_root / "references/parallel-protocol.md",
+    "behavioral": skill_root / "references/behavioral-rules.md",
+}
+texts = {name: path.read_text(encoding="utf-8") for name, path in files.items()}
+errors = []
+
+canonical_archive = "docs/archives/<project-name>/<run-id>/"
+for name in ("skill", "readme", "archive"):
+    if canonical_archive not in texts[name]:
+        errors.append(f"{files[name]} lacks canonical archive path")
+if "<project-name>-<run-id>" in texts["archive"] or "<project-name>-<run-id>" in texts["readme"]:
+    errors.append("current archive docs still use the flattened project-run path")
+if "./<project-name>/<run-id>/progress/MASTER.md" not in texts["archive"]:
+    errors.append("archive index link does not match canonical nested path")
+if "locally validated — awaiting remote sync" not in texts["archive"]:
+    errors.append("archive index cannot represent pending remote synchronization")
+
+payload = "Outcome, Rework, Plan returns, Unplanned dependencies, and Focused S.U.P.E.R result"
+if payload not in texts["skill"]:
+    errors.append("SKILL.md lacks the canonical execution-event payload")
+for fp in (
+    "project-level lightweight status authority",
+    "authoritative task-event records",
+    "scoped to one task",
+):
+    if fp not in texts["skill"]:
+        errors.append(f"SKILL.md state ownership missing: {fp}")
+
+for heading in ("## Domain Decisions and Write-Back", "## S.U.P.E.R Priorities"):
+    if heading not in texts["task_definition"]:
+        errors.append(f"task-definition template missing {heading}")
+if "references/super-philosophy.md" not in texts["plan"]:
+    errors.append("plan template does not cite the canonical S.U.P.E.R reference")
+if "**S (Single Purpose)**" in texts["plan"] or "**R (Replaceable Parts)**" in texts["plan"]:
+    errors.append("plan template still redefines S.U.P.E.R principles")
+
+for fp in (
+    "exact lookup → contract check → reuse/create → immediate ledger write",
+    "ITEM_MATCH_COUNT",
+    "record ITEM_JSON id",
+    "Field or item identity lookup/create failures are blocking",
+):
+    if fp not in texts["github"]:
+        errors.append(f"GitHub recovery protocol missing: {fp}")
+if "references/adaptive-control.md" not in texts["parallel"]:
+    errors.append("parallel protocol does not delegate adaptive storage/activation")
+if 'references/parallel-protocol.md` "Writer model"' not in texts["behavioral"]:
+    errors.append("behavioral reviewer rule does not cite the canonical writer model")
+
+for fp, name in (
+    ("Separate tier vocabularies", "readme"),
+    ("两套分级术语相互独立", "readme_zh"),
+):
+    if fp not in texts[name]:
+        errors.append(f"README terminology distinction missing: {fp}")
+
+if errors:
+    for error in errors:
+        print(f"check (j): {error}", file=sys.stderr)
+    sys.exit(1)
+PY
 }
 
 # ---------------------------------------------------------------------------
@@ -459,11 +569,12 @@ run_check f "py_compile Python sources" check_f
 run_check g "exporter smoke test (fixture)" check_g
 run_check h "review-context UTF-8 smoke test" check_h
 run_check i "bundled installer bootstrap and repair smoke test" check_i
+run_check j "workflow contract invariants" check_j
 
 echo
 if [ "$FAILURES" -gt 0 ]; then
   echo "validate.sh: $FAILURES check(s) FAILED" >&2
   exit 1
 fi
-echo "validate.sh: all 9 checks passed"
+echo "validate.sh: all 10 checks passed"
 exit 0

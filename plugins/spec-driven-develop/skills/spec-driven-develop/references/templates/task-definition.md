@@ -37,6 +37,13 @@ Use this template for the authoritative Phase 2 artifact at `docs/plan/task-defi
 ## Testing Policy
 <!-- Required test layers, known harness limits, and explicit no-test exceptions. -->
 
+## Domain Decisions and Write-Back
+<!-- Confirmed canonical terms and bounded-context decisions; glossary/ADR paths updated in Phase 2; unresolved terminology that is explicitly deferred. Use `None` when no domain decision is required. -->
+
+## S.U.P.E.R Priorities
+- **Fix in this run**: declared S.U.P.E.R violations or drivers that shape acceptance.
+- **Deferred**: relevant violations intentionally left out, with rationale.
+
 ## Governance and Memory Decision
 <!-- Resolved instruction surfaces, durable memory surface, and whether any write-back is expected. -->
 

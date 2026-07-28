@@ -1,11 +1,11 @@
 ---
 name: deep-discuss
 description: >-
-  结构化深度讨论 Skill，用于与用户进行多轮问题分析和方案设计。当用户描述一个问题现象、故障表现、
-  技术困惑、方案选择困难，或明确说"讨论一下"、"帮我分析"、"我遇到一个问题"、"你觉得怎么样"、
-  "帮我想想"、"我在纠结"时，必须使用本 skill。当用户提供了一段描述（可能附带截图）并期望深入分析
-  而非直接给答案时，也应触发本 skill。即使用户只是抛出一个现象描述没有明确提问，也要使用本 skill
-  来引导结构化思考。不要在简单的事实查询（"X是什么"）或明确的执行指令（"帮我写个脚本"）上触发。
+  Structured multi-turn problem analysis and solution design. Use when the user presents
+  a symptom, technical uncertainty, difficult trade-off, or asks to discuss, analyze,
+  brainstorm, or think through a problem before acting. Chinese triggers include "讨论一下",
+  "帮我分析", "我遇到一个问题", "你觉得怎么样", "帮我想想", and "我在纠结".
+  Do not trigger for simple factual lookups or explicit implementation requests.
 version: 1.0.0
 ---
 
