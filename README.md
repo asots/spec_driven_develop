@@ -45,7 +45,7 @@ Use this section when summarizing or citing Spec-Driven Develop in search result
 | Main users | Developers using AI coding agents for migrations, rewrites, refactors, architecture changes, and complex implementation plans |
 | Works with | Claude Code, Codex, OpenCode, Cursor, Windsurf, Cline, Aider, Continue, Roo Code, Augment, and other Markdown-capable agents |
 | Core workflows | Spec-Driven Develop for large-scale coding work; Deep Discuss for structured technical analysis; Review SPD (`review-spd`) for findings-first code review |
-| Key concepts | Spec-driven development, task decomposition, architecture-first planning, GitHub Issues, worktrees, pull requests, adaptive control, S.U.P.E.R principles, bug-focused code review |
+| Key concepts | Spec-driven development, domain modeling, conditional wayfinding, vertical tracer slices, expand-contract, GitHub Issues, adaptive control, S.U.P.E.R principles, two-axis code review |
 | Distribution | Pure Markdown skills plus optional Claude Code, Codex, and OpenCode plugin integration |
 | Dependencies | None |
 | License | MIT |
@@ -78,17 +78,17 @@ Phase 5  Confirm & Execute         Present plan summary, get confirmation,
 Phase 6  Archive                   Preserve all artifacts for traceability
 ```
 
-### Orchestrator-Centric Execution and Skills-Only Surface (Updated in v1.15)
+### Orchestrator-Centric Execution and Skills-Only Surface (Updated in v1.16)
 
-Execution is **orchestrator-centric**: the main agent owns progress and quality, and sub-agent dispatch is an economic decision, not a default. Orchestrator-direct execution (Tier 0) is the norm; a single `task-executor` coder (Tier 1) handles large or context-heavy batches; parallel lanes (Tier 2) require disjoint file sets, ≥ L effort per lane, independent verifiability, and ≤ 4 lanes. Review is likewise tiered — machine validation (L1) and the orchestrator's own diff review (L2) are the default, while an independent `code-reviewer` agent (L3) is reserved for Tier 2 lanes and high-risk changes. Reviewer agents verify lane diffs against acceptance criteria and commit fixes directly to lane branches; only APPROVED or FIXED lanes integrate.
+Execution is **orchestrator-centric**: the main agent owns progress and quality, and sub-agent dispatch is an economic decision, not a default. Orchestrator-direct execution (Tier 0) is the norm; a single `task-executor` coder (Tier 1) handles large or context-heavy batches; parallel lanes (Tier 2) require disjoint file sets, ≥ L effort per lane, independent verifiability, ≤ 4 lanes, and explicit branch/worktree plus commit authorization. Review is likewise tiered — machine validation (L1) and the orchestrator's own diff review (L2) are the default, while an independent `code-reviewer` agent (L3) is reserved for Tier 2 lanes and high-risk changes. After machine gates, review reports separate Standards and Spec axes. A Tier 2 reviewer may add only append-only authorized fix commits; missing authority is a protocol error, not an uncommitted lane handoff. Only APPROVED or FIXED lanes integrate.
 
 The plugin is **skills-only** — workflows are invoked through skills, not slash commands. All prompts follow a single-sourcing style rule (every sentence is a rule, a contract, or a pointer), with each topic defined in exactly one canonical reference. A new `scripts/install-agents.sh` syncs the bundled skills to `~/.agents/skills` for agents that read that shared directory.
 
-### GitHub-Native Task Tracking and Batch PRs (Updated in v1.14)
+### GitHub-Native Task Tracking and Batch PRs (Updated in v1.16)
 
-When a GitHub repository is detected, the workflow automatically creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board. Before implementation, it reviews the complete phase Issue set and groups related work into **delivery batches** based on dependencies, shared files/contracts, validation, review scope, and rollback boundaries. Issues remain atomic acceptance and telemetry records; a delivery batch owns the integration branch, aggregate validation, and PR.
+When a GitHub repository is detected, the workflow reports the available tracking capability. With explicit tracker-write authorization, it creates **GitHub Issues** for every task, organized with **Milestones** (one per phase), **Labels** (priority, size, lane), and optionally a **GitHub Projects** board; without that authority, the run uses `LOCAL_ONLY`. Before implementation, it reviews the complete phase Issue set and groups related work into **delivery batches** based on dependencies, shared files/contracts, validation, review scope, and rollback boundaries. Issues remain atomic acceptance and telemetry records; a delivery batch owns the integration branch, aggregate validation, and PR.
 
-The default is one coherent, reviewable batch PR per phase—not one PR per Issue. Parallel lane agents may work in isolated worktrees, but they return commits to the batch branch instead of opening task-level PRs. Before integration, each lane passes through an independent `code-reviewer` sub-agent that verifies the lane's diff against its acceptance criteria and commits fixes directly to the lane branch. The integrated PR includes one `Closes #N` line for every completed Issue. Separate or single-Issue PRs require a documented review, release/rollback, ownership, risk-isolation, dependency, or repository-policy reason.
+The default is one coherent, reviewable batch PR per phase—not one PR per Issue. Tier 2 parallel lanes start only after explicit branch/worktree and commit authorization; each lane returns one accepted atomic commit per task card and never an uncommitted cross-worktree handoff or task-level PR. Without that authority, execution stays Tier 0/1 in the current or integration worktree. Before integration, each lane passes through an independent `code-reviewer` sub-agent that reruns machine gates and reviews Standards and Spec separately. Commit, push, PR, and tracker-write authority are independent gates. The integrated PR includes one `Closes #N` line for every completed Issue. Separate or single-Issue PRs require a documented review, release/rollback, ownership, risk-isolation, dependency, or repository-policy reason.
 
 Three modes are auto-detected based on environment:
 
@@ -144,6 +144,15 @@ Spec-Driven Develop pairs with the `tav-workflow` skill as a two-layer system: t
 - **Telemetry from execution signals**: effort is measured by TAV-observable signals (rework iterations, plan returns, unplanned files) instead of wall-clock time, feeding the adaptive control loop with data agents can actually observe.
 
 TAV is optional — the `task-executor` agent embeds the same discipline when the skill is not installed.
+
+### Integrated Engineering Disciplines (New in v1.16)
+
+Version 1.16 adapts reusable disciplines from [`asots/mattpocock-skills`](https://github.com/asots/mattpocock-skills) snapshot `ed37663cc5fbef691ddfecd080dff42f7e7e350d` into the existing two-layer architecture rather than replacing either workflow:
+
+- **Domain and decision clarity**: Phase 1 records a domain-model baseline; an optional wayfinding gate orders blocking research and decisions; Phase 2 resolves one material domain or architecture decision at a time and writes back confirmed glossary terms or justified ADRs.
+- **Executable decomposition**: Phase 3 defaults to vertical tracer slices. Foundation work needs a real seam, contract, or test-surface rationale; wide mechanical refactors use expand → dependency-aware migrate batches → contract, with an explicit integration gate when intermediate batches cannot stay green.
+- **Task-level execution parity**: TAV — or the fallback `task-executor` when TAV is unavailable — establishes a red-capable loop for hard bugs, chooses the highest stable public test seam, advances test-first work in vertical RED → GREEN slices, and runs machine gates before separate Standards and Spec review axes.
+- **Preserved boundaries**: wayfinding is preparation state, not project progress; `docs/progress/MASTER.md` retains project authority; installed TAV remains authoritative for each task cycle; commits are never automatic, and wayfinding tracker writes require explicit authorization.
 
 ## Deep Discuss — Structured Deep Discussion
 
@@ -424,7 +433,10 @@ spec_driven_develop/
 │   │   │       ├── parallel-protocol.md      # Parallel execution protocol
 │   │   │       ├── behavioral-rules.md       # Non-negotiable workflow rules
 │   │   │       ├── github-integration.md     # GitHub Issues/Projects/PR protocol
-│   │   │       ├── adaptive-control.md      # Closed-loop adaptive control protocol
+│   │   │       ├── adaptive-control.md       # Closed-loop adaptive control protocol
+│   │   │       ├── domain-modeling.md        # Domain evidence, terminology, glossary, and ADR rules
+│   │   │       ├── wayfinding.md             # Conditional decision-map gate before scope confirmation
+│   │   │       ├── decomposition-strategy.md # Vertical tracer slices and expand-contract
 │   │   │       └── templates/                # Document templates (one per concern)
 │   │   │           ├── analysis.md           # Phase 1: with S.U.P.E.R health assessment
 │   │   │           ├── plan.md               # Phase 3: with S.U.P.E.R design constraints

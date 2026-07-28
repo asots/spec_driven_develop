@@ -11,7 +11,7 @@ description: >-
   surface resolution, progress tracking setup, and then executes the plan within the same session. Keeps Issues as
   task-tracking units while batching related implementation into coherent reviewable PRs.
 metadata:
-  version: 1.15.0
+  version: 1.16.0
 ---
 
 # Spec-Driven Develop
@@ -38,11 +38,14 @@ You are executing the **Spec-Driven Development** workflow — a seven-phase pip
 
 | Reference | Owns |
 |:----------|:-----|
-| `references/behavioral-rules.md` | All behavioral rules (1-23) |
+| `references/behavioral-rules.md` | All behavioral rules (1-25) |
 | `references/github-integration.md` | Tracking modes, pre-flight check, all `gh` commands and Issue/PR body templates |
 | `references/adaptive-control.md` | Telemetry collection, drift calculation, response actions, state storage, controller activation |
 | `references/parallel-protocol.md` | Dispatch/review admission (tiers), lane/worktree protocol, review loop, merge risk, post-integration checks |
 | `references/super-philosophy.md` | S.U.P.E.R principles + the 10-check review checklist |
+| `references/domain-modeling.md` | Domain surfaces, evidence-driven terminology, one-decision-at-a-time refinement, glossary/ADR write-back |
+| `references/wayfinding.md` | Conditional decision map for efforts whose route is still too foggy for Phase 2 confirmation |
+| `references/decomposition-strategy.md` | Vertical tracer slices, prefactoring boundaries, and expand-contract for wide refactors |
 | `references/templates/` | Schemas for every generated document (analysis, plan, progress, governance, archive) |
 
 **Task tracking modes** (capabilities differ; detection and upgrade instructions live in `references/github-integration.md` § "Pre-flight Check"):
@@ -103,20 +106,29 @@ After loading your current state, populate the platform's native task tracking t
 1. Launch `project-analyzer` sub-agents **in parallel**, split by focus area:
    - **Architecture & Stack**: structure, directory layout, tech stack, entry points, build/run commands
    - **Module Inventory**: each module's responsibility, public API surface, size, dependencies — evaluated against all five S.U.P.E.R principles with a per-principle compliance rating
-   - **Risks, Tests & Governance**: transformation risks, complexity hotspots, coding conventions, test coverage, instruction/memory surfaces — plus a S.U.P.E.R Architecture Health Summary with violation hotspots (priority targets for the plan)
+   - **Risks, Tests, Domain & Governance**: transformation risks, complexity hotspots, coding conventions, test coverage, domain glossaries/ADRs and terminology contradictions, instruction/memory surfaces — plus a S.U.P.E.R Architecture Health Summary with violation hotspots (priority targets for the plan)
 
    Give each agent the Phase 0 direction AND `references/super-philosophy.md`. If sub-agents are unavailable, perform the same analysis sequentially yourself.
 
    **Scale the analysis to the repository.** The three-agent split above assumes each agent can deep-read its focus area. For large codebases (roughly 100+ modules or beyond ~200k LOC), partition the repository by subsystem (top-level directory or build unit), launch one Module Inventory agent per partition alongside the Architecture and Risk agents, and merge partition outputs into a subsystem-level rollup in `module-inventory.md`. Whatever the strategy, every analysis document must mark areas that were not deep-read with `coverage: shallow` — Phase 3 treats estimates for shallow-coverage areas as low-confidence and prefers smaller task granularity there.
 
 2. Consolidate outputs, resolve contradictions, and write `docs/analysis/` documents from `references/templates/analysis.md`:
-   - `project-overview.md` — Architecture, tech stack, entry points, build system
+   - `project-overview.md` — Architecture, tech stack, entry points, build system, domain-model baseline
    - `module-inventory.md` — Every module with: responsibility, dependencies, size, complexity rating, **S.U.P.E.R compliance score per module**, and a coverage marker (`deep` or `shallow`); large repositories add a subsystem-level rollup section
    - `risk-assessment.md` — Technical risks, compatibility risks, complexity hotspots, testing gaps, project governance gaps, **S.U.P.E.R Architecture Health Summary with violation hotspots**
 
 3. **GitHub Pre-flight Check**: detect the tracking mode per `references/github-integration.md` § "Pre-flight Check". Report the detected mode; if it differs from user expectation, explain how to upgrade (e.g., `gh auth refresh -s project`).
 
 **Output**: Complete `docs/analysis/` (three documents) + detected tracking mode. The S.U.P.E.R assessment is the architectural baseline for all subsequent phases.
+
+### Conditional Wayfinding Gate
+
+After Phase 1, evaluate whether the analyzed destination can be turned into a confirmed task definition in one grounded Phase 2 discussion. If blocking decisions still depend on ordered research, prototypes, or domain/architecture choices, run `references/wayfinding.md` before Phase 2.
+
+- Wayfinding resolves decisions, not implementation deliverables. It may use explicitly disposable probes, but it must not retain task-level code changes or bypass Phase 2 confirmation and Phase 3 decomposition.
+- Its map is preparation state only. `docs/progress/MASTER.md` remains project-level progress authority once created; implementation Issues and TAV state retain their existing ownership.
+- Use LOCAL_ONLY analysis files by default. External tracker map/decision writes require explicit authorization even when a GitHub tracking mode was detected.
+- When the route is clear, summarize the resolved decisions into the Phase 2 inputs and continue the normal seven-phase pipeline. If the gate is not triggered, note that the route was already clear in `risk-assessment.md`.
 
 ---
 
@@ -127,7 +139,8 @@ After loading your current state, populate the platform's native task tracking t
 **Actions**:
 
 1. Present key Phase 1 findings: brief architecture summary, notable S.U.P.E.R health issues, and coupling/complexity highlights relevant to the transformation.
-2. Ask **targeted questions grounded in the analysis** — specific and informed, not generic (e.g., about circular dependencies found, hardcoded environment assumptions, missing interface contracts). At minimum confirm:
+2. Read `references/domain-modeling.md`, which owns the evidence, one-active-decision, glossary, and ADR rules. Resolve blocking terminology or domain-boundary conflicts before freezing scope and return links to any confirmed write-back.
+3. Ask **targeted questions grounded in the analysis** — specific and informed, not generic (e.g., about circular dependencies found, hardcoded environment assumptions, missing interface contracts). At minimum confirm:
    - **Scope** — which modules from the inventory are in scope
    - **Target** — target technology/architecture/state
    - **Constraints** — timeline, backward compatibility, libraries, deployment targets
@@ -136,9 +149,9 @@ After loading your current state, populate the platform's native task tracking t
    - **Testing policy** — which test layers protect changes; whether to establish a minimal test harness if none exists
    - **Project governance** — canonical instruction surfaces; native memory surface or explicitly named repo fallback
 
-3. Summarize the refined understanding and get explicit confirmation.
+4. Summarize the refined understanding, including resolved domain terms/decisions and any deferred ambiguity, then get explicit confirmation.
 
-**Output**: The authoritative, confirmed task definition guiding Phases 3-6.
+**Output**: The authoritative, confirmed task definition guiding Phases 3-6, plus any glossary/ADR updates made through `references/domain-modeling.md`.
 
 ---
 
@@ -149,7 +162,8 @@ After loading your current state, populate the platform's native task tracking t
 **Actions**:
 
 1. Launch `task-architect` sub-agents with the full Phase 1 analysis AND the confirmed Phase 2 definition. If multiple strategies are plausible, launch 2 agents exploring different approaches (e.g., bottom-up vs. strangler fig) and pick the better result. If sub-agents are unavailable, decompose yourself.
-2. The decomposition must produce:
+2. Apply `references/decomposition-strategy.md` before assigning phases, lanes, or delivery batches. It owns behavior-slice defaults, expand-contract, operational-task categories, exception rationales, and genuine-blocker rules; record the selected delivery shape on every task card.
+3. The decomposition must produce:
    - **Phases** ordered by dependency; early phases prioritize fixing S.U.P.E.R violation hotspots before new features.
    - **Tasks**, each with: description, priority (P0/P1/P2), effort (S/M/L/XL), dependencies, S.U.P.E.R design drivers, acceptance criteria, test expectation, and memory/governance impact. Every task's acceptance criteria implicitly include passing the S.U.P.E.R Quick Check for its listed principles.
      - **Testing is default**: tasks changing user-visible features, behavior, API contracts, schemas, migrations, parsing, routing, permissions, caching, or persistence MUST add or update automated tests; documentation/config tasks may mark tests N/A with an explicit reason.
@@ -157,9 +171,9 @@ After loading your current state, populate the platform's native task tracking t
    - **Parallel execution lanes** per phase: group mutually independent tasks; assess merge risk (file overlap).
    - **Delivery batches** per `references/behavioral-rules.md` rule 17: assign every task to exactly one batch and record ID, goal, task IDs, execution waves, lanes, integration branch, combined validation, dependency order, shared contracts, and split rationale.
    - **Dependency graph** as a Mermaid diagram (subgraphs for batch boundaries and lanes) and **milestones** at phase boundaries. Every milestone criterion must be a runnable command or concretely observable check; each phase ends with a milestone acceptance task that runs the combined regression and blocks closure on failure.
-3. Write `docs/plan/` documents from `references/templates/plan.md`: `task-breakdown.md`, `dependency-graph.md`, `milestones.md`.
-4. **GitHub Resource Synchronization** (skip in LOCAL_ONLY): create Labels → Milestones → Issues → [GITHUB_FULL only] Project board, in that order, using the exact commands and the Issue body template in `references/github-integration.md`. Add a 1-second delay between Issue creations. Record all URLs and the Task → Issue → Delivery Batch mapping for Phase 4. Issue creation does not imply PR creation.
-5. **Initialize Adaptive Control State**: for each Milestone, compute percentage-based drift thresholds and append the adaptive YAML block per `references/adaptive-control.md` § "Adaptive State Storage". In LOCAL_ONLY mode, the state goes to MASTER.md in Phase 4 instead.
+4. Write `docs/plan/` documents from `references/templates/plan.md`: `task-breakdown.md`, `dependency-graph.md`, `milestones.md`.
+5. **GitHub Resource Synchronization**: capability detection is read-only. Create Labels → Milestones → Issues → [GITHUB_FULL only] Project board only after explicit GitHub tracker-write authorization, using the exact commands and Issue body template in `references/github-integration.md`. Add a 1-second delay between Issue creations and record all URLs plus the Task → Issue → Delivery Batch mapping for Phase 4. If authorization is not granted, select `LOCAL_ONLY` for this run; Issue creation never implies commit, push, or PR authorization.
+6. **Initialize Adaptive Control State**: for each Milestone, compute percentage-based drift thresholds and append the adaptive YAML block per `references/adaptive-control.md` § "Adaptive State Storage". In LOCAL_ONLY mode, the state goes to MASTER.md in Phase 4 instead.
 
 **Output**: Complete `docs/plan/` (three documents); in GitHub modes, all tasks exist as labeled, milestoned Issues with adaptive state initialized.
 
@@ -222,14 +236,15 @@ Do not create competing truth sources.
 2. **Choose the execution tier for each delivery batch** per the admission criteria in `references/parallel-protocol.md` § "Dispatch Admission (Tiered Execution)":
    - **Tier 0 — orchestrator-direct (default)**: S/M effort, ≤ 3 files, context already held, or machine-verifiable acceptance. Execute directly on the batch integration branch. No sub-agents, no worktrees.
    - **Tier 1 — single coder**: L/XL bundles or context-heavy exploration. Delegate the complete batch to one `task-executor`.
-   - **Tier 2 — parallel lanes**: only when ALL hold — disjoint lane file sets, ≥ L effort per lane, independent verifiability, ≤ 4 lanes. Launch one `task-executor` per dependency-ready lane in isolated worktrees, in waves, each with the full batch context plus its task/Issue subset. Lane agents never create PRs.
+   - **Tier 2 — parallel lanes**: only when ALL hold — disjoint lane file sets, ≥ L effort per lane, independent verifiability, ≤ 4 lanes, and confirmed explicit branch/worktree plus commit authorization. Launch one `task-executor` per dependency-ready lane in isolated worktrees, in waves, each with the full batch context plus its task/Issue subset. Without both authorizations, use Tier 0 or Tier 1 on the current/integration worktree. Lane agents never create PRs.
    - Branch convention: repository's own; otherwise `batch/{batch_id}-{slug}` (integration) and `work/{batch_id}-{lane_id}-{slug}` (Tier 2 lanes only).
 
 3. **Review before integrating** per `references/parallel-protocol.md` § "Review Admission (Tiered Review)":
    - **L1 — machine validation (always)**: every task's targeted checks plus the batch's combined validation.
-   - **L2 — orchestrator diff review (default)**: personally read the diff against every Issue's acceptance criteria.
-   - **L3 — independent reviewer (reserved)**: one `code-reviewer` per lane, mandatory for Tier 2 lanes and high-risk work (contract/port formats, logic code, cross-surface semantic invariants). Verdict APPROVED | FIXED | ESCALATE; integrate only APPROVED or FIXED lanes; resolve ESCALATE yourself, with the user when needed.
+   - **L2 — orchestrator diff review (default)**: after L1, personally read the diff through separate Standards (repository rules first; generic smells only as heuristics) and Spec (missing/partial behavior, scope creep, semantic mismatch) axes against every Issue's acceptance criteria. Never merge the axes into one score.
+   - **L3 — independent reviewer (reserved)**: one `code-reviewer` per lane, mandatory for Tier 2 lanes and high-risk work (contract/port formats, logic code, cross-surface semantic invariants). It reruns machine gates and reports Standards and Spec separately. The two axes may use separate agents only when the independence benefit justifies their cold-start cost. Verdict APPROVED | FIXED | ESCALATE; integrate only APPROVED or FIXED lanes; resolve ESCALATE yourself, with the user when needed.
    - Writer model: reviewers never write GitHub state, MASTER.md, drift state, or instruction/memory surfaces. You remain the acceptance-verification authority and single writer for all shared state.
+   - Authority: executor and reviewer commits are permitted only when you have confirmed and relayed explicit commit authorization. Commit authorization does not grant branch creation, push, PR creation, or Issue/Milestone/Project writes; follow the independent gates in `references/github-integration.md`.
 
 4. **After each task completion** — follow `references/adaptive-control.md` § "Controller Activation": collect telemetry, update cumulative `drift_score`, write telemetry to the Issue (GitHub modes) or MASTER.md (LOCAL_ONLY), and execute automatic threshold responses. For parallel lanes, lane agents return per-task telemetry and you record it once during batch integration.
 
@@ -239,7 +254,7 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
    - Consolidate reviewed lane branches onto the batch integration branch; reconcile overlaps.
    - Run per-task checks plus combined validation and post-integration architecture checks.
    - Verify every included Issue's acceptance criteria yourself (L2). Keep incomplete Issues out of closing keywords.
-   - Create exactly one batch PR with one `Closes #N` per completed Issue. Immediately write the PR number and `in review` state to the batch row and every completed Issue row in MASTER.md; keep partial Issues open with explicit partial status.
+   - When commit, push, and PR authorization are all explicit, create exactly one batch PR with one `Closes #N` per completed Issue. Immediately write the PR number and `in review` state to the batch row and every completed Issue row in MASTER.md; keep partial Issues open with explicit partial status. Without those authorizations, stop after local integration validation and report the ready branch/diff without remote writes.
    - A single-Issue PR is allowed only for a documented exception or a one-Issue phase.
 
 6. **Progress updates**:
@@ -266,7 +281,7 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
 1. Announce completion to the user.
 2. Determine the archive directory name from the Phase 2 task name (lowercase, hyphens, no special characters): `docs/archives/<project-name>/`. Target structure and index template: `references/templates/archive.md`.
 3. Move `docs/analysis/`, `docs/plan/`, and `docs/progress/` into the archive; copy snapshots or export references for the resolved instruction and memory surfaces into `docs/archives/<project-name>/governance/`; move any other temporary workflow files.
-4. **[GitHub modes]** Close each phase's Milestone (if not already closed); optionally close the Project board. These remain on GitHub as a permanent record.
+4. **[GitHub modes]** With explicit GitHub tracker-write authorization, close each phase's Milestone (if not already closed) and optionally close the Project board. Otherwise leave remote state unchanged and record the pending archive synchronization locally.
 5. Create or update `docs/archives/README.md` with an entry: project name, one-line description, date range, link to archived MASTER.md, and (GitHub modes) the Project URL.
 6. Remove the now-empty `docs/analysis/`, `docs/plan/`, `docs/progress/` directories. Keep active instruction and memory surfaces in place; only their snapshots live under the archive.
 7. **Estimation calibration retrospective**: aggregate the telemetry log's effort deltas by task type and module. Where a category shows systematic underestimation (average delta ≥ +1 across 3+ tasks), distill 1-3 calibration rules (e.g. "schema-touching tasks in this repo run one effort level above estimate") and record them through the knowledge consolidation pipeline to the resolved memory surface — the next project starts from calibrated priors instead of zero.

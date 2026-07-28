@@ -1,8 +1,8 @@
 #requires -Version 5.1
 # Spec-Driven Develop documentation self-check.
 # Verifies version consistency (single source = SKILL.md frontmatter), referenced-file
-# integrity, behavioral-rule numbering, and the cross-repo contract fingerprint shared
-# with tav-workflow (escalation signals + delivery-batch write-back protocol).
+# integrity, behavioral-rule numbering, integrated-discipline semantic fingerprints,
+# and the cross-repo contract shared with tav-workflow.
 # Run: pwsh scripts/verify.ps1 [-TavPath <path-to-tav-workflow-repo>]
 
 param(
@@ -41,6 +41,14 @@ function Get-Bullets([string]$section) {
   @(($section -split "`r?`n") | Where-Object { $_ -match '^- ' } | ForEach-Object { $_.TrimEnd() })
 }
 
+function Require-Fingerprints([string]$name, [string]$text, [string[]]$fingerprints) {
+  $failsBefore = $script:fail
+  foreach ($fp in $fingerprints) {
+    if ($text -notlike "*$fp*") { Fail "$name missing fingerprint: '$fp'" }
+  }
+  if ($script:fail -eq $failsBefore) { Ok "$name carries required fingerprints" }
+}
+
 # 1. SKILL.md frontmatter version is the single source of truth
 $skillPath = Join-Path $skillDir 'SKILL.md'
 $skill = Get-Content $skillPath -Raw -Encoding UTF8
@@ -72,7 +80,7 @@ if ($script:fail -eq $failsBefore) { Ok "all $($refs.Count) referenced files exi
 
 # 4. Agent definitions the workflow spawns exist
 $failsBefore = $script:fail
-foreach ($a in 'project-analyzer', 'task-architect', 'task-executor') {
+foreach ($a in 'project-analyzer', 'task-architect', 'task-executor', 'code-reviewer') {
   if (-not (Test-Path (Join-Path $root "plugins/spec-driven-develop/agents/$a.md"))) { Fail "missing agent definition: $a.md" }
 }
 if ($script:fail -eq $failsBefore) { Ok 'agent definitions exist' }
@@ -85,14 +93,123 @@ if ($nums.Count -eq 0) { Fail 'behavioral-rules.md contains no numbered rules' }
 elseif (Compare-Object $nums $expected -SyncWindow 0) { Fail "behavioral-rules.md numbering broken: found $($nums -join ',')" }
 else { Ok "behavioral-rules.md rules numbered 1..$($nums.Count) with no gaps" }
 
-# 6. Cross-repo contract fingerprint with tav-workflow
+# 6. Integrated planning, execution, and review discipline fingerprints
+$disciplineRefs = @(
+  'references/domain-modeling.md',
+  'references/wayfinding.md',
+  'references/decomposition-strategy.md'
+)
+$failsBefore = $script:fail
+foreach ($r in $disciplineRefs) {
+  if ($skill -notlike "*$r*") { Fail "SKILL.md missing canonical reference: '$r'" }
+  elseif (-not (Test-Path (Join-Path $skillDir $r))) { Fail "canonical reference missing: '$r'" }
+}
+if ($script:fail -eq $failsBefore) { Ok 'integrated discipline references resolve' }
+
+Require-Fingerprints 'SKILL.md planning/review contract' $skill @(
+  'Conditional Wayfinding Gate',
+  'record the selected delivery shape on every task card',
+  'branch/worktree plus commit authorization',
+  'follow the independent gates in'
+)
+Require-Fingerprints 'behavioral-rules.md additions' $br @(
+  '23. **Version-control and external-write authority is explicit**',
+  '24. **Resolve decision fog before decomposition**',
+  '25. **Default behavior changes to vertical tracer slices; wide refactors use expand-contract**'
+)
+
+$executor = Get-Content (Join-Path $root 'plugins/spec-driven-develop/agents/task-executor.md') -Raw -Encoding UTF8
+$reviewer = Get-Content (Join-Path $root 'plugins/spec-driven-develop/agents/code-reviewer.md') -Raw -Encoding UTF8
+$parallel = Get-Content (Join-Path $skillDir 'references/parallel-protocol.md') -Raw -Encoding UTF8
+Require-Fingerprints 'task-executor fallback contract' $executor @(
+  'red-capable feedback loop',
+  'highest stable public seam',
+  'vertical RED',
+  'Standards Review',
+  'Spec Review',
+  'must be reported BLOCKED before editing'
+)
+Require-Fingerprints 'code-reviewer two-axis contract' $reviewer @(
+  'Standards Axis',
+  'Spec Axis',
+  'never combine them into one score',
+  'Machine Validation Run'
+)
+Require-Fingerprints 'parallel review contract' $parallel @(
+  'Two-Axis Review Contract',
+  'explicit branch/worktree plus commit authorization',
+  'downgrade the batch to Tier 0/1'
+)
+
+$github = Get-Content (Join-Path $skillDir 'references/github-integration.md') -Raw -Encoding UTF8
+$planTemplate = Get-Content (Join-Path $skillDir 'references/templates/plan.md') -Raw -Encoding UTF8
+$wayfinding = Get-Content (Join-Path $skillDir 'references/wayfinding.md') -Raw -Encoding UTF8
+$decomposition = Get-Content (Join-Path $skillDir 'references/decomposition-strategy.md') -Raw -Encoding UTF8
+
+Require-Fingerprints 'GitHub authority gates' $github @(
+  '## Authority Gates',
+  'Commit authorization does not authorize',
+  'Tier 2 must not start',
+  'git add -- {task_specific_paths}',
+  'stop after local integration validation'
+)
+if ($github -like '*git add -A*') { Fail 'github-integration.md still stages unrelated paths with git add -A' }
+elseif ($github -like '*refs #{issue_1}, refs #{issue_2}*') { Fail 'github-integration.md still demonstrates one commit referencing multiple Issues' }
+else { Ok 'GitHub commit examples are task-atomic and path-scoped' }
+
+Require-Fingerprints 'plan template delivery and authority contract' $planTemplate @(
+  'Standalone Docs, Governance, Validation, Release, or Archive tasks',
+  'branch/worktree and commit authorization',
+  'instead of returning uncommitted lane worktrees'
+)
+Require-Fingerprints 'wayfinding boundary contract' $wayfinding @(
+  'research | prototype | grilling | investigation',
+  'may not leave persistent product changes behind',
+  'one active non-research decision at a time',
+  'may resolve several decisions sequentially'
+)
+if ($wayfinding -like '*prerequisite-task*' -or $wayfinding -like '*Resolve no more than one non-research decision per session*') {
+  Fail 'wayfinding.md still carries the conflicting prerequisite-task or per-session decision limit'
+} else { Ok 'wayfinding.md is sequential-per-agent and preparation-only' }
+
+Require-Fingerprints 'decomposition strategy scope' $decomposition @(
+  '## Default: Vertical Tracer Slices for Behavior Changes',
+  '## Non-Behavior Operational Tasks',
+  'Do not disguise maintenance or milestone work as user-visible behavior'
+)
+
+if ($executor -like '*Think (steps 1-2)*' -or $executor -like '*Act (step 3)*' -or $executor -like '*refs #{issue_1}, refs #{issue_2}*' -or $executor -like '*reviewer fixes remain identified, uncommitted worktree changes*') {
+  Fail 'task-executor.md still carries brittle step mapping, a multi-Issue commit, or an uncommitted Tier 2 reviewer handoff'
+} else { Ok 'task-executor role mapping and commit example are stable and task-atomic' }
+
+if ($reviewer -like '*uncommitted worktree change*' -or $reviewer -like '*explicitly identified uncommitted fixes*') {
+  Fail 'code-reviewer.md still permits an uncommitted Tier 2 review handoff'
+} else { Ok 'code-reviewer fixes are authorized append-only commits or ESCALATE' }
+
+$smokeOutput = & python scripts/smoke-review-context.py 2>&1
+if ($LASTEXITCODE -ne 0) { Fail "review-context UTF-8 smoke test failed: $($smokeOutput -join ' ')" }
+else { Ok 'review-context UTF-8 smoke test passed' }
+
+# 7. Cross-repo contract fingerprint with tav-workflow
 $tavSkillPath = Join-Path $TavPath 'SKILL.md'
 if (-not (Test-Path $tavSkillPath)) {
   Warn "tav-workflow not found at '$TavPath' - cross-repo contract checks skipped (pass -TavPath to enable)"
 } else {
   $tav = Get-Content $tavSkillPath -Raw -Encoding UTF8
 
-  # 6a. Escalation signal lists must match verbatim, bullet for bullet
+  # 7a. TAV owns the task-level specialist disciplines
+  $tavSections = @(
+    @{ Name = 'Hard-bug diagnosis branch'; Fingerprints = @('red-capable', 'original feedback command') },
+    @{ Name = 'TDD execution branch'; Fingerprints = @('highest stable public boundary', 'vertical behavior slice') },
+    @{ Name = 'Two-axis review'; Fingerprints = @('Standards', 'Spec', 'Do not merge the axes into one score') }
+  )
+  foreach ($entry in $tavSections) {
+    $section = Get-Section $tav $entry.Name
+    if ($null -eq $section) { Fail "tav SKILL.md section '$($entry.Name)' not found" }
+    else { Require-Fingerprints "tav section '$($entry.Name)'" $section $entry.Fingerprints }
+  }
+
+  # 7b. Escalation signal lists must match verbatim, bullet for bullet
   $spdSec = Get-Section $skill 'Escalation Signals'
   $tavSec = Get-Section $tav 'L2 Escalation Signals'
   if ($null -eq $spdSec) { Fail 'SKILL.md section "Escalation Signals" not found' }
@@ -111,7 +228,7 @@ if (-not (Test-Path $tavSkillPath)) {
     }
   }
 
-  # 6b. Write-back protocol fingerprint: tav must carry the delivery-batch semantics
+  # 7c. Write-back protocol fingerprint: tav must carry the delivery-batch semantics
   if ($tav -match 'Close the Issue via PR') { Fail 'tav SKILL.md still contains pre-delivery-batch wording "Close the Issue via PR"' }
   else { Ok 'tav SKILL.md free of pre-delivery-batch write-back wording' }
 
@@ -130,7 +247,7 @@ if (-not (Test-Path $tavSkillPath)) {
   elseif ($spdBoundary -notlike '*Closes #N*') { Fail 'spd "Boundary with TAV" missing delivery-batch fingerprint "Closes #N"' }
   else { Ok 'spd boundary section carries delivery-batch fingerprint' }
 
-  # 6c. Cross-references by section name must resolve both ways
+  # 7d. Cross-references by section name must resolve both ways
   if ($skill -notlike '*Operating Inside a Spec-Driven Project*') { Fail 'SKILL.md no longer cites tav section "Operating Inside a Spec-Driven Project"' }
   elseif ($tav -notlike '*Boundary with TAV*') { Fail 'tav SKILL.md no longer cites spd section "Boundary with TAV"' }
   else { Ok 'cross-repo section citations resolve both ways' }

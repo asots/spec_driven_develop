@@ -16,6 +16,22 @@ The workflow auto-detects the best available mode via a pre-flight check. The us
 
 ---
 
+## Authority Gates
+
+Detection and read-only inspection do not authorize writes. Before running a mutating command, confirm that the user's authorization explicitly names its operation class:
+
+| Operation class | Examples | Required authority |
+|:----------------|:---------|:-------------------|
+| Local branch/worktree changes | `git branch`, `git switch -c`, `git worktree add/remove` | Branch/worktree authorization |
+| Local commits | `git add`, `git commit` | Commit authorization; one accepted task card per commit |
+| Remote branch writes | `git push` | Push authorization |
+| Pull-request writes | `gh pr create/edit/comment/merge/close` | PR authorization |
+| Tracker writes | Issue, Milestone, Label, Project creation/edit/comment/close | GitHub tracker-write authorization |
+
+One user response may authorize several named classes together, but never infer one class from another or from the detected tracking mode, an existing branch, an Issue, or general approval to implement. Commit authorization does not authorize branch creation, push, PR creation, or tracker writes. Phase-boundary confirmation is not write authorization unless it names the operations. Tier 2 requires branch/worktree and commit authorization before dispatch because lane integration is commit-based; without both, use Tier 0 or Tier 1 in the current/integration worktree. Creating a batch PR requires commit, push, and PR authorization; tracker comments remain separately gated.
+
+---
+
 ## Pre-flight Check
 
 Run this check at the end of Phase 1 (after analysis, before proceeding to Phase 2). Report the detected mode to the user.
@@ -241,31 +257,31 @@ Use these rules to confirm or revise delivery batches:
 
 Record every confirmed or revised Task → Issue → Delivery Batch mapping in `docs/plan/task-breakdown.md` and MASTER.md before implementation. If regrouping changes a previously created Issue, update its structured `**Delivery Batch**` field with `gh issue edit --body-file <updated-body-file>` while preserving the rest of the body, then comment with the reason. The Issue body, plan, and MASTER.md must never disagree about the active batch.
 
-### 2. Create the Batch Integration Branch and Worktrees
+### 2. Create the Batch Integration Branch and Worktrees When Authorized
 
-Follow the repository's branch convention. If none exists, use:
+Only create branches or worktrees when branch/worktree authorization is explicit. Otherwise keep Tier 0/1 work in the current worktree. When authorized, follow the repository's branch convention; if none exists, use:
 
 - Integration branch: `batch/{batch_id}-{slug}`
 - Optional lane branch: `work/{batch_id}-{lane_id}-{slug}`
 
-For a one-lane batch, work directly in one isolated worktree on the integration branch. For a genuinely parallel batch, execute dependency-ready lanes in waves. Create each wave's lane worktrees from the current integration base; integrate prerequisite commits before branching downstream waves. Every lane receives the complete batch context and its assigned Issue subset.
+For a one-lane batch, work directly in one isolated worktree on the integration branch. For a genuinely parallel batch, first confirm both branch/worktree and commit authorization, then execute dependency-ready lanes in waves. Create each wave's lane worktrees from the current integration base; integrate prerequisite commits before branching downstream waves. Every lane receives the complete batch context and its assigned Issue subset.
 
 If the platform provides a native worktree tool, use it according to that platform's documentation instead of manual worktree management.
 
-### 3. Implement and Commit Without Creating PRs
+### 3. Implement, Verify, and Commit Only When Authorized
 
-Follow each Issue's acceptance criteria, test expectation, and memory/governance impact. Read the resolved instruction and memory surfaces before editing. Keep commits reviewable and reference the relevant Issues without closing them:
+Follow each Issue's acceptance criteria, test expectation, and memory/governance impact. Read the resolved instruction and memory surfaces before editing. Run one TAV cycle per task card and commit only after that card's acceptance checks pass. Stage only the paths belonging to that card, create one atomic commit that references exactly that task/Issue without closing it, then repeat for the next card:
 
 ```bash
-git add -A
-git commit -m "feat: {batch_or_lane_description} (refs #{issue_1}, refs #{issue_2})"
+git add -- {task_specific_paths}
+git commit -m "feat({scope}): {task_description} (refs #{issue_number})"
 ```
 
-Lane agents return branch and commit references to the orchestrator. They must not run `gh pr create`, add `Closes #N`, update cumulative adaptive state, or race to edit MASTER.md.
+Without commit authorization, Tier 0/1 may return a verified uncommitted integration/current worktree; Tier 2 must not start. Tier 2 lane agents return one accepted commit per task card plus branch references to the orchestrator. They must not run `gh pr create`, add `Closes #N`, update cumulative adaptive state, or race to edit MASTER.md.
 
 ### 4. Integrate and Validate the Complete Batch
 
-The orchestrator consolidates lane commits onto the batch integration branch, resolves overlaps, and runs:
+For Tier 2, the orchestrator consolidates lane commits onto the batch integration branch and resolves overlaps. For Tier 0/1 without commit authorization, the verified diff already lives in the current/integration worktree and no lane consolidation occurs. In either case, run:
 
 - Every included Issue's targeted tests and acceptance checks
 - The batch's combined build/test/smoke validation
@@ -274,9 +290,9 @@ The orchestrator consolidates lane commits onto the batch integration branch, re
 
 If an Issue is only partially covered, leave it open and use `Refs #N`; do not include a closing keyword until all acceptance criteria pass.
 
-### 5. Push and Create One Batch PR
+### 5. Push and Create One Batch PR When Separately Authorized
 
-Push only the integrated batch branch, then create one PR for all completed Issues in the batch:
+Run this step only when commit, push, and PR authorization are all explicit. Push only the integrated batch branch, then create one PR for all completed Issues in the batch. If either remote-write authorization is absent, stop after local integration validation and report the ready branch/diff without pushing or creating a PR.
 
 ```bash
 BATCH_BRANCH="{resolved_batch_branch}"
@@ -332,7 +348,7 @@ Immediately after the PR is created:
 1. Update the delivery batch row in MASTER.md with the PR number and `in review`.
 2. Update every fully completed Issue row with the PR number and `in review`.
 3. Keep each partially covered Issue open with the PR number, `partial`, and its remaining acceptance work.
-4. Comment on every included Issue using completion-accurate language:
+4. When GitHub tracker-write authorization includes Issue comments, comment on included Issues using completion-accurate language. Otherwise record the skipped external synchronization in MASTER.md and rely on the authorized PR's Issue links/closing keywords:
 
 ```bash
 # Fully completed and awaiting merge
@@ -342,11 +358,11 @@ gh issue comment {completed_issue} --repo "$REPO" --body "Fully implemented in d
 gh issue comment {partial_issue} --repo "$REPO" --body "Partially covered by delivery batch {batch_id}; integration PR: #{pr_number}. This Issue remains open. Outstanding: {remaining_acceptance_work}."
 ```
 
-This synchronization is required before yielding the session so resume logic cannot mistake an open batch PR for unstarted work or create a duplicate PR.
+The local MASTER.md synchronization is required before yielding the session so resume logic cannot mistake an open batch PR for unstarted work or create a duplicate PR. Issue comments are optional unless separately authorized.
 
 ### 7. Cleanup
 
-After the batch PR is merged, remove its integration and lane worktrees/branches according to repository policy. Do not clean a lane before the orchestrator has integrated its commits.
+After the batch PR is merged, remove its integration and lane worktrees/branches only with the required cleanup authorization and according to repository policy. Do not clean a lane before the orchestrator has integrated its commits.
 
 ---
 

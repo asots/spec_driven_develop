@@ -34,6 +34,9 @@ Templates for the three documents generated in Phase 1 (Deep Project Analysis). 
 ## Testing Baseline
 <!-- Existing test frameworks, test commands, coverage gaps, and whether new feature work currently has a reliable place to add tests -->
 
+## Domain Model Baseline
+<!-- Existing CONTEXT.md / CONTEXT-MAP.md layout, relevant ADRs, canonical terms, overloaded or conflicting terminology, and contradictions between domain docs and current code. Mark items that require active Phase 2 refinement. -->
+
 ## Project Governance Baseline
 <!-- Existing project-level instruction and memory surfaces: AGENTS.md, CLAUDE.md, native project memory, repo-local fallback memory files, Cursor/Windsurf/Cline/Codex rules, or equivalents. Note canonical locations, gaps, and conflicts. -->
 
@@ -110,6 +113,9 @@ Templates for the three documents generated in Phase 1 (Deep Project Analysis). 
 
 ## Testing Risks
 <!-- Missing test harnesses, weak regression coverage, slow/flaky tests, or areas where feature work cannot be safely validated yet. -->
+
+## Domain Model Risks
+<!-- Missing/stale glossaries, overloaded terms, unclear bounded-context ownership, or ADR/code contradictions that could make scope and acceptance ambiguous. -->
 
 ## Project Governance Risks
 <!-- Missing or conflicting instruction/memory surfaces, stale instructions, non-native fallback files used without confirmation, or durable decisions that currently exist only in conversation context. -->

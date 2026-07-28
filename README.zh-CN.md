@@ -45,7 +45,7 @@ Spec-Driven Develop 是一个开源、平台无关的 AI Coding Agent 工作流�
 | 主要用户 | 使用 AI Coding Agent 处理迁移、重写、重构、架构改造和复杂实施计划的开发者 |
 | 适用平台 | Claude Code、Codex、OpenCode、Cursor、Windsurf、Cline、Aider、Continue、Roo Code、Augment，以及其他能读取 Markdown 的 Agent |
 | 核心工作流 | Spec-Driven Develop 用于大规模编码任务；Deep Discuss 用于结构化技术分析；Review SPD（`review-spd`）用于 findings-first 代码审查 |
-| 关键词 | spec-driven development、AI coding agent、task decomposition、architecture-first planning、GitHub Issues、worktrees、pull requests、adaptive control、S.U.P.E.R、bug-focused code review |
+| 关键词 | spec-driven development、domain modeling、conditional wayfinding、vertical tracer slices、expand-contract、GitHub Issues、adaptive control、S.U.P.E.R、双轴代码审查 |
 | 分发形式 | 纯 Markdown Skill，附带 Claude Code、Codex 与 OpenCode 的插件集成 |
 | 依赖 | 无 |
 | 许可证 | MIT |
@@ -78,17 +78,17 @@ Phase 5  确认并执行                展示规划摘要，获得确认，
 Phase 6  归档                      保存所有工件以便溯源
 ```
 
-### 编排者中心执行与纯 Skill 形态（v1.15 更新）
+### 编排者中心执行与纯 Skill 形态（v1.16 更新）
 
-执行采用**编排者中心**模式：主 Agent 负责整体进度与质量，子 Agent 的分派是一个经济性决策，而非默认行为。默认由编排者直接执行（Tier 0）；单个 `task-executor` coder（Tier 1）处理较大或上下文较重的批次；并行泳道（Tier 2）则要求文件集互不相交、每条泳道 ≥ L 工作量、可独立验证且泳道数 ≤ 4。审查同样分级——机器校验（L1）与编排者自己的 diff 审查（L2）是默认，独立的 `code-reviewer` Agent（L3）只保留给 Tier 2 泳道和高风险变更。Reviewer 对照验收标准审查泳道 diff 并直接把修复提交到泳道分支；只有结论为 APPROVED 或 FIXED 的泳道才会被集成。
+执行采用**编排者中心**模式：主 Agent 负责整体进度与质量，子 Agent 的分派是一个经济性决策，而非默认行为。默认由编排者直接执行（Tier 0）；单个 `task-executor` coder（Tier 1）处理较大或上下文较重的批次；并行泳道（Tier 2）则要求文件集互不相交、每条泳道 ≥ L 工作量、可独立验证、泳道数 ≤ 4，并且分支/worktree 与 commit 均获明确授权。审查同样分级——机器校验（L1）与编排者自己的 diff 审查（L2）是默认，独立的 `code-reviewer` Agent（L3）只保留给 Tier 2 泳道和高风险变更。机器门禁之后，审查分别报告 Standards 与 Spec 两个轴。Tier 2 Reviewer 只能追加获授权的 fix commits；缺少授权属于协议错误，不能形成未提交泳道 handoff。只有结论为 APPROVED 或 FIXED 的泳道才会被集成。
 
 插件为**纯 Skill** 形态——工作流通过 Skill 触发，不再使用斜杠命令。所有 Prompt 遵循单一来源风格规则（每个句子只能是规则、契约或指针），每个主题只在唯一一份权威参考里定义。新增的 `scripts/install-agents.sh` 会把 bundled skills 同步到 `~/.agents/skills`，供读取该共享目录的 Agent 使用。
 
-### GitHub 原生任务追踪与批次 PR（v1.14 更新）
+### GitHub 原生任务追踪与批次 PR（v1.16 更新）
 
-当检测到 GitHub 仓库时，工作流会自动为每个任务创建 **GitHub Issue**，使用 **Milestone**（每个阶段一个）、**Label**（优先级、规模、泳道）组织，并可选创建 **GitHub Projects** 看板。开始开发前，工作流会审视当前阶段的完整 Issue 集，再按依赖、共享文件/契约、验证范围、审查边界和回滚边界组成 **Delivery Batch（交付批次）**。Issue 继续承担原子验收和逐任务遥测；交付批次承担集成分支、整体验证和 PR。
+检测到 GitHub 仓库时，工作流只报告可用的追踪能力。获得明确的 tracker 写入授权后，才会为每个任务创建 **GitHub Issue**，使用 **Milestone**（每个阶段一个）、**Label**（优先级、规模、泳道）组织，并可选创建 **GitHub Projects** 看板；没有该授权时，本次运行使用 `LOCAL_ONLY`。开始开发前，工作流会审视当前阶段的完整 Issue 集，再按依赖、共享文件/契约、验证范围、审查边界和回滚边界组成 **Delivery Batch（交付批次）**。Issue 继续承担原子验收和逐任务遥测；交付批次承担集成分支、整体验证和 PR。
 
-默认是每个阶段形成一个边界清楚、可审查的批次 PR，而不是一个 Issue 一个 PR。并行泳道 Agent 可以在隔离 worktree 中开发，但只把 commits 交给批次分支，不创建任务级 PR。整合之前，每条泳道还会经过一个独立的 `code-reviewer` 子 Agent：它对照验收标准审查该泳道的 diff，并直接把修复提交到泳道分支。最终集成 PR 为每个已完成 Issue 各写一行 `Closes #N`。只有在审查、独立发布/回滚、所有权、风险隔离、硬依赖或仓库策略确实要求时才拆分；单 Issue PR 同样必须记录理由。
+默认是每个阶段形成一个边界清楚、可审查的批次 PR，而不是一个 Issue 一个 PR。Tier 2 并行泳道只有在分支/worktree 与 commit 均获明确授权后才能启动；每条泳道按任务卡返回一个已验收的原子 commit，不返回跨 worktree 的未提交改动，也不创建任务级 PR。缺少这些授权时，执行降级为当前或集成 worktree 内的 Tier 0/1。整合之前，每条泳道还会经过一个独立的 `code-reviewer` 子 Agent：它重新运行机器门禁，并分别审查 Standards 与 Spec。commit、push、PR 与 tracker 写入是相互独立的授权门禁。最终集成 PR 为每个已完成 Issue 各写一行 `Closes #N`。只有在审查、独立发布/回滚、所有权、风险隔离、硬依赖或仓库策略确实要求时才拆分；单 Issue PR 同样必须记录理由。
 
 三种模式根据环境自动检测：
 
@@ -123,6 +123,15 @@ Spec-Driven Develop 与 `tav-workflow` skill 构成双层体系：本 skill 负�
 - **执行信号遥测**：effort 用 TAV 可观测信号（返工次数、计划回退、计划外文件）度量而非墙钟时间，为自适应控制回路提供 agent 真正可观测的数据。
 
 TAV 是可选的——未安装该 skill 时，`task-executor` agent 内嵌了同样的执行纪律。
+
+### 集成工程纪律（v1.16 新增）
+
+v1.16 将 [`asots/mattpocock-skills`](https://github.com/asots/mattpocock-skills) 快照 `ed37663cc5fbef691ddfecd080dff42f7e7e350d` 中可复用的纪律适配进现有双层架构，而不是替换任一工作流：
+
+- **领域与决策清晰度**：Phase 1 记录 domain-model baseline；可选的 wayfinding gate 对阻塞性的研究和决策排序；Phase 2 每次只解决一个实质性的领域或架构决策，并即时回写已确认的术语表项或满足条件的 ADR。
+- **可执行拆解**：Phase 3 默认采用 vertical tracer slice。基础/预重构任务必须有真实 seam、contract 或 test-surface 理由；无法以垂直切片保持绿色的宽机械重构使用 expand → dependency-aware migrate batches → contract，中间批次不能独立保持绿色时增加明确的集成门禁。
+- **任务级执行对齐**：TAV——或 TAV 不可用时的后备 `task-executor`——为困难故障先建立 red-capable 反馈环，选择最高且稳定的 public test seam，以纵向 RED → GREEN 切片推进 test-first 工作，并在机器门禁之后分别执行 Standards 与 Spec 审查。
+- **保留原有边界**：wayfinding 只是准备态，不是项目进度；`docs/progress/MASTER.md` 继续拥有项目级权威；安装的 TAV 仍是每个任务循环的权威；commit 绝不自动执行，wayfinding tracker 写入需要明确授权。
 
 ## Deep Discuss — 结构化深度讨论
 
@@ -403,7 +412,10 @@ spec_driven_develop/
 │   │   │       ├── parallel-protocol.md      # 并行执行协议
 │   │   │       ├── behavioral-rules.md       # 不可违反的工作流规则
 │   │   │       ├── github-integration.md     # GitHub Issues/Projects/PR 集成协议
-│   │   │       ├── adaptive-control.md      # 闭环自适应控制协议
+│   │   │       ├── adaptive-control.md       # 闭环自适应控制协议
+│   │   │       ├── domain-modeling.md        # 领域证据、术语表与 ADR 规则
+│   │   │       ├── wayfinding.md             # 范围确认前的条件式决策地图门禁
+│   │   │       ├── decomposition-strategy.md # 垂直 tracer slices 与 expand-contract
 │   │   │       └── templates/                # 文档模板（按关注点拆分）
 │   │   │           ├── analysis.md           # Phase 1：含 S.U.P.E.R 健康度评估
 │   │   │           ├── plan.md               # Phase 3：含 S.U.P.E.R 设计约束

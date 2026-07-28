@@ -2,18 +2,18 @@
 #
 # scripts/validate.sh — standing consistency guard for the spec_driven_develop repo.
 #
-# Runs seven checks and prints one PASS/FAIL line per check. Exits non-zero if any
+# Runs eight checks and prints one PASS/FAIL line per check. Exits non-zero if any
 # check fails. Safe to run from any directory: the script cds to the repo root
 # (the parent of this scripts/ directory) before doing any work.
 #
 # Dependencies (no new ones introduced):
 #   - bash
-#   - python3 (standard library only)
+#   - python3 or python (standard library only)
 #   - node   (required for check (e); absence is a loud FAILURE, not a skip)
 #   - git    (used to enumerate tracked files for check (a))
 #
 # Design choice (per task T1.4): path-reference extraction in check (a) is
-# implemented in python3 stdlib rather than ripgrep (rg). This keeps the guard
+# implemented in Python stdlib rather than ripgrep (rg). This keeps the guard
 # free of any rg dependency so it runs identically on machines without ripgrep.
 #
 # Checks:
@@ -48,6 +48,9 @@
 #        known-good fixture in scripts/test-fixtures/progress/ and assert the
 #        JSON structure (task name, one phase with two tasks, two parsed tasks
 #        with non-empty priority/acceptance).
+#   (h) Review context UTF-8 smoke test — create a temporary Git repository with
+#        Chinese, arrow, and emoji characters, then run the packaged collector
+#        without relying on the host locale or stdout code page.
 #
 set -uo pipefail
 
@@ -56,6 +59,22 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
 
 FAILURES=0
+
+if command -v python3 >/dev/null 2>&1; then
+  PYTHON_BIN=python3
+elif command -v python >/dev/null 2>&1; then
+  PYTHON_BIN=python
+else
+  PYTHON_BIN=''
+fi
+
+python_cmd() {
+  if [[ -z "$PYTHON_BIN" ]]; then
+    echo "Python interpreter not found (tried python3 and python)" >&2
+    return 1
+  fi
+  "$PYTHON_BIN" "$@"
+}
 
 run_check() {
   local id="$1"; shift
@@ -72,7 +91,7 @@ run_check() {
 # (a) Reference existence
 # ---------------------------------------------------------------------------
 check_a() {
-  python3 - <<'PY'
+  python_cmd - <<'PY'
 import re
 import subprocess
 import sys
@@ -159,7 +178,7 @@ PY
 # (b) Manifest <-> filesystem parity
 # ---------------------------------------------------------------------------
 check_b() {
-  python3 - <<'PY'
+  python_cmd - <<'PY'
 import json
 import re
 import sys
@@ -217,7 +236,7 @@ PY
 # (c) Version parity
 # ---------------------------------------------------------------------------
 check_c() {
-  python3 - <<'PY'
+  python_cmd - <<'PY'
 import json
 import re
 import sys
@@ -280,7 +299,7 @@ PY
 # (d) JSON validity
 # ---------------------------------------------------------------------------
 check_d() {
-  python3 - <<'PY'
+  python_cmd - <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -322,7 +341,7 @@ check_e() {
 # (f) py_compile the Python sources
 # ---------------------------------------------------------------------------
 check_f() {
-  python3 -m py_compile \
+  python_cmd -m py_compile \
     scripts/export-progress.py \
     scripts/review-context.py \
     plugins/spec-driven-develop/skills/review-spd/scripts/review-context.py
@@ -332,7 +351,7 @@ check_f() {
 # (g) Exporter smoke test against the known-good fixture
 # ---------------------------------------------------------------------------
 check_g() {
-  python3 - <<'PY'
+  python_cmd - <<'PY'
 import json
 import subprocess
 import sys
@@ -382,6 +401,13 @@ PY
 }
 
 # ---------------------------------------------------------------------------
+# (h) Review context UTF-8 smoke test in a temporary Git repository
+# ---------------------------------------------------------------------------
+check_h() {
+  python_cmd scripts/smoke-review-context.py
+}
+
+# ---------------------------------------------------------------------------
 # Run all checks
 # ---------------------------------------------------------------------------
 run_check a "reference existence" check_a
@@ -391,11 +417,12 @@ run_check d "JSON validity of manifests" check_d
 run_check e "ESM syntax of opencode-plugin.js" check_e
 run_check f "py_compile Python sources" check_f
 run_check g "exporter smoke test (fixture)" check_g
+run_check h "review-context UTF-8 smoke test" check_h
 
 echo
 if [ "$FAILURES" -gt 0 ]; then
   echo "validate.sh: $FAILURES check(s) FAILED" >&2
   exit 1
 fi
-echo "validate.sh: all 7 checks passed"
+echo "validate.sh: all 8 checks passed"
 exit 0

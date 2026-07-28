@@ -14,6 +14,8 @@ Design a practical, dependency-aware implementation plan that breaks the transfo
 
 ## Planning Protocol
 
+Before designing tasks, read `references/decomposition-strategy.md`. It is the canonical delivery-shape policy; this prompt defines the architect contract and must not restate or weaken that reference.
+
 ### 1. Transformation Strategy
 
 Based on the analysis data provided, determine the optimal approach:
@@ -26,7 +28,7 @@ Justify your choice based on the project's specific characteristics.
 
 ### 2. Phase Design
 
-Break the work into sequential phases. Each phase must have a clear, testable goal, leave the project in a working state, build on the previous phase's output, and be neither too granular nor too coarse. Adapt the phase count and boundaries to the specific project — fix S.U.P.E.R violation hotspots and foundations early.
+Break the work into sequential phases. Each phase must have a clear, testable goal, leave the project in a working state, build on the previous phase's output, and be neither too granular nor too coarse. Adapt the phase count and boundaries to the specific project — fix S.U.P.E.R violation hotspots and foundations early. Within each phase, apply the delivery shapes and operational-task categories owned by `references/decomposition-strategy.md`.
 
 ### 3. Task Definition
 
@@ -41,9 +43,13 @@ For each task within a phase:
 - **Memory/Governance Impact**: Whether the task can update the resolved memory surface or any resolved instruction surface
 - **Source Reference**: Which original module/file this task relates to
 
+For runtime behavior changes, the description names the independently observable behavior delivered by a vertical slice. Other cards name the delivery-shape exception or operational category and its rationale as defined in `references/decomposition-strategy.md`. Blocking edges must be genuine prerequisites, not a layer-by-layer or file-system sequence.
+
 Testing is the default. Any task that adds or changes user-visible features, business behavior, API contracts, schemas, migrations, parsing, routing, permissions, caching, or persistence must include relevant automated test work in its acceptance criteria. If the analysis shows no usable test harness, add an early foundation task to create the smallest practical test surface before feature implementation begins.
 
 Project governance is also default. If the analysis shows missing, stale, or conflicting instruction surfaces, add a foundation task to resolve and repair them before implementation tasks are launched. If no native memory surface is available, add a checkpoint to confirm whether the user wants a repo-local fallback memory file.
+
+Domain write-back is part of acceptance when relevant. If a task changes canonical terminology, bounded-context relationships, or an architecture decision that qualifies under `references/domain-modeling.md`, include the matching glossary or ADR update in that task rather than creating an unrelated documentation tail task.
 
 ### 4. Dependency Mapping
 
@@ -52,6 +58,8 @@ Produce a Mermaid diagram showing:
 - Delivery batch boundaries and batch-to-batch dependencies inside each phase
 - Critical path: the longest dependency chain
 - Parallelizable tasks within each phase
+
+Show expand → migrate → contract chains explicitly. A contract task depends on every migration batch; an integration-gate task appears only when intermediate migration batches cannot independently remain green.
 
 ### 5. Parallel Execution Lanes
 
@@ -64,7 +72,7 @@ For each lane:
 - **Estimated time**: Combined effort of the lane (determines wall-clock time for the phase)
 - **Merge risk**: Low / Medium / High — likelihood of merge conflicts between lanes (based on file overlap)
 
-Apply the Tier 2 admission criteria in `references/parallel-protocol.md` before creating lanes. Do not create a lane smaller than 2 tasks (or a single S-effort task) unless risk isolation demands it; fold undersized lanes into the nearest compatible lane. Waves are capped at 4 concurrent lanes; additional ready lanes queue for the next wave.
+Apply the Tier 2 admission criteria in `references/parallel-protocol.md` before creating lanes, including the explicit branch/worktree and commit-authorization prerequisites. If either authorization is not yet confirmed, mark Tier 2 as conditional and provide a Tier 0/1 fallback. Do not create a lane smaller than 2 tasks (or a single S-effort task) unless risk isolation demands it; fold undersized lanes into the nearest compatible lane. Waves are capped at 4 concurrent lanes; additional ready lanes queue for the next wave.
 
 ### 6. Delivery Batch Design
 
@@ -85,12 +93,13 @@ For every batch, provide:
 - **Parallel lanes**: which lanes contribute commits to the batch
 - **Execution waves**: prerequisite work first, followed by each set of dependency-ready lanes that may run simultaneously
 - **Integration branch**: follow repo convention or use `batch/{batch_id}-{slug}`
+- **Planned tier and authority prerequisite**: the execution tier plus any commit/branch/push/PR authorization that must be confirmed before that action
 - **Combined validation**: targeted and aggregate test/build/smoke checks
 - **Shared contracts**: interfaces, schemas, and types crossing lane boundaries — each marked `frozen` (no lane may change it) or `owned` (a named task changes it in the earliest wave); lanes receive this list as part of their input contract
 - **Dependencies**: prerequisite batches
 - **Split or single-task rationale**: explicit reason when not using the default phase-level batch
 
-Lane workers never create PRs. The orchestrator integrates their commits and creates exactly one PR per delivery batch, with one `Closes #N` line for each fully completed Issue.
+Tier 2 lane workers return one accepted atomic commit per task card and never create PRs. The orchestrator integrates those commits and, only with separate push and PR authorization, creates exactly one PR per delivery batch with one `Closes #N` line for each fully completed Issue.
 
 ### 7. Milestone Definition
 
