@@ -1,5 +1,13 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.20.0 (2026-07-29)
+
+### Spec/TAV recovery contract closure
+
+- **Added**: A canonical archived `MASTER.md` tombstone schema with an exact marker, archive pointer, pending-operation semantics, and Phase 6 creation rules.
+- **Changed**: Authoritative skill text now distinguishes Spec dispatch tiers and phase numbers from TAV task tiers and phase numbers.
+- **Added**: The mirrored handoff contract carries the `spec-tav/v1` identifier for cross-repository compatibility checks.
+
 ## Version 1.19.0 (2026-07-28)
 
 ### Contract alignment and consistency guards

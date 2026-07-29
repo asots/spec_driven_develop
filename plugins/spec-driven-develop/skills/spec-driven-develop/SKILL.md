@@ -12,7 +12,7 @@ description: >-
   surface resolution, progress tracking setup, and then executes the plan across recoverable sessions when needed. Keeps Issues as
   task-tracking units while batching related implementation into coherent reviewable PRs.
 metadata:
-  version: 1.19.0
+  version: 1.20.0
 ---
 
 # Spec-Driven Develop
@@ -80,7 +80,7 @@ Then check if `docs/progress/MASTER.md` already exists:
   - **In GitHub modes**: Also query GitHub for the latest status scoped to the recorded workflow run ID — see `references/github-integration.md` § "Reading Progress from GitHub". Update MASTER.md if remote state is ahead of the local index.
 - If it **does not exist**: This is a fresh start. Proceed to Phase 0.
 
-An archived snapshot does not replace the active root-level recovery entry while remote synchronization or cleanup remains pending. If `MASTER.md` is a tombstone, follow its archive pointer and resume the recorded pending operation rather than starting fresh.
+An archived snapshot does not replace the active root-level recovery entry while remote synchronization or cleanup remains pending. A tombstone is identified by the exact `**Workflow State**: archived` marker and follows `references/templates/progress.md` "Archived MASTER.md Tombstone". If `Pending Operations` is `none`, the archived run is complete and a different current request starts fresh at Phase 0. If pending operations are listed, follow the archive pointer and resume only those recorded operations; do not reconstruct active task execution from the tombstone.
 
 After loading your current state, populate the platform's native task tracking tool when available (for example, `TaskCreate` / `TaskUpdate`) with the active phase's pending tasks: content = task description, status = in-progress for the active task, priority mapped P0=high, P1=medium, P2=low. If no native task tool is available, skip this step — MASTER.md alone is sufficient.
 
@@ -236,7 +236,7 @@ Do not create competing truth sources.
 
 1. **Process each phase sequentially.** In GitHub modes, first confirm explicit tracker-write authorization that includes Issue comments; the authoritative execution-event record cannot be replaced by a local mirror. If it is absent, stop as `awaiting tracker-write authorization` or return to Phase 2 for a user-approved LOCAL_ONLY switch. Then read every open Issue in the phase and revalidate the planned batches against current dependencies, affected files, review scope, and repository rules. If the mapping must change, update `task-breakdown.md`, MASTER.md, and the `Delivery Batch` field in every affected Issue body; comment the regrouping reason so all execution surfaces agree.
 
-2. **Choose the execution tier for each delivery batch** using `references/parallel-protocol.md` "Dispatch Admission (Tiered Execution)". Tier 0 direct execution is the default; Tier 1 delegates a context-heavy complete batch; Tier 2 requires every admission and authority condition before lanes or worktrees exist. The reference owns branch conventions, wave dispatch, and the downgrade path.
+2. **Choose the execution tier for each delivery batch** using `references/parallel-protocol.md` "Dispatch Admission (Tiered Execution)". Tier 0 direct execution is the default; Tier 1 delegates a context-heavy complete batch; Tier 2 requires every admission and authority condition before lanes or worktrees exist. These `Tier 0/1/2` dispatch tiers are independent from TAV's `L0/L1/L2` task tiers for scope and risk. The reference owns branch conventions, wave dispatch, and the downgrade path.
 
 3. **Review before integrating** using `references/parallel-protocol.md` "Review Admission (Tiered Review)". L1 machine validation and L2 separate Standards/Spec diff review always apply; L3 independent review is reserved for its stated risk cases. You remain the acceptance-verification authority and sole writer of shared progress, adaptive, governance, and external-tracker state; commit, branch, push, PR, and tracker writes retain their independent authority gates.
 
@@ -279,8 +279,9 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
 5. **[GitHub modes]** With explicit GitHub tracker-write authorization, close each phase's Milestone (if not already closed) and optionally close the Project board. Otherwise leave remote state unchanged and record the pending archive synchronization locally.
 6. Create or update `docs/archives/README.md` with an entry: project name, one-line description, date range, link to archived MASTER.md, workflow run ID, and (GitHub modes) the Project URL.
 7. Remove source workflow directories only after archive verification, explicit cleanup authorization from step 2, and completion of all required remote synchronization. With remote work pending, cleanup is forbidden; retain the active recovery entry and report the exact next remote operation. Keep active instruction and memory surfaces in place; only their snapshots live under the archive.
-8. **Execution retrospective**: where multiple completed tasks expose the same dependency, contract, or planning mistake, distill 1-3 evidence-backed calibration rules and record them through the knowledge-consolidation pipeline to the resolved memory surface.
-9. Announce completion, report the archive path and any pending remote synchronization, then suggest the user commit the archive to version control.
+8. After active progress artifacts have been removed under the authorization from step 2, create a root-level `docs/progress/MASTER.md` tombstone from `references/templates/progress.md`. It records the exact archived marker, immutable run ID, archive MASTER pointer, and `Pending Operations: none`. If an operation fails after active progress was already removed, list only that exact pending operation and next action. Never replace an active MASTER with a tombstone while planned task execution or intentional remote synchronization remains pending.
+9. **Execution retrospective**: where multiple completed tasks expose the same dependency, contract, or planning mistake, distill 1-3 evidence-backed calibration rules and record them through the knowledge-consolidation pipeline to the resolved memory surface.
+10. Announce completion, report the archive path and any pending remote synchronization, then suggest the user commit the archive to version control.
 
 **Output**: All artifacts under `docs/archives/<project-name>/<run-id>/` with an updated `docs/archives/README.md` index; when remote synchronization is pending, the root-level recovery entry remains active.
 
@@ -288,7 +289,9 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
 
 ## Boundary with TAV
 
-Spec-Driven Develop owns analysis, decomposition, delivery-batch orchestration, and progress scaffolding. `tav-workflow` owns the scoped implementation loop: during Phase 5b, one TAV cycle executes exactly one task card, while the enclosing batch coordinates shared branches, integration validation, and PR creation. This contract is mirrored in `tav-workflow` § "Operating Inside a Spec-Driven Project" — keep both sides in sync.
+Spec-Driven Develop owns analysis, decomposition, delivery-batch orchestration, and progress scaffolding. `tav-workflow` owns the scoped implementation loop: during Phase 5b, one TAV cycle executes exactly one task card, while the enclosing batch coordinates shared branches, integration validation, and PR creation. Spec Phases 0-6 and TAV Phases 0-4 are independent numbering systems. This contract is mirrored in `tav-workflow` § "Operating Inside a Spec-Driven Project" — keep both sides in sync.
+
+**Handoff contract ID**: `spec-tav/v1` (canonical here; mirrored by `tav-workflow`).
 
 ### Handoff Contract (per task)
 

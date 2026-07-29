@@ -9,7 +9,7 @@
 
 **An architecture-first workflow plugin for AI coding agents. Pure Markdown. Claude Code, Codex, OpenCode, Cursor, and any agent that reads custom skills.**
 
-**Current version**: 1.19.0 — see [CHANGELOG.md](CHANGELOG.md).
+**Current version**: 1.20.0 — see [CHANGELOG.md](CHANGELOG.md).
 
 Spec-Driven Develop is an open-source, platform-agnostic workflow for AI coding agents. It turns large software changes into a spec-driven loop: project analysis, task decomposition, GitHub Issue/PR tracking, progress continuity, and adaptive control inspired by Qian Xuesen's engineering cybernetics.
 
@@ -124,6 +124,7 @@ Spec-Driven Develop pairs with the `tav-workflow` skill as a two-layer system: t
 - **Handoff Contract**: each task card feeds the TAV cycle (description → plan, acceptance criteria → verification baseline, S.U.P.E.R drivers → extra checks); the finished cycle returns progress and one execution-event payload to the orchestrator.
 - **Execution events from TAV signals**: rework iterations, plan returns, unplanned files, and focused S.U.P.E.R results provide evidence for watch, replan, or rescope responses without pretending to compute a precise effort score.
 - **Separate tier vocabularies**: `L0/L1/L2` is the TAV task tier for scope and risk; `Tier 0/1/2` is the Spec-Driven delivery-batch dispatch tier for direct, delegated, or parallel execution. They are independent dimensions.
+- **Versioned handoff and archive recovery**: the mirrored `spec-tav/v1` contract includes complete task intake, and an archived root MASTER uses an explicit tombstone schema rather than being mistaken for an active plan.
 - **Knowledge routing**: memory resolution remains declared project surface → native project memory → explicit repo fallback. Glossaries/ADRs and instruction files are type-specific destinations for domain decisions and agent rules; they do not compete in that memory priority order.
 
 TAV is optional — the `task-executor` agent embeds the same discipline when the skill is not installed.

@@ -491,6 +491,7 @@ files = {
     "readme": Path("README.md"),
     "readme_zh": Path("README.zh-CN.md"),
     "archive": skill_root / "references/templates/archive.md",
+    "progress": skill_root / "references/templates/progress.md",
     "plan": skill_root / "references/templates/plan.md",
     "task_definition": skill_root / "references/templates/task-definition.md",
     "github": skill_root / "references/github-integration.md",
@@ -510,6 +511,18 @@ if "./<project-name>/<run-id>/progress/MASTER.md" not in texts["archive"]:
     errors.append("archive index link does not match canonical nested path")
 if "locally validated — awaiting remote sync" not in texts["archive"]:
     errors.append("archive index cannot represent pending remote synchronization")
+for fp in (
+    "## Archived MASTER.md Tombstone",
+    "**Workflow State**: archived",
+    "**Archive MASTER**:",
+    "**Pending Operations**:",
+):
+    if fp not in texts["progress"]:
+        errors.append(f"progress tombstone contract missing: {fp}")
+if "spec-tav/v1" not in texts["skill"]:
+    errors.append("SKILL.md lacks handoff contract ID spec-tav/v1")
+if "do not reconstruct active task execution from the tombstone" not in texts["skill"]:
+    errors.append("SKILL.md lacks completed-tombstone recovery semantics")
 
 payload = "Outcome, Rework, Plan returns, Unplanned dependencies, and Focused S.U.P.E.R result"
 if payload not in texts["skill"]:

@@ -166,6 +166,7 @@ $decomposition = Get-Content (Join-Path $skillDir 'references/decomposition-stra
 $adaptive = Get-Content (Join-Path $skillDir 'references/adaptive-control.md') -Raw -Encoding UTF8
 $super = Get-Content (Join-Path $skillDir 'references/super-philosophy.md') -Raw -Encoding UTF8
 $archiveTemplate = Get-Content (Join-Path $skillDir 'references/templates/archive.md') -Raw -Encoding UTF8
+$progressTemplate = Get-Content (Join-Path $skillDir 'references/templates/progress.md') -Raw -Encoding UTF8
 
 Require-Fingerprints 'GitHub authority gates' $github @(
   '## Authority Gates',
@@ -205,6 +206,18 @@ Require-Fingerprints 'archive template contract' $archiveTemplate @(
   'docs/archives/<project-name>/<run-id>/',
   './<project-name>/<run-id>/progress/MASTER.md',
   'locally validated — awaiting remote sync'
+)
+Require-Fingerprints 'archived MASTER tombstone contract' $progressTemplate @(
+  '## Archived MASTER.md Tombstone',
+  '**Workflow State**: archived',
+  '**Archive MASTER**:',
+  '**Pending Operations**:',
+  'This file is a recovery pointer, not an active task tracker.'
+)
+Require-Fingerprints 'core tombstone lifecycle' $skill @(
+  '**Workflow State**: archived',
+  'Pending Operations',
+  'do not reconstruct active task execution from the tombstone'
 )
 if ($archiveTemplate -like '*<project-name>-<run-id>*') { Fail 'archive template still uses flattened project-run naming' }
 else { Ok 'archive template uses only the canonical nested run path' }
@@ -349,6 +362,11 @@ if (-not (Test-Path $tavSkillPath)) {
   if ($spdBoundary -notlike "*$canonicalPayload*") { Fail 'spd boundary lacks the canonical execution-event payload' }
   elseif ($tavOp -notlike "*$canonicalPayload*") { Fail 'tav interop section lacks the canonical execution-event payload' }
   else { Ok 'execution-event payload is canonical and mirrored across repos' }
+
+  $contractId = 'spec-tav/v1'
+  if ($spdBoundary -notlike "*$contractId*") { Fail "spd boundary lacks handoff contract ID $contractId" }
+  elseif ($tavOp -notlike "*$contractId*") { Fail "tav interop section lacks handoff contract ID $contractId" }
+  else { Ok "handoff contract ID $contractId is mirrored across repos" }
 
   $statePattern = '(?ms)\*\*State ownership:\*\*\s*(.*?)(?:\n---|\z)'
   $spdStateMatch = [regex]::Match($spdBoundary, $statePattern)

@@ -213,3 +213,25 @@ In `LOCAL_ONLY` mode, create one per phase. In GitHub modes, these files are opt
 - [ ] MASTER.md phase count updated
 - [ ] MASTER.md "Current Status" updated to next phase
 ```
+
+---
+
+## Archived MASTER.md Tombstone
+
+Use this only after Phase 6 has verified the archive and explicit cleanup authorization has removed the active progress artifacts. While intentional remote synchronization remains pending, keep the full active MASTER.md instead of replacing it with this tombstone.
+
+The exact `**Workflow State**: archived` marker is the machine-readable discriminator used by Spec-Driven continuity checks and TAV Phase 0.
+
+```markdown
+# Spec-Driven Workflow Tombstone
+
+> **Workflow State**: archived
+> **Task**: <task name>
+> **Workflow run ID**: `spd-YYYYMMDD-<project-slug>-<short-id>`
+> **Archive MASTER**: `../archives/<project-name>/<run-id>/progress/MASTER.md`
+> **Pending Operations**: none | <exact operation list>
+> **Next Action**: none | <single concrete recovery action>
+> **Last Updated**: YYYY-MM-DD
+
+This file is a recovery pointer, not an active task tracker. Follow the archive pointer for history. Resume only explicitly listed pending operations; when `Pending Operations` is `none`, a different request starts a fresh workflow.
+```

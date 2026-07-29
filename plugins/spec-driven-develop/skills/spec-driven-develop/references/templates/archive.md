@@ -46,3 +46,5 @@ docs/archives/<project-name>/<run-id>/
 ```
 
 Use the collision-safe `docs/archives/<project-name>/<run-id>/` path and never merge into an existing run directory. Before source cleanup, verify required artifacts, relative links, and source-to-archive file counts. Archive governance surfaces as snapshots or export notes only. Keep active instruction and memory surfaces in place after archiving. If memory is native and cannot be exported, record its platform/name and the key decisions that were written there.
+
+After verified archive cleanup removes the active progress artifacts, create the root `docs/progress/MASTER.md` recovery pointer from `references/templates/progress.md` "Archived MASTER.md Tombstone". Do not use a tombstone while intentional remote synchronization remains pending; retain the full active MASTER.md in that case.

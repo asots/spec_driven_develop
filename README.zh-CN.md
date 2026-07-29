@@ -9,7 +9,7 @@
 
 **一个架构优先的 AI Coding Agent 工作流插件。纯 Markdown。适用于 Claude Code、Codex、OpenCode、Cursor，以及任何能读取自定义 Skill 的 Agent。**
 
-**当前版本**：1.19.0 — 详见 [CHANGELOG.md](CHANGELOG.md)。
+**当前版本**：1.20.0 — 详见 [CHANGELOG.md](CHANGELOG.md)。
 
 Spec-Driven Develop 是一个开源、平台无关的 AI Coding Agent 工作流。它把大型软件改造收敛成规范驱动闭环：项目分析、任务分解、GitHub Issue/PR 追踪、跨对话进度连续性，以及受钱学森工程控制论启发的自适应控制。
 
@@ -124,6 +124,7 @@ Spec-Driven Develop 与 `tav-workflow` skill 构成双层体系：本 skill 负�
 - **交接契约（Handoff Contract）**：任务卡喂给 TAV 循环（描述 → 计划、验收标准 → 验证基线、S.U.P.E.R 驱动 → 附加检查项）；循环完成后回写进度与遥测。
 - **TAV 执行事件**：返工次数、计划回退、计划外文件和聚焦的 S.U.P.E.R 结果，为观察、重规划或重新定范围提供证据，而不是伪精确的 effort 分数。
 - **两套分级术语相互独立**：`L0/L1/L2` 是 TAV 按范围与风险划分的任务级别；`Tier 0/1/2` 是 Spec-Driven 对交付批次采用直接执行、单 Agent 委派或并行泳道的调度级别，二者不是同一维度。
+- **版本化交接与归档恢复**：镜像的 `spec-tav/v1` 契约补齐任务输入；归档后的根 MASTER 使用明确的 tombstone schema，不再被误判为活跃计划。
 - **知识路由**：记忆面仍按“项目既有声明 → 原生项目记忆 → 明确选择的仓库 fallback”解析；glossary/ADR 与 instruction 文件是领域决策和 Agent 规则的按类型写入目标，不参与记忆面优先级竞争。
 
 TAV 是可选的——未安装该 skill 时，`task-executor` agent 内嵌了同样的执行纪律。
