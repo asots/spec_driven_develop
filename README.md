@@ -9,7 +9,7 @@
 
 **An architecture-first workflow plugin for AI coding agents. Pure Markdown. Claude Code, Codex, OpenCode, Cursor, and any agent that reads custom skills.**
 
-**Current version**: 1.20.0 — see [CHANGELOG.md](CHANGELOG.md).
+**Current version**: 1.21.0 — see [CHANGELOG.md](CHANGELOG.md).
 
 Spec-Driven Develop is an open-source, platform-agnostic workflow for AI coding agents. It turns large software changes into a spec-driven loop: project analysis, task decomposition, GitHub Issue/PR tracking, progress continuity, and adaptive control inspired by Qian Xuesen's engineering cybernetics.
 

@@ -303,15 +303,17 @@ if (-not (Test-Path $tavSkillPath)) {
 } else {
   $tav = Get-Content $tavSkillPath -Raw -Encoding UTF8
 
-  # 7a. TAV owns the task-level specialist disciplines
+  # 7a. TAV owns the task-level specialist disciplines. Since tav 3.13.0 the
+  # branch contracts live in references/branches.md; SKILL.md keeps the triggers.
   $tavSections = @(
-    @{ Name = 'Hard-bug diagnosis branch'; Fingerprints = @('red-capable', 'original feedback command') },
-    @{ Name = 'TDD execution branch'; Fingerprints = @('highest stable public boundary', 'vertical behavior slice') },
-    @{ Name = 'Two-axis review'; Fingerprints = @('Standards', 'Spec', 'Do not merge the axes into one score') }
+    @{ File = 'references/branches.md'; Name = 'Hard-bug diagnosis branch'; Fingerprints = @('red-capable', 'original feedback command') },
+    @{ File = 'references/branches.md'; Name = 'TDD execution branch'; Fingerprints = @('highest stable public boundary', 'vertical behavior slice') },
+    @{ File = 'SKILL.md'; Name = 'Two-axis review'; Fingerprints = @('Standards', 'Spec', 'Do not merge the axes into one score') }
   )
   foreach ($entry in $tavSections) {
-    $section = Get-Section $tav $entry.Name
-    if ($null -eq $section) { Fail "tav SKILL.md section '$($entry.Name)' not found" }
+    $tavFile = Join-Path $TavPath $entry.File
+    $section = if (Test-Path $tavFile) { Get-Section (Get-Content $tavFile -Raw -Encoding UTF8) $entry.Name } else { $null }
+    if ($null -eq $section) { Fail "tav $($entry.File) section '$($entry.Name)' not found" }
     else { Require-Fingerprints "tav section '$($entry.Name)'" $section $entry.Fingerprints }
   }
 

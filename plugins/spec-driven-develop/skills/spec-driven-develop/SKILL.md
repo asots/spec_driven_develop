@@ -12,7 +12,7 @@ description: >-
   surface resolution, progress tracking setup, and then executes the plan across recoverable sessions when needed. Keeps Issues as
   task-tracking units while batching related implementation into coherent reviewable PRs.
 metadata:
-  version: 1.20.0
+  version: 1.21.0
 ---
 
 # Spec-Driven Develop
@@ -254,7 +254,7 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
 6. **Progress updates**:
    - **GitHub modes**: merged batch PRs auto-close their Issues; update MASTER.md "Current Status" and "Delivery Batches" once per batch transition.
    - **LOCAL_ONLY**: check off tasks in phase files; update MASTER.md counts.
-   - **All modes**: durable knowledge → resolved memory surface; agent-behavior changes → resolved instruction surfaces.
+   - **All modes**: durable knowledge → resolved memory surface; agent-behavior changes → resolved instruction surfaces; decision-type knowledge (costly to reverse, genuine trade-off, rejected alternatives worth recording) → decision note through `write-notes-like-deepseek` per behavioral rule 16.
 
 7. **At each phase boundary**: the phase's milestone acceptance task must pass before the phase closes — a failure there is a gate failure (return to the offending batch or task, or trigger adaptive replan if it reveals plan-level drift). Close the Milestone only after it passes.
 
@@ -280,7 +280,7 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
 6. Create or update `docs/archives/README.md` with an entry: project name, one-line description, date range, link to archived MASTER.md, workflow run ID, and (GitHub modes) the Project URL.
 7. Remove source workflow directories only after archive verification, explicit cleanup authorization from step 2, and completion of all required remote synchronization. With remote work pending, cleanup is forbidden; retain the active recovery entry and report the exact next remote operation. Keep active instruction and memory surfaces in place; only their snapshots live under the archive.
 8. After active progress artifacts have been removed under the authorization from step 2, create a root-level `docs/progress/MASTER.md` tombstone from `references/templates/progress.md`. It records the exact archived marker, immutable run ID, archive MASTER pointer, and `Pending Operations: none`. If an operation fails after active progress was already removed, list only that exact pending operation and next action. Never replace an active MASTER with a tombstone while planned task execution or intentional remote synchronization remains pending.
-9. **Execution retrospective**: where multiple completed tasks expose the same dependency, contract, or planning mistake, distill 1-3 evidence-backed calibration rules and record them through the knowledge-consolidation pipeline to the resolved memory surface.
+9. **Execution retrospective**: where multiple completed tasks expose the same dependency, contract, or planning mistake, distill 1-3 evidence-backed calibration rules and record them through the knowledge-consolidation pipeline — short rules to the resolved memory surface, decision-type calibrations as decision notes per behavioral rule 16.
 10. Announce completion, report the archive path and any pending remote synchronization, then suggest the user commit the archive to version control.
 
 **Output**: All artifacts under `docs/archives/<project-name>/<run-id>/` with an updated `docs/archives/README.md` index; when remote synchronization is pending, the root-level recovery entry remains active.

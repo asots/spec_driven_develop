@@ -1,5 +1,12 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.21.0 (2026-09-20)
+
+### Decision-note capture integrated
+
+- **Added**: Behavioral rule 16 routes decision-type knowledge (costly to reverse, genuine trade-off, rejected alternatives) to decision notes through the `write-notes-like-deepseek` skill, which owns the note location, format, verification gate, and archival; without that skill, the decision is reported as a pending note candidate. The note format and gate are not vendored, keeping a single source of truth.
+- **Changed**: Phase 5 progress updates and the Phase 6 execution retrospective route decision-type calibrations through the new decision-note path alongside the resolved memory surface.
+
 ## Version 1.20.0 (2026-07-29)
 
 ### Spec/TAV recovery contract closure
