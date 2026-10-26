@@ -1,18 +1,14 @@
 ---
 name: spec-driven-develop
 description: >-
-  Automates pre-development workflow for large-scale complex tasks. Use for spec-driven
-  work or broad rewrites, migrations, overhauls, and refactors only when at least two L2
-  escalation signals hold (3+ modules or a public contract break; multi-session or ~10+ files;
-  architectural decisions; acceptance cannot fit one TAV cycle). Chinese examples include
-  "整体重构", "全项目重构", "跨模块迁移", "架构级改造", "大规模", and "规范驱动". A bare
-  rewrite/refactor/migration keyword is not sufficient; single-module work belongs to
-  tav-workflow. Performs full project analysis, task
-  decomposition, documentation generation, project-level instruction and native memory
-  surface resolution, progress tracking setup, and then executes the plan across recoverable sessions when needed. Keeps Issues as
-  task-tracking units while batching related implementation into coherent reviewable PRs.
+  Plans and executes large transformations (rewrites, migrations, overhauls, architecture-level
+  refactors) through project analysis, task decomposition, recoverable progress tracking, and
+  batched PRs. Use only when at least two L2 signals hold: 3+ modules or a public contract break;
+  multi-session or ~10+ files; architectural decisions; acceptance cannot fit one TAV cycle.
+  Chinese cues: 整体重构, 全项目重构, 跨模块迁移, 架构级改造, 大规模, 规范驱动. A bare
+  rewrite/refactor/migration keyword is not enough; single-module work belongs to tav-workflow.
 metadata:
-  version: 1.22.0
+  version: 1.23.0
 ---
 
 # Spec-Driven Develop

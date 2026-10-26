@@ -1,5 +1,11 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.23.0 (2026-10-26)
+
+### Shorter trigger description
+
+- **Changed**: The skill `description` drops from 851 to 567 characters. It keeps the two-of-four L2 signal test, the Chinese trigger cues, and the single-module boundary with `tav-workflow`; the phase-by-phase capability list it no longer repeats is in the skill body.
+
 ## Version 1.22.0 (2026-10-26)
 
 ### Phase 2 decisions routed through rule 16
