@@ -1,5 +1,13 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.25.0 (2026-10-26)
+
+### tav skill folder, CI, and decision records in task-executor
+
+- **Changed**: `scripts/verify.ps1` reads tav-workflow from its skills/tav-workflow/ folder (tav 3.16.0+). In CI (`CI=true`) a missing tav-workflow checkout fails the run instead of skipping the cross-repo checks.
+- **Added**: A GitHub Actions workflow runs both repositories' self-checks against sibling checkouts.
+- **Changed**: The `task-executor` fallback discipline searches decision records before editing, matching tav-workflow's Thinker evidence rule; a task card that contradicts a recorded decision is reported as a blocker.
+
 ## Version 1.24.0 (2026-10-26)
 
 ### Archive protocol on demand; complementary validators

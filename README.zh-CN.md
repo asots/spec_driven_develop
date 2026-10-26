@@ -9,7 +9,7 @@
 
 **一个架构优先的 AI Coding Agent 工作流插件。纯 Markdown。适用于 Claude Code、Codex、OpenCode、Cursor，以及任何能读取自定义 Skill 的 Agent。**
 
-**当前版本**：1.24.0 — 详见 [CHANGELOG.md](CHANGELOG.md)。
+**当前版本**：1.25.0 — 详见 [CHANGELOG.md](CHANGELOG.md)。
 
 Spec-Driven Develop 是一个开源、平台无关的 AI Coding Agent 工作流。它把大型软件改造收敛成规范驱动闭环：项目分析、任务分解、GitHub Issue/PR 追踪、跨对话进度连续性，以及受钱学森工程控制论启发的自适应控制。
 

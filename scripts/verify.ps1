@@ -255,9 +255,12 @@ if ($reviewer -like '*uncommitted worktree change*' -or $reviewer -like '*explic
 } else { Ok 'code-reviewer fixes are authorized append-only commits or ESCALATE' }
 
 # 7. Cross-repo contract fingerprint with tav-workflow
-$tavSkillPath = Join-Path $TavPath 'SKILL.md'
+# Since tav 3.16.0 the installable skill lives in skills/tav-workflow/ of the tav repo.
+$tavSkillDir = Join-Path $TavPath 'skills/tav-workflow'
+$tavSkillPath = Join-Path $tavSkillDir 'SKILL.md'
 if (-not (Test-Path $tavSkillPath)) {
-  Warn "tav-workflow not found at '$TavPath' - cross-repo contract checks skipped (pass -TavPath to enable)"
+  $msg = "tav-workflow skill not found at '$tavSkillDir' - cross-repo contract checks skipped (pass -TavPath to enable)"
+  if ($env:CI -eq 'true') { Fail $msg } else { Warn $msg }
 } else {
   $tav = Get-Content $tavSkillPath -Raw -Encoding UTF8
 
@@ -269,7 +272,7 @@ if (-not (Test-Path $tavSkillPath)) {
     @{ File = 'SKILL.md'; Name = 'Two-axis review'; Fingerprints = @('Standards', 'Spec', 'Do not merge the axes into one score') }
   )
   foreach ($entry in $tavSections) {
-    $tavFile = Join-Path $TavPath $entry.File
+    $tavFile = Join-Path $tavSkillDir $entry.File
     $section = if (Test-Path $tavFile) { Get-Section (Get-Content $tavFile -Raw -Encoding UTF8) $entry.Name } else { $null }
     if ($null -eq $section) { Fail "tav $($entry.File) section '$($entry.Name)' not found" }
     else { Require-Fingerprints "tav section '$($entry.Name)'" $section $entry.Fingerprints }
@@ -303,7 +306,7 @@ if (-not (Test-Path $tavSkillPath)) {
   if ($tav -match 'Close the Issue via PR') { Fail 'tav SKILL.md still contains pre-delivery-batch wording "Close the Issue via PR"' }
   else { Ok 'tav SKILL.md free of pre-delivery-batch write-back wording' }
 
-  $tavInteropPath = Join-Path $TavPath 'references/spec-driven-interop.md'
+  $tavInteropPath = Join-Path $tavSkillDir 'references/spec-driven-interop.md'
   $tavOp = if (Test-Path $tavInteropPath) { Get-Section (Get-Content $tavInteropPath -Raw -Encoding UTF8) 'Operating Inside a Spec-Driven Project' } else { $null }
   if ($null -eq $tavOp) { Fail 'tav references/spec-driven-interop.md section "Operating Inside a Spec-Driven Project" not found' }
   else {

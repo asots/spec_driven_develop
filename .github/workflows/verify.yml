@@ -1,0 +1,39 @@
+# Runs both repositories' self-checks against sibling checkouts, so a change on either
+# side of the spec-tav/v1 contract fails here instead of after release. tav-workflow
+# runs the same checks in its own workflow.
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout spec-driven-develop
+        uses: actions/checkout@v7
+        with:
+          path: spec-driven-develop
+
+      - name: Checkout tav-workflow
+        uses: actions/checkout@v7
+        with:
+          repository: asots/tav-workflow
+          path: tav-workflow
+
+      - name: spec-driven-develop self-checks
+        shell: bash
+        working-directory: spec-driven-develop
+        run: |
+          pwsh scripts/verify.ps1
+          bash scripts/validate.sh
+
+      - name: tav-workflow self-check
+        shell: pwsh
+        run: ./tav-workflow/scripts/verify.ps1
