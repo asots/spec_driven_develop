@@ -8,7 +8,7 @@ description: >-
   Chinese cues: 整体重构, 全项目重构, 跨模块迁移, 架构级改造, 大规模, 规范驱动. A bare
   rewrite/refactor/migration keyword is not enough; single-module work belongs to tav-workflow.
 metadata:
-  version: 1.25.0
+  version: 1.26.0
 ---
 
 # Spec-Driven Develop

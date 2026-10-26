@@ -1,13 +1,13 @@
 {
   "name": "spec-driven-develop",
-  "version": "1.25.0",
+  "version": "1.26.0",
   "description": "Three complementary AI agent skills for spec-driven development, structured deep discussion, and findings-first code review.",
   "author": {
     "name": "zhu1090093659",
     "url": "https://github.com/zhu1090093659"
   },
-  "homepage": "https://github.com/zhu1090093659/spec_driven_develop",
-  "repository": "https://github.com/zhu1090093659/spec_driven_develop",
+  "homepage": "https://github.com/asots/spec_driven_develop",
+  "repository": "https://github.com/asots/spec_driven_develop",
   "license": "MIT",
   "keywords": [
     "spec-driven",
@@ -34,7 +34,7 @@
       "Read",
       "Write"
     ],
-    "websiteURL": "https://github.com/zhu1090093659/spec_driven_develop",
+    "websiteURL": "https://github.com/asots/spec_driven_develop",
     "defaultPrompt": [
       "Use spec-driven development to plan this migration.",
       "Help me analyze this technical problem deeply.",

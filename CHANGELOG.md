@@ -1,5 +1,11 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.26.0 (2026-10-26)
+
+### Distribution points at the asots fork
+
+- **Changed**: The install scripts, both READMEs, the plugin and marketplace manifests (`homepage`, `repository`, `websiteURL`), and the GitHub Issue/PR footer links point at `asots/spec_driven_develop` instead of the upstream `zhu1090093659/spec_driven_develop`, so remote installs fetch this fork. Author and owner attribution is unchanged.
+
 ## Version 1.25.0 (2026-10-26)
 
 ### tav skill folder, CI, and decision records in task-executor

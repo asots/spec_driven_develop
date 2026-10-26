@@ -3,7 +3,7 @@ set -euo pipefail
 
 PLUGIN_NAME="spec-driven-develop"
 INSTALLER_REF="${SPEC_DRIVEN_INSTALL_REF:-main}"
-REPO_URL="https://github.com/zhu1090093659/spec_driven_develop"
+REPO_URL="https://github.com/asots/spec_driven_develop"
 OPENCODE_HOME="${OPENCODE_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/opencode}"
 TARGET_VENDOR_DIR="$OPENCODE_HOME/vendor/$PLUGIN_NAME"
 TARGET_PLUGIN_DIR="$OPENCODE_HOME/plugins"

@@ -7,8 +7,8 @@
 
 SKILL_NAME="spec-driven-develop"
 INSTALLER_REF="${SPEC_DRIVEN_INSTALL_REF:-main}"
-REPO_URL="https://github.com/zhu1090093659/spec_driven_develop"
-RAW_URL="https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/$INSTALLER_REF"
+REPO_URL="https://github.com/asots/spec_driven_develop"
+RAW_URL="https://raw.githubusercontent.com/asots/spec_driven_develop/$INSTALLER_REF"
 SKILLS_SUBPATH="plugins/spec-driven-develop/skills"
 SKILL_SUBPATH="$SKILLS_SUBPATH/$SKILL_NAME"
 BUNDLED_SKILLS=("spec-driven-develop" "deep-discuss" "review-spd")

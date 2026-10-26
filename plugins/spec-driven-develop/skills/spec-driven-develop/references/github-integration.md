@@ -184,7 +184,7 @@ Every task Issue uses this structured body format:
 
 ---
 <!-- spec-run:{run_id}; task:{task_id} -->
-_Managed by [Spec-Driven Develop](https://github.com/zhu1090093659/spec_driven_develop) workflow_
+_Managed by [Spec-Driven Develop](https://github.com/asots/spec_driven_develop) workflow_
 ```
 
 Before creating an Issue, list candidates with `--label "spec-run:$RUN_ID" --state all`, inspect any same task ID/body marker, and reuse only the exact `<!-- spec-run:$RUN_ID; task:$TASK_ID -->` match. Create an Issue only when no such match exists:
@@ -404,7 +404,7 @@ Refs #{partially_covered_issue_if_any}
 - Memory surface: updated / unchanged / unavailable / fallback used
 
 ---
-_Part of [Spec-Driven Develop](https://github.com/zhu1090093659/spec_driven_develop) workflow_
+_Part of [Spec-Driven Develop](https://github.com/asots/spec_driven_develop) workflow_
 EOF
 )"
 ```

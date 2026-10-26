@@ -1,7 +1,7 @@
 [English](./README.md) | **中文**
 
-[![GitHub stars](https://img.shields.io/github/stars/zhu1090093659/spec_driven_develop?style=social)](https://github.com/zhu1090093659/spec_driven_develop/stargazers)
-[![Forks](https://img.shields.io/github/forks/zhu1090093659/spec_driven_develop?style=social)](https://github.com/zhu1090093659/spec_driven_develop/fork)
+[![GitHub stars](https://img.shields.io/github/stars/asots/spec_driven_develop?style=social)](https://github.com/asots/spec_driven_develop/stargazers)
+[![Forks](https://img.shields.io/github/forks/asots/spec_driven_develop?style=social)](https://github.com/asots/spec_driven_develop/fork)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20Codex%20%7C%20OpenCode%20%7C%20Cursor-FF6B6B.svg)](https://github.com)
 
@@ -9,7 +9,7 @@
 
 **一个架构优先的 AI Coding Agent 工作流插件。纯 Markdown。适用于 Claude Code、Codex、OpenCode、Cursor，以及任何能读取自定义 Skill 的 Agent。**
 
-**当前版本**：1.25.0 — 详见 [CHANGELOG.md](CHANGELOG.md)。
+**当前版本**：1.26.0 — 详见 [CHANGELOG.md](CHANGELOG.md)。
 
 Spec-Driven Develop 是一个开源、平台无关的 AI Coding Agent 工作流。它把大型软件改造收敛成规范驱动闭环：项目分析、任务分解、GitHub Issue/PR 追踪、跨对话进度连续性，以及受钱学森工程控制论启发的自适应控制。
 
@@ -51,7 +51,7 @@ Spec-Driven Develop 是一个开源、平台无关的 AI Coding Agent 工作流�
 | 分发形式 | 纯 Markdown Skill，附带 Claude Code、Codex 与 OpenCode 的插件集成 |
 | 依赖 | Markdown Skill 无运行时依赖；可选安装与校验辅助脚本按其说明需要 Bash、Git、Python 或 Node |
 | 许可证 | MIT |
-| 仓库 | <https://github.com/zhu1090093659/spec_driven_develop> |
+| 仓库 | <https://github.com/asots/spec_driven_develop> |
 
 ## 它做什么
 
@@ -239,7 +239,7 @@ SKILL 的 prompt 以通用、平台中立的方式编写。在缺少某些能力
 ### Claude Code
 
 ```
-/plugin marketplace add zhu1090093659/spec_driven_develop
+/plugin marketplace add asots/spec_driven_develop
 /plugin install spec-driven-develop@spec-driven-develop
 ```
 
@@ -255,14 +255,14 @@ SKILL 的 prompt 以通用、平台中立的方式编写。在缺少某些能力
 /plugins
 ```
 
-添加 `zhu1090093659/spec_driven_develop` 市场后，安装 `spec-driven-develop@spec-driven-develop`。如插件被禁用，请遵循 Codex UI 当前展示的 feature flag 指引；不要手工编辑内部插件配置。
+添加 `asots/spec_driven_develop` 市场后，安装 `spec-driven-develop@spec-driven-develop`。如插件被禁用，请遵循 Codex UI 当前展示的 feature flag 指引；不要手工编辑内部插件配置。
 
 备选方式：在 Codex 会话中调用 `$skill-installer`，让它从本仓库的 `plugins/spec-driven-develop/skills/spec-driven-develop` 路径安装核心 Skill。
 
 或者通过 Shell 脚本安装 bundled skills：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-codex.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/asots/spec_driven_develop/main/scripts/install-codex.sh)
 ```
 
 远程 wrapper 会自举同版本的共享安装器。安装和修复会先在暂存目录校验完整 bundled file manifest，再以事务式替换现有 bundle；下载或校验失败时保留旧安装不变。
@@ -274,13 +274,13 @@ bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_de
 全局安装：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-opencode.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/asots/spec_driven_develop/main/scripts/install-opencode.sh)
 ```
 
 或者从本地 clone 安装：
 
 ```bash
-git clone https://github.com/zhu1090093659/spec_driven_develop.git
+git clone https://github.com/asots/spec_driven_develop.git
 bash spec_driven_develop/scripts/install-opencode.sh
 ```
 
@@ -300,13 +300,13 @@ bash spec_driven_develop/scripts/install-opencode.sh
 ### Cursor
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-cursor.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/asots/spec_driven_develop/main/scripts/install-cursor.sh)
 ```
 
 也可以克隆仓库后本地安装：
 
 ```bash
-git clone https://github.com/zhu1090093659/spec_driven_develop.git
+git clone https://github.com/asots/spec_driven_develop.git
 bash spec_driven_develop/scripts/install-cursor.sh
 ```
 
@@ -316,7 +316,7 @@ bash spec_driven_develop/scripts/install-cursor.sh
 
 ```bash
 # 下载 SKILL.md
-curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/plugins/spec-driven-develop/skills/spec-driven-develop/SKILL.md -o SKILL.md
+curl -sL https://raw.githubusercontent.com/asots/spec_driven_develop/main/plugins/spec-driven-develop/skills/spec-driven-develop/SKILL.md -o SKILL.md
 ```
 
 放置位置取决于你用的 Agent：
@@ -466,8 +466,8 @@ Spec-Driven Develop 是一个面向 AI Coding Agent 的纯 Markdown 规范驱动
 ## Star History
 
 <p align="center">
-  <a href="https://www.star-history.com/#zhu1090093659/spec_driven_develop&Date" target="_blank">
-    <img src="https://api.star-history.com/svg?repos=zhu1090093659/spec_driven_develop&type=Date" alt="Star History" width="600">
+  <a href="https://www.star-history.com/#asots/spec_driven_develop&Date" target="_blank">
+    <img src="https://api.star-history.com/svg?repos=asots/spec_driven_develop&type=Date" alt="Star History" width="600">
   </a>
 </p>
 

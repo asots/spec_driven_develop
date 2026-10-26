@@ -1,7 +1,7 @@
 **English** | [中文](./README.zh-CN.md)
 
-[![GitHub stars](https://img.shields.io/github/stars/zhu1090093659/spec_driven_develop?style=social)](https://github.com/zhu1090093659/spec_driven_develop/stargazers)
-[![Forks](https://img.shields.io/github/forks/zhu1090093659/spec_driven_develop?style=social)](https://github.com/zhu1090093659/spec_driven_develop/fork)
+[![GitHub stars](https://img.shields.io/github/stars/asots/spec_driven_develop?style=social)](https://github.com/asots/spec_driven_develop/stargazers)
+[![Forks](https://img.shields.io/github/forks/asots/spec_driven_develop?style=social)](https://github.com/asots/spec_driven_develop/fork)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20Codex%20%7C%20OpenCode%20%7C%20Cursor-FF6B6B.svg)](https://github.com)
 
@@ -9,7 +9,7 @@
 
 **An architecture-first workflow plugin for AI coding agents. Pure Markdown. Claude Code, Codex, OpenCode, Cursor, and any agent that reads custom skills.**
 
-**Current version**: 1.25.0 — see [CHANGELOG.md](CHANGELOG.md).
+**Current version**: 1.26.0 — see [CHANGELOG.md](CHANGELOG.md).
 
 Spec-Driven Develop is an open-source, platform-agnostic workflow for AI coding agents. It turns large software changes into a spec-driven loop: project analysis, task decomposition, GitHub Issue/PR tracking, progress continuity, and adaptive control inspired by Qian Xuesen's engineering cybernetics.
 
@@ -51,7 +51,7 @@ Use this section when summarizing or citing Spec-Driven Develop in search result
 | Distribution | Pure Markdown skills plus optional Claude Code, Codex, and OpenCode plugin integration |
 | Dependencies | The Markdown skills have no runtime dependency; optional install and validation helpers require Bash, Git, Python, or Node as documented by their scripts |
 | License | MIT |
-| Repository | <https://github.com/zhu1090093659/spec_driven_develop> |
+| Repository | <https://github.com/asots/spec_driven_develop> |
 
 ## What It Does
 
@@ -239,7 +239,7 @@ The SKILL prompt is written in a generic, platform-neutral way. It gracefully de
 ### Claude Code
 
 ```
-/plugin marketplace add zhu1090093659/spec_driven_develop
+/plugin marketplace add asots/spec_driven_develop
 /plugin install spec-driven-develop@spec-driven-develop
 ```
 
@@ -255,14 +255,14 @@ Open Codex's interactive plugin manager:
 /plugins
 ```
 
-Add the `zhu1090093659/spec_driven_develop` marketplace, then install `spec-driven-develop@spec-driven-develop`. Follow the Codex UI's current feature-flag guidance if plugins are disabled; do not edit internal plugin configuration by hand.
+Add the `asots/spec_driven_develop` marketplace, then install `spec-driven-develop@spec-driven-develop`. Follow the Codex UI's current feature-flag guidance if plugins are disabled; do not edit internal plugin configuration by hand.
 
 Alternative: invoke `$skill-installer` in a Codex session and ask it to install the core skill from this repository's `plugins/spec-driven-develop/skills/spec-driven-develop` path.
 
 Or install the bundled skills via shell:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-codex.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/asots/spec_driven_develop/main/scripts/install-codex.sh)
 ```
 
 The remote wrapper bootstraps its matching shared installer. Install and repair operations validate the complete bundled file manifest in a staging directory before transactionally replacing an existing bundle; a download or validation failure leaves the previous installation untouched.
@@ -274,13 +274,13 @@ This repository includes an opencode plugin entrypoint at `plugins/spec-driven-d
 Install globally:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-opencode.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/asots/spec_driven_develop/main/scripts/install-opencode.sh)
 ```
 
 Or install from a local clone:
 
 ```bash
-git clone https://github.com/zhu1090093659/spec_driven_develop.git
+git clone https://github.com/asots/spec_driven_develop.git
 bash spec_driven_develop/scripts/install-opencode.sh
 ```
 
@@ -300,13 +300,13 @@ Quit and restart opencode after installation or config changes. opencode loads p
 ### Cursor
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/scripts/install-cursor.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/asots/spec_driven_develop/main/scripts/install-cursor.sh)
 ```
 
 Or clone the repo and run locally:
 
 ```bash
-git clone https://github.com/zhu1090093659/spec_driven_develop.git
+git clone https://github.com/asots/spec_driven_develop.git
 bash spec_driven_develop/scripts/install-cursor.sh
 ```
 
@@ -316,7 +316,7 @@ For any other coding agent, grab the SKILL file and place it where your agent re
 
 ```bash
 # Download the SKILL.md
-curl -sL https://raw.githubusercontent.com/zhu1090093659/spec_driven_develop/main/plugins/spec-driven-develop/skills/spec-driven-develop/SKILL.md -o SKILL.md
+curl -sL https://raw.githubusercontent.com/asots/spec_driven_develop/main/plugins/spec-driven-develop/skills/spec-driven-develop/SKILL.md -o SKILL.md
 ```
 
 Where to place it depends on your agent:
@@ -466,8 +466,8 @@ No. The core workflow is Markdown-only and has no runtime dependency. GitHub-nat
 ## Star History
 
 <p align="center">
-  <a href="https://www.star-history.com/#zhu1090093659/spec_driven_develop&Date" target="_blank">
-    <img src="https://api.star-history.com/svg?repos=zhu1090093659/spec_driven_develop&type=Date" alt="Star History" width="600">
+  <a href="https://www.star-history.com/#asots/spec_driven_develop&Date" target="_blank">
+    <img src="https://api.star-history.com/svg?repos=asots/spec_driven_develop&type=Date" alt="Star History" width="600">
   </a>
 </p>
 
