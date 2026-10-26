@@ -12,7 +12,7 @@ description: >-
   surface resolution, progress tracking setup, and then executes the plan across recoverable sessions when needed. Keeps Issues as
   task-tracking units while batching related implementation into coherent reviewable PRs.
 metadata:
-  version: 1.21.0
+  version: 1.22.0
 ---
 
 # Spec-Driven Develop
@@ -44,7 +44,7 @@ You are executing the **Spec-Driven Development** workflow — a seven-phase pip
 | `references/adaptive-control.md` | Execution events, response levels, canonical storage, controller activation |
 | `references/parallel-protocol.md` | Dispatch/review admission (tiers), lane/worktree protocol, review loop, merge risk, post-integration checks |
 | `references/super-philosophy.md` | S.U.P.E.R principles + the 10-check review checklist |
-| `references/domain-modeling.md` | Domain surfaces, evidence-driven terminology, one-decision-at-a-time refinement, glossary/ADR write-back |
+| `references/domain-modeling.md` | Domain surfaces, evidence-driven terminology, one-decision-at-a-time refinement, glossary write-back, decision-record routing |
 | `references/wayfinding.md` | Conditional decision map for efforts whose route is still too foggy for Phase 2 confirmation |
 | `references/decomposition-strategy.md` | Vertical tracer slices, prefactoring boundaries, and expand-contract for wide refactors |
 | `references/templates/` | Schemas for every generated document (including the Phase 2 task definition, analysis, plan, progress, governance, archive) |
@@ -109,7 +109,7 @@ After loading your current state, populate the platform's native task tracking t
 1. Launch `project-analyzer` sub-agents **in parallel**, split by focus area:
    - **Architecture & Stack**: structure, directory layout, tech stack, entry points, build/run commands
    - **Module Inventory**: each module's responsibility, public API surface, size, dependencies, and the S.U.P.E.R principles relevant to its risk profile
-   - **Risks, Tests, Domain & Governance**: transformation risks, complexity hotspots, coding conventions, test coverage, domain glossaries/ADRs and terminology contradictions, instruction/memory surfaces — plus S.U.P.E.R violation hotspots (priority targets for the plan)
+   - **Risks, Tests, Domain & Governance**: transformation risks, complexity hotspots, coding conventions, test coverage, domain glossaries/decision records and terminology contradictions, instruction/memory surfaces — plus S.U.P.E.R violation hotspots (priority targets for the plan)
 
    Give each agent the Phase 0 direction AND `references/super-philosophy.md`. If sub-agents are unavailable, perform the same analysis sequentially yourself.
 
@@ -142,7 +142,7 @@ After Phase 1, evaluate whether the analyzed destination can be turned into a co
 **Actions**:
 
 1. Present key Phase 1 findings: brief architecture summary, notable S.U.P.E.R health issues, and coupling/complexity highlights relevant to the transformation.
-2. Read `references/domain-modeling.md`, which owns the evidence, one-active-decision, glossary, and ADR rules. Resolve blocking terminology or domain-boundary conflicts before freezing scope and return links to any confirmed write-back. When the platform provides the `grilling` and `domain-modeling` skills, run the decision loop and the glossary/ADR write-back through them (see that reference's "Skill Mapping"); the reference remains the authoritative contract.
+2. Read `references/domain-modeling.md`, which owns the evidence, one-active-decision, glossary, and decision-record rules. Resolve blocking terminology or domain-boundary conflicts before freezing scope and return links to any confirmed write-back. When the platform provides the `grilling` and `domain-modeling` skills, run the decision loop and the glossary write-back through them, with qualifying decisions recorded through behavioral rule 16 (see that reference's "Skill Mapping"); the reference remains the authoritative contract.
 3. Ask **targeted questions grounded in the analysis** — specific and informed, not generic (e.g., about circular dependencies found, hardcoded environment assumptions, missing interface contracts). At minimum confirm:
    - **Scope** — which modules from the inventory are in scope
    - **Target** — target technology/architecture/state
@@ -154,7 +154,7 @@ After Phase 1, evaluate whether the analyzed destination can be turned into a co
 
 4. Summarize the refined understanding, including resolved domain terms/decisions and any deferred ambiguity, then get explicit confirmation.
 
-**Output**: Write the authoritative confirmed definition to `docs/plan/task-definition.md` using `references/templates/task-definition.md`. Generate one immutable workflow run ID and record it there before Phase 3; it scopes any GitHub resources and recovery ledger for this workflow attempt. This is the single spec source for Phases 3-6; `task-breakdown.md`, phase files, and Issue bodies reference it rather than restating or redefining approved scope. Include any glossary/ADR updates made through `references/domain-modeling.md`.
+**Output**: Write the authoritative confirmed definition to `docs/plan/task-definition.md` using `references/templates/task-definition.md`. Generate one immutable workflow run ID and record it there before Phase 3; it scopes any GitHub resources and recovery ledger for this workflow attempt. This is the single spec source for Phases 3-6; `task-breakdown.md`, phase files, and Issue bodies reference it rather than restating or redefining approved scope. Include any glossary updates and decision notes made through `references/domain-modeling.md`.
 
 ---
 

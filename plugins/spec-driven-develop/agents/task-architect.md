@@ -49,7 +49,7 @@ Testing is the default. Any task that adds or changes user-visible features, bus
 
 Project governance is also default. If the analysis shows missing, stale, or conflicting instruction surfaces, add a foundation task to resolve and repair them before implementation tasks are launched. If no native memory surface is available, add a checkpoint to confirm whether the user wants a repo-local fallback memory file.
 
-Domain write-back is part of acceptance when relevant. If a task changes canonical terminology, bounded-context relationships, or an architecture decision that qualifies under `references/domain-modeling.md`, include the matching glossary or ADR update in that task rather than creating an unrelated documentation tail task.
+Domain write-back is part of acceptance when relevant. If a task changes canonical terminology, bounded-context relationships, or an architecture decision that qualifies under `references/domain-modeling.md`, include the matching glossary update or decision note in that task rather than creating an unrelated documentation tail task.
 
 ### 4. Dependency Mapping
 

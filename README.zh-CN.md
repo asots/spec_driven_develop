@@ -9,7 +9,7 @@
 
 **一个架构优先的 AI Coding Agent 工作流插件。纯 Markdown。适用于 Claude Code、Codex、OpenCode、Cursor，以及任何能读取自定义 Skill 的 Agent。**
 
-**当前版本**：1.21.0 — 详见 [CHANGELOG.md](CHANGELOG.md)。
+**当前版本**：1.22.0 — 详见 [CHANGELOG.md](CHANGELOG.md)。
 
 Spec-Driven Develop 是一个开源、平台无关的 AI Coding Agent 工作流。它把大型软件改造收敛成规范驱动闭环：项目分析、任务分解、GitHub Issue/PR 追踪、跨对话进度连续性，以及受钱学森工程控制论启发的自适应控制。
 
@@ -125,7 +125,7 @@ Spec-Driven Develop 与 `tav-workflow` skill 构成双层体系：本 skill 负�
 - **TAV 执行事件**：返工次数、计划回退、计划外文件和聚焦的 S.U.P.E.R 结果，为观察、重规划或重新定范围提供证据，而不是伪精确的 effort 分数。
 - **两套分级术语相互独立**：`L0/L1/L2` 是 TAV 按范围与风险划分的任务级别；`Tier 0/1/2` 是 Spec-Driven 对交付批次采用直接执行、单 Agent 委派或并行泳道的调度级别，二者不是同一维度。
 - **版本化交接与归档恢复**：镜像的 `spec-tav/v1` 契约补齐任务输入；归档后的根 MASTER 使用明确的 tombstone schema，不再被误判为活跃计划。
-- **知识路由**：记忆面仍按“项目既有声明 → 原生项目记忆 → 明确选择的仓库 fallback”解析；glossary/ADR 与 instruction 文件是领域决策和 Agent 规则的按类型写入目标，不参与记忆面优先级竞争。
+- **知识路由**：记忆面仍按“项目既有声明 → 原生项目记忆 → 明确选择的仓库 fallback”解析；glossary、决策笔记与 instruction 文件是领域决策和 Agent 规则的按类型写入目标，不参与记忆面优先级竞争。
 
 TAV 是可选的——未安装该 skill 时，`task-executor` agent 内嵌了同样的执行纪律。
 
@@ -133,7 +133,7 @@ TAV 是可选的——未安装该 skill 时，`task-executor` agent 内嵌了�
 
 v1.17 将 [`asots/mattpocock-skills`](https://github.com/asots/mattpocock-skills) 快照 `ed37663cc5fbef691ddfecd080dff42f7e7e350d` 中可复用的纪律适配进现有双层架构，而不是替换任一工作流：
 
-- **领域与决策清晰度**：Phase 1 记录 domain-model baseline；可选的 wayfinding gate 对阻塞性的研究和决策排序；Phase 2 每次只解决一个实质性的领域或架构决策，并即时回写已确认的术语表项或满足条件的 ADR。
+- **领域与决策清晰度**：Phase 1 记录 domain-model baseline；可选的 wayfinding gate 对阻塞性的研究和决策排序；Phase 2 每次只解决一个实质性的领域或架构决策，并即时回写已确认的术语表项或满足条件的决策记录。
 - **可执行拆解**：Phase 3 默认采用 vertical tracer slice。基础/预重构任务必须有真实 seam、contract 或 test-surface 理由；无法以垂直切片保持绿色的宽机械重构使用 expand → dependency-aware migrate batches → contract，中间批次不能独立保持绿色时增加明确的集成门禁。
 - **任务级执行对齐**：TAV——或 TAV 不可用时的后备 `task-executor`——为困难故障先建立 red-capable 反馈环，选择最高且稳定的 public test seam，以纵向 RED → GREEN 切片推进 test-first 工作，并在机器门禁之后分别执行 Standards 与 Spec 审查。
 - **保留原有边界**：wayfinding 只是准备态，不是项目进度；`docs/progress/MASTER.md` 继续拥有项目级权威；安装的 TAV 仍是每个任务循环的权威；commit 绝不自动执行，wayfinding tracker 写入需要明确授权。
@@ -405,7 +405,7 @@ spec_driven_develop/
 │   │   │       ├── behavioral-rules.md       # 不可违反的工作流规则
 │   │   │       ├── github-integration.md     # GitHub Issues/Projects/PR 集成协议
 │   │   │       ├── adaptive-control.md       # 闭环自适应控制协议
-│   │   │       ├── domain-modeling.md        # 领域证据、术语表与 ADR 规则
+│   │   │       ├── domain-modeling.md        # 领域证据、术语表与决策记录规则
 │   │   │       ├── wayfinding.md             # 范围确认前的条件式决策地图门禁
 │   │   │       ├── decomposition-strategy.md # 垂直 tracer slices 与 expand-contract
 │   │   │       └── templates/                # 文档模板（按关注点拆分）

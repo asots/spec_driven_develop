@@ -31,7 +31,7 @@
 - **Memory updates**: If a task introduces a durable rule, invariant, recurring gotcha, command, or project convention, update the resolved native memory surface or explicitly selected repo fallback.
 - **Issue/PR separation**: Issues are atomic task and execution-event records; delivery batches are implementation, integration validation, and PR units. Apply the grouping and rationale contract in `references/github-integration.md` "Delivery Batch Execution Workflow".
 - **Delivery shape**: Runtime behavior changes default to a vertical tracer slice that delivers one complete behavior path through the relevant layers. Foundation/prefactor, expand, migrate, contract, and integration-gate exceptions require a rationale. Standalone Docs, Governance, Validation, Release, or Archive tasks are allowed with a category, standalone rationale, and concrete acceptance check; follow `references/decomposition-strategy.md`.
-- **Domain write-back**: A task that changes canonical terminology, bounded-context relationships, or a qualifying architecture decision updates the relevant glossary/ADR in the same acceptance unit; follow `references/domain-modeling.md`.
+- **Domain write-back**: A task that changes canonical terminology, bounded-context relationships, or a qualifying architecture decision updates the relevant glossary or decision note in the same acceptance unit; follow `references/domain-modeling.md`.
 
 ## Phase 1: <Phase Name>
 **Goal**: What this phase achieves

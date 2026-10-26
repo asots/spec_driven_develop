@@ -1,5 +1,12 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.22.0 (2026-10-26)
+
+### Phase 2 decisions routed through rule 16
+
+- **Changed**: Phase 2 domain modeling records qualifying decisions through behavioral rule 16's decision-note channel instead of writing ADRs directly; the `domain-modeling` skill keeps glossary write-back. Without `write-notes-like-deepseek`, such a decision is reported as a pending note candidate.
+- **Changed**: Phase 1 analysis reads both ADR directories and `.agents/notes/` decision notes as decision records.
+
 ## Version 1.21.0 (2026-09-20)
 
 ### Decision-note capture integrated

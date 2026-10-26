@@ -9,7 +9,7 @@
 
 **An architecture-first workflow plugin for AI coding agents. Pure Markdown. Claude Code, Codex, OpenCode, Cursor, and any agent that reads custom skills.**
 
-**Current version**: 1.21.0 — see [CHANGELOG.md](CHANGELOG.md).
+**Current version**: 1.22.0 — see [CHANGELOG.md](CHANGELOG.md).
 
 Spec-Driven Develop is an open-source, platform-agnostic workflow for AI coding agents. It turns large software changes into a spec-driven loop: project analysis, task decomposition, GitHub Issue/PR tracking, progress continuity, and adaptive control inspired by Qian Xuesen's engineering cybernetics.
 
@@ -125,7 +125,7 @@ Spec-Driven Develop pairs with the `tav-workflow` skill as a two-layer system: t
 - **Execution events from TAV signals**: rework iterations, plan returns, unplanned files, and focused S.U.P.E.R results provide evidence for watch, replan, or rescope responses without pretending to compute a precise effort score.
 - **Separate tier vocabularies**: `L0/L1/L2` is the TAV task tier for scope and risk; `Tier 0/1/2` is the Spec-Driven delivery-batch dispatch tier for direct, delegated, or parallel execution. They are independent dimensions.
 - **Versioned handoff and archive recovery**: the mirrored `spec-tav/v1` contract includes complete task intake, and an archived root MASTER uses an explicit tombstone schema rather than being mistaken for an active plan.
-- **Knowledge routing**: memory resolution remains declared project surface → native project memory → explicit repo fallback. Glossaries/ADRs and instruction files are type-specific destinations for domain decisions and agent rules; they do not compete in that memory priority order.
+- **Knowledge routing**: memory resolution remains declared project surface → native project memory → explicit repo fallback. Glossaries, decision notes, and instruction files are type-specific destinations for domain decisions and agent rules; they do not compete in that memory priority order.
 
 TAV is optional — the `task-executor` agent embeds the same discipline when the skill is not installed.
 
@@ -133,7 +133,7 @@ TAV is optional — the `task-executor` agent embeds the same discipline when th
 
 Version 1.17 adapts reusable disciplines from [`asots/mattpocock-skills`](https://github.com/asots/mattpocock-skills) snapshot `ed37663cc5fbef691ddfecd080dff42f7e7e350d` into the existing two-layer architecture rather than replacing either workflow:
 
-- **Domain and decision clarity**: Phase 1 records a domain-model baseline; an optional wayfinding gate orders blocking research and decisions; Phase 2 resolves one material domain or architecture decision at a time and writes back confirmed glossary terms or justified ADRs.
+- **Domain and decision clarity**: Phase 1 records a domain-model baseline; an optional wayfinding gate orders blocking research and decisions; Phase 2 resolves one material domain or architecture decision at a time and writes back confirmed glossary terms or justified decision records.
 - **Executable decomposition**: Phase 3 defaults to vertical tracer slices. Foundation work needs a real seam, contract, or test-surface rationale; wide mechanical refactors use expand → dependency-aware migrate batches → contract, with an explicit integration gate when intermediate batches cannot stay green.
 - **Task-level execution parity**: TAV — or the fallback `task-executor` when TAV is unavailable — establishes a red-capable loop for hard bugs, chooses the highest stable public test seam, advances test-first work in vertical RED → GREEN slices, and runs machine gates before separate Standards and Spec review axes.
 - **Preserved boundaries**: wayfinding is preparation state, not project progress; `docs/progress/MASTER.md` retains project authority; installed TAV remains authoritative for each task cycle; commits are never automatic, and wayfinding tracker writes require explicit authorization.
@@ -405,7 +405,7 @@ spec_driven_develop/
 │   │   │       ├── behavioral-rules.md       # Non-negotiable workflow rules
 │   │   │       ├── github-integration.md     # GitHub Issues/Projects/PR protocol
 │   │   │       ├── adaptive-control.md       # Closed-loop adaptive control protocol
-│   │   │       ├── domain-modeling.md        # Domain evidence, terminology, glossary, and ADR rules
+│   │   │       ├── domain-modeling.md        # Domain evidence, terminology, glossary, and decision-record rules
 │   │   │       ├── wayfinding.md             # Conditional decision-map gate before scope confirmation
 │   │   │       ├── decomposition-strategy.md # Vertical tracer slices and expand-contract
 │   │   │       └── templates/                # Document templates (one per concern)
