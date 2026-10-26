@@ -20,6 +20,7 @@ BUNDLED_REQUIRED_FILES=(
     "review-spd/scripts/review-context.py"
     "spec-driven-develop/SKILL.md"
     "spec-driven-develop/references/adaptive-control.md"
+    "spec-driven-develop/references/archive-protocol.md"
     "spec-driven-develop/references/behavioral-rules.md"
     "spec-driven-develop/references/decomposition-strategy.md"
     "spec-driven-develop/references/domain-modeling.md"

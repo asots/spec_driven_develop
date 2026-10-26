@@ -1,0 +1,20 @@
+# Phase 6: Archive Protocol
+
+`SKILL.md` keeps the Phase 6 trigger; this file owns the archive procedure.
+
+**Goal**: Archive all workflow artifacts for traceability, then clean up working directories.
+
+**Actions**:
+
+1. Determine the canonical collision-safe archive path from the Phase 2 task name and workflow run ID: `docs/archives/<project-name>/<run-id>/`. Resolve its absolute path and confirm it remains under `docs/archives/`; never merge into an existing archive directory.
+2. Present the archive and cleanup plan, then obtain explicit authorization for the move/copy and removal operations. Do not announce completion yet.
+3. If remote synchronization remains pending, create a copy-only archive snapshot and keep the active root-level `docs/progress/MASTER.md` plus `github-sync.md` in place. Otherwise copy or move `docs/analysis/`, `docs/plan/`, and `docs/progress/` into the new archive. Include `task-definition.md`, `github-sync.md` when present, and a `governance/surface-resolution.md` export containing the resolved instruction and memory surfaces. Copy snapshots or export notes only for active instruction and memory surfaces; keep their live locations untouched.
+4. Verify the archive structure, required artifacts, relative links, and expected source-to-archive file counts before any cleanup. If verification fails, leave the original workflow artifacts in place and report the failure.
+5. **[GitHub modes]** With explicit GitHub tracker-write authorization, close each phase's Milestone (if not already closed) and optionally close the Project board. Otherwise leave remote state unchanged and record the pending archive synchronization locally.
+6. Create or update `docs/archives/README.md` with an entry: project name, one-line description, date range, link to archived MASTER.md, workflow run ID, and (GitHub modes) the Project URL.
+7. Remove source workflow directories only after archive verification, explicit cleanup authorization from step 2, and completion of all required remote synchronization. With remote work pending, cleanup is forbidden; retain the active recovery entry and report the exact next remote operation. Keep active instruction and memory surfaces in place; only their snapshots live under the archive.
+8. After active progress artifacts have been removed under the authorization from step 2, create a root-level `docs/progress/MASTER.md` tombstone from `references/templates/progress.md`. It records the exact archived marker, immutable run ID, archive MASTER pointer, and `Pending Operations: none`. If an operation fails after active progress was already removed, list only that exact pending operation and next action. Never replace an active MASTER with a tombstone while planned task execution or intentional remote synchronization remains pending.
+9. **Execution retrospective**: where multiple completed tasks expose the same dependency, contract, or planning mistake, distill 1-3 evidence-backed calibration rules and record them through the knowledge-consolidation pipeline — short rules to the resolved memory surface, decision-type calibrations as decision notes per behavioral rule 16.
+10. Announce completion, report the archive path and any pending remote synchronization, then suggest the user commit the archive to version control.
+
+**Output**: All artifacts under `docs/archives/<project-name>/<run-id>/` with an updated `docs/archives/README.md` index; when remote synchronization is pending, the root-level recovery entry remains active.

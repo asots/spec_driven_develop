@@ -1,5 +1,12 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.24.0 (2026-10-26)
+
+### Archive protocol on demand; complementary validators
+
+- **Changed**: The Phase 6 archive procedure moved to `references/archive-protocol.md`; `SKILL.md` keeps the trigger and a pointer (SKILL.md 33.2KB -> 30.2KB). The bundled installer requires the new file.
+- **Changed**: `scripts/verify.ps1` drops the checks `scripts/validate.sh` already performs (manifest versions, agent files, the review-context smoke test, archive / GitHub-recovery / S.U.P.E.R-template invariants); run both. It reads the tav handoff section from tav-workflow's references/spec-driven-interop.md (tav 3.15.0+).
+
 ## Version 1.23.0 (2026-10-26)
 
 ### Shorter trigger description

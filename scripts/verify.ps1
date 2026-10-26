@@ -1,8 +1,9 @@
 #requires -Version 5.1
-# Spec-Driven Develop documentation self-check.
-# Verifies version consistency (single source = SKILL.md frontmatter), referenced-file
-# integrity, behavioral-rule numbering, integrated-discipline semantic fingerprints,
-# and the cross-repo contract shared with tav-workflow.
+# Spec-Driven Develop documentation self-check; run it together with scripts/validate.sh.
+# Checks what validate.sh does not: README/CHANGELOG version parity, SKILL.md references,
+# behavioral-rule numbering, contract fingerprints, and the cross-repo contract shared
+# with tav-workflow. Manifest versions, agent files, the review-context smoke test, and the
+# archive / GitHub-recovery / S.U.P.E.R-template invariants are validate.sh checks (b)-(j).
 # Run: pwsh scripts/verify.ps1 [-TavPath <path-to-tav-workflow-repo>]
 
 param(
@@ -55,21 +56,7 @@ $skill = Get-Content $skillPath -Raw -Encoding UTF8
 if ($skill -notmatch '(?m)^\s*version:\s*(.+)$') { Fail 'SKILL.md frontmatter missing version'; $skillVer = '<none>' }
 else { $skillVer = $Matches[1].Trim(); Ok "SKILL.md version = $skillVer (source of truth)" }
 
-# 2. Every plugin manifest version must match
-$manifests = @(
-  'plugins/spec-driven-develop/.claude-plugin/plugin.json',
-  'plugins/spec-driven-develop/.codex-plugin/plugin.json',
-  '.claude-plugin/marketplace.json'
-)
-foreach ($m in $manifests) {
-  $t = Get-Content (Join-Path $root $m) -Raw -Encoding UTF8
-  if ($t -match '"version"\s*:\s*"([^"]+)"') {
-    $v = $Matches[1].Trim()
-    if ($v -ne $skillVer) { Fail "$m version = '$v' != SKILL.md '$skillVer'" }
-    else { Ok "$m version = $v" }
-  } else { Fail "$m has no version field" }
-}
-
+# 2. README and CHANGELOG versions match SKILL.md (manifest versions: validate.sh check (c))
 $readmeVersionChecks = @(
   @{ Path = 'README.md'; Pattern = '\*\*Current version\*\*:\s*([^\s—]+)'; Label = 'Current version' },
   @{ Path = 'README.zh-CN.md'; Pattern = '\*\*当前版本\*\*：\s*([^\s—]+)'; Label = '当前版本' }
@@ -94,12 +81,7 @@ foreach ($r in $refs) {
 }
 if ($script:fail -eq $failsBefore) { Ok "all $($refs.Count) referenced files exist" }
 
-# 4. Agent definitions the workflow spawns exist
-$failsBefore = $script:fail
-foreach ($a in 'project-analyzer', 'task-architect', 'task-executor', 'code-reviewer') {
-  if (-not (Test-Path (Join-Path $root "plugins/spec-driven-develop/agents/$a.md"))) { Fail "missing agent definition: $a.md" }
-}
-if ($script:fail -eq $failsBefore) { Ok 'agent definitions exist' }
+# 4. Agent files: validate.sh check (b)
 
 # 5. behavioral-rules.md numbering is a gapless 1..N sequence
 $br = Get-Content (Join-Path $skillDir 'references/behavioral-rules.md') -Raw -Encoding UTF8
@@ -165,7 +147,6 @@ $wayfinding = Get-Content (Join-Path $skillDir 'references/wayfinding.md') -Raw 
 $decomposition = Get-Content (Join-Path $skillDir 'references/decomposition-strategy.md') -Raw -Encoding UTF8
 $adaptive = Get-Content (Join-Path $skillDir 'references/adaptive-control.md') -Raw -Encoding UTF8
 $super = Get-Content (Join-Path $skillDir 'references/super-philosophy.md') -Raw -Encoding UTF8
-$archiveTemplate = Get-Content (Join-Path $skillDir 'references/templates/archive.md') -Raw -Encoding UTF8
 $progressTemplate = Get-Content (Join-Path $skillDir 'references/templates/progress.md') -Raw -Encoding UTF8
 
 Require-Fingerprints 'GitHub authority gates' $github @(
@@ -174,12 +155,6 @@ Require-Fingerprints 'GitHub authority gates' $github @(
   'Tier 2 must not start',
   'git add -- {task_specific_paths}',
   'stop after local integration validation'
-)
-Require-Fingerprints 'GitHub Project recovery contract' $github @(
-  'exact lookup → contract check → reuse/create → immediate ledger write',
-  'ITEM_MATCH_COUNT',
-  'record ITEM_JSON id',
-  'Field or item identity lookup/create failures are blocking'
 )
 if ($github -like '*git add -A*') { Fail 'github-integration.md still stages unrelated paths with git add -A' }
 elseif ($github -like '*refs #{issue_1}, refs #{issue_2}*') { Fail 'github-integration.md still demonstrates one commit referencing multiple Issues' }
@@ -202,11 +177,6 @@ Require-Fingerprints 'Phase 2 task-definition template' $taskDefinitionTemplate 
   '## Governance and Memory Decision',
   'Change this document before changing downstream task cards'
 )
-Require-Fingerprints 'archive template contract' $archiveTemplate @(
-  'docs/archives/<project-name>/<run-id>/',
-  './<project-name>/<run-id>/progress/MASTER.md',
-  'locally validated — awaiting remote sync'
-)
 Require-Fingerprints 'archived MASTER tombstone contract' $progressTemplate @(
   '## Archived MASTER.md Tombstone',
   '**Workflow State**: archived',
@@ -219,14 +189,6 @@ Require-Fingerprints 'core tombstone lifecycle' $skill @(
   'Pending Operations',
   'do not reconstruct active task execution from the tombstone'
 )
-if ($archiveTemplate -like '*<project-name>-<run-id>*') { Fail 'archive template still uses flattened project-run naming' }
-else { Ok 'archive template uses only the canonical nested run path' }
-
-if ($planTemplate.Contains('**S (Single Purpose)**') -or $planTemplate.Contains('**R (Replaceable Parts)**')) {
-  Fail 'plan template still redefines canonical S.U.P.E.R principles'
-} elseif ($planTemplate -notlike '*references/super-philosophy.md*') {
-  Fail 'plan template no longer cites the canonical S.U.P.E.R reference'
-} else { Ok 'plan template references S.U.P.E.R without redefining it' }
 
 if ($parallel -notlike '*references/adaptive-control.md*"Canonical Storage"*"Controller Activation"*') {
   Fail 'parallel-protocol.md does not delegate storage and activation to adaptive-control.md'
@@ -292,10 +254,6 @@ if ($reviewer -like '*uncommitted worktree change*' -or $reviewer -like '*explic
   Fail 'code-reviewer.md still permits an uncommitted Tier 2 review handoff'
 } else { Ok 'code-reviewer fixes are authorized append-only commits or ESCALATE' }
 
-$smokeOutput = & python scripts/smoke-review-context.py 2>&1
-if ($LASTEXITCODE -ne 0) { Fail "review-context UTF-8 smoke test failed: $($smokeOutput -join ' ')" }
-else { Ok 'review-context UTF-8 smoke test passed' }
-
 # 7. Cross-repo contract fingerprint with tav-workflow
 $tavSkillPath = Join-Path $TavPath 'SKILL.md'
 if (-not (Test-Path $tavSkillPath)) {
@@ -345,8 +303,9 @@ if (-not (Test-Path $tavSkillPath)) {
   if ($tav -match 'Close the Issue via PR') { Fail 'tav SKILL.md still contains pre-delivery-batch wording "Close the Issue via PR"' }
   else { Ok 'tav SKILL.md free of pre-delivery-batch write-back wording' }
 
-  $tavOp = Get-Section $tav 'Operating Inside a Spec-Driven Project'
-  if ($null -eq $tavOp) { Fail 'tav SKILL.md section "Operating Inside a Spec-Driven Project" not found' }
+  $tavInteropPath = Join-Path $TavPath 'references/spec-driven-interop.md'
+  $tavOp = if (Test-Path $tavInteropPath) { Get-Section (Get-Content $tavInteropPath -Raw -Encoding UTF8) 'Operating Inside a Spec-Driven Project' } else { $null }
+  if ($null -eq $tavOp) { Fail 'tav references/spec-driven-interop.md section "Operating Inside a Spec-Driven Project" not found' }
   else {
     $failsBefore = $script:fail
     foreach ($fp in 'Closes #N', 'do not create a task-level PR') {
