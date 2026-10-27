@@ -166,6 +166,11 @@ Require-Fingerprints 'task-card delivery shape and rollback' ($github + $paralle
   'Per-task delivery shape, rollback boundary, and S.U.P.E.R design drivers',
   'Tracking mode, per-task delivery shape and rollback boundary, and the resolved instruction surfaces'
 )
+Require-Fingerprints 'optional OCR delegate in the Standards axis' ($parallel + $reviewer + $executor) @(
+  'ocr delegate preview --format json',
+  'ocr delegate rule --format json',
+  'never install OCR during a review'
+)
 Require-Fingerprints 'plan template delivery and authority contract' $planTemplate @(
   'Standalone Docs, Governance, Validation, Release, or Archive tasks',
   'branch/worktree and commit authorization',

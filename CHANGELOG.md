@@ -1,5 +1,11 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.28.0 (2026-10-27)
+
+### Optional open-code-review in the Standards axis
+
+- **Added**: When the `ocr` CLI (open-code-review, v1.9.0 or later) is on PATH, the Standards axis uses its delegate mode to select reviewable files, including untracked ones, and their rule groups; otherwise the manual pass applies. This covers the shared review contract in `references/parallel-protocol.md` (so it also applies when the orchestrator reviews directly), `code-reviewer`, and `task-executor`. Detection is a shell `ocr --version` check, not an agent-specific mechanism. Delegate mode calls no LLM and never replaces the Spec axis, machine gates, or security review. `scripts/verify.ps1` fingerprints the new text.
+
 ## Version 1.27.0 (2026-10-27)
 
 ### Review fixes: task-card context and decision-note lifecycle

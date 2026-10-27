@@ -40,6 +40,8 @@ Run configured machine gates before judgment-based review. They complement rathe
 
 Never collapse the axes into one score. A change can pass Standards and fail Spec, or the reverse. The same reviewer may perform two explicit passes; use separate reviewer agents for the axes only when their independence benefit exceeds cold-start and orchestration cost. Neither axis replaces tests, lint/type checks, compatibility, security, or configuration/IaC validation.
 
+When the `ocr` CLI (open-code-review, v1.9.0 or later) is on PATH, the Standards axis uses its delegate mode: `ocr delegate preview --format json` lists the reviewable files (staged, unstaged, and untracked, or a lane's range with `--from`/`--to`), and `ocr delegate rule --format json <paths>` returns their rule groups. Review each file against its rule group (tracked files through `git diff`, untracked files read in full) and end every listed file as reviewed or skipped with a reason. If `ocr` is missing or older, the manual Standards pass applies unchanged. This holds whether the orchestrator reviews directly or a reviewer agent does; never install OCR during a review. Delegate mode calls no LLM and never replaces the Spec axis, machine gates, or security review.
+
 ---
 
 ## When to Parallelize
