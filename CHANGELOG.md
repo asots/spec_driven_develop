@@ -1,5 +1,13 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.27.0 (2026-10-27)
+
+### Review fixes: task-card context and decision-note lifecycle
+
+- **Fixed**: The GitHub Issue body carries Delivery Shape and Rollback Boundary, and the parallel-protocol dispatch lists give `task-executor` and `code-reviewer` the delivery shape, rollback boundary, tracking mode, and instruction surfaces their contracts require.
+- **Fixed**: Rule 16 defines the decision-note lifecycle: a Phase 2 note stays `proposed` until its batch integrates, and Phase 6 resolves leftover proposed notes before cleanup. `task-executor` and the TAV write-back mapping have a decision-note slot.
+- **Fixed**: `AGENTS.md` lists `scripts/verify.ps1` next to `scripts/validate.sh`; the README trees no longer list the removed `docs/archives/`; `scripts/verify.ps1` checks the new Issue fields and dispatch lines.
+
 ## Version 1.26.0 (2026-10-26)
 
 ### Distribution points at the asots fork

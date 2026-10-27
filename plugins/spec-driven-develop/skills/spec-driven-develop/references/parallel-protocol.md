@@ -63,6 +63,7 @@ For each parallel lane in the current dependency-ready wave:
    - **Tracking mode** (`GITHUB_FULL`, `GITHUB_STANDARD`, or `LOCAL_ONLY`)
    - **GitHub Issue numbers** (GitHub modes) or inline task descriptions (LOCAL_ONLY)
    - Per-task acceptance criteria, test expectations, and explicit no-test rationales, if any
+   - Per-task delivery shape, rollback boundary, and S.U.P.E.R design drivers
    - **Frozen shared contracts**: the batch's shared-contract list (interfaces, schemas, types crossing lane boundaries), each entry marked `frozen` or `owned` by a named task; a lane must not modify a frozen contract — it reports BLOCKED for coordination instead
    - Per-task memory/governance impact and expected surface updates, if any
    - Relevant source file paths (from `docs/analysis/module-inventory.md`)
@@ -77,6 +78,7 @@ For each parallel lane in the current dependency-ready wave:
 
 3. When a coder returns DONE, dispatch one `code-reviewer` for the lane (L3 review) with:
    - The lane ID, its assigned task/Issue subset, and the per-task acceptance criteria (the reviewer's checklist)
+   - Tracking mode, per-task delivery shape and rollback boundary, and the resolved instruction surfaces
    - The coder's handoff report
    - The lane branch + worktree path and the lane-level validation commands
    - The orchestrator's explicit commit-authorization status (required for Tier 2; missing means protocol error)

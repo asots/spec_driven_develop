@@ -8,7 +8,7 @@ description: >-
   Chinese cues: 整体重构, 全项目重构, 跨模块迁移, 架构级改造, 大规模, 规范驱动. A bare
   rewrite/refactor/migration keyword is not enough; single-module work belongs to tav-workflow.
 metadata:
-  version: 1.26.0
+  version: 1.27.0
 ---
 
 # Spec-Driven Develop
@@ -294,7 +294,7 @@ Spec-Driven Develop owns analysis, decomposition, delivery-batch orchestration, 
 |:------------|:-------------------|
 | Verifier pass | TAV returns `ready for batch integration`; after integrated validation, the orchestrator marks project status and only performs authorized closure through the batch PR's `Closes #N` line or LOCAL_ONLY completion updates |
 | TAV execution signals (rework iterations, Thinker returns, unplanned files touched) | TAV returns one execution-event payload with Outcome, Rework, Plan returns, Unplanned dependencies, and Focused S.U.P.E.R result; the orchestrator records it once in the authoritative surface (see `references/adaptive-control.md`) |
-| Knowledge consolidation captures (at most 1-3 durable rules per cycle) | TAV returns candidates; the orchestrator reconciles and writes authorized updates to the surfaces resolved under "Governance Status" in MASTER.md — durable facts to memory, agent-behavior rules to instructions |
+| Knowledge consolidation captures (at most 1-3 durable rules per cycle) | TAV returns candidates; the orchestrator reconciles and writes authorized updates to the surfaces resolved under "Governance Status" in MASTER.md — durable facts to memory, agent-behavior rules to instructions, decision-type captures to decision notes per behavioral rule 16 |
 | `[ESCALATION-REPORT]` or blocked state | TAV returns the event; the orchestrator records it in an authorized Issue comment or phase-file note and selects the response level |
 
 **State ownership:**

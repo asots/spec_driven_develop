@@ -160,6 +160,12 @@ if ($github -like '*git add -A*') { Fail 'github-integration.md still stages unr
 elseif ($github -like '*refs #{issue_1}, refs #{issue_2}*') { Fail 'github-integration.md still demonstrates one commit referencing multiple Issues' }
 else { Ok 'GitHub commit examples are task-atomic and path-scoped' }
 
+Require-Fingerprints 'task-card delivery shape and rollback' ($github + $parallel) @(
+  '**Delivery Shape**: {delivery_shape}',
+  '**Rollback Boundary**: {rollback_boundary}',
+  'Per-task delivery shape, rollback boundary, and S.U.P.E.R design drivers',
+  'Tracking mode, per-task delivery shape and rollback boundary, and the resolved instruction surfaces'
+)
 Require-Fingerprints 'plan template delivery and authority contract' $planTemplate @(
   'Standalone Docs, Governance, Validation, Release, or Archive tasks',
   'branch/worktree and commit authorization',

@@ -161,6 +161,8 @@ Every task Issue uses this structured body format:
 **Phase**: {phase_number} — {phase_name}
 **Priority**: {priority} | **Size**: {size} | **Lane**: {lane}
 **Delivery Batch**: {batch_id}
+**Delivery Shape**: {delivery_shape}
+**Rollback Boundary**: {rollback_boundary}
 **S.U.P.E.R Drivers**: {principles}
 **Test Expectation**: {required_tests_or_explicit_no_test_rationale}
 **Memory/Governance Impact**: {memory_or_governance_update_expectation}

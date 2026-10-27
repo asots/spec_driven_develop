@@ -9,7 +9,7 @@
 
 **An architecture-first workflow plugin for AI coding agents. Pure Markdown. Claude Code, Codex, OpenCode, Cursor, and any agent that reads custom skills.**
 
-**Current version**: 1.26.0 — see [CHANGELOG.md](CHANGELOG.md).
+**Current version**: 1.27.0 — see [CHANGELOG.md](CHANGELOG.md).
 
 Spec-Driven Develop is an open-source, platform-agnostic workflow for AI coding agents. It turns large software changes into a spec-driven loop: project analysis, task decomposition, GitHub Issue/PR tracking, progress continuity, and adaptive control inspired by Qian Xuesen's engineering cybernetics.
 
@@ -388,8 +388,6 @@ spec_driven_develop/
 ├── CHANGELOG.md                               # Current and historical release notes
 ├── CLAUDE.md                                  # Claude Code-specific project instructions
 ├── .agents/plugins/marketplace.json          # Codex repo-local plugin marketplace
-├── docs/
-│   └── archives/                              # Completed workflow archives
 ├── plugins/spec-driven-develop/              # Self-contained Claude Code, Codex, and OpenCode plugin
 │   ├── .claude-plugin/
 │   │   └── plugin.json                       # Claude Code plugin manifest

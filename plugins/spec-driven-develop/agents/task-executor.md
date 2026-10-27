@@ -149,6 +149,7 @@ Return a structured completion report:
 - Instruction surfaces: none / proposal / candidate update (list paths or native surfaces)
 - Memory surface: none / proposal / candidate update (name the surface)
 - Durable rule candidate: yes / no — brief evidence for orchestrator reconciliation
+- Decision-note candidate: none / one line each (decision, alternatives rejected, why) for the orchestrator to route per behavioral rule 16
 
 ### Integration Handoff
 - Branch: batch/... or work/...
