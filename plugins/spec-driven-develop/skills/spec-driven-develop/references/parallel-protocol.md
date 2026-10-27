@@ -36,7 +36,7 @@ Writer model (see `behavioral-rules.md` rules 18-19):
 Run configured machine gates before judgment-based review. They complement rather than replace each other:
 
 1. **Standards** — compare the diff with repository instruction and coding-standard sources. Repository rules override generic guidance. Generic code smells are optional judgment-call heuristics, not hard violations, and should not duplicate issues already enforced by tooling.
-2. **Spec** — compare the diff with each task definition and acceptance criteria. Look separately for missing or partial behavior, unauthorized scope expansion, and implementation that appears present but is semantically wrong.
+2. **Spec** — compare the diff with each task definition and acceptance criteria. Look separately for missing or partial behavior, unauthorized scope expansion, and implementation that appears present but is semantically wrong. Flag implementation that contradicts a recorded decision (an implemented note, accepted ADR, or rejected approach) unless the task card explicitly supersedes it.
 
 Never collapse the axes into one score. A change can pass Standards and fail Spec, or the reverse. The same reviewer may perform two explicit passes; use separate reviewer agents for the axes only when their independence benefit exceeds cold-start and orchestration cost. Neither axis replaces tests, lint/type checks, compatibility, security, or configuration/IaC validation.
 

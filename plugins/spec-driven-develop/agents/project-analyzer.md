@@ -21,7 +21,7 @@ Analyze the assigned area of the codebase thoroughly and return structured, acti
 - Identify the technology stack: languages, frameworks, libraries, tools
 - Find documentation, tests, CI/CD configuration
 - Find project-level instruction and memory surfaces: `AGENTS.md`, `CLAUDE.md`, Cursor/Windsurf/Cline/Codex rule files, native project memory if visible, repo-local fallback memory files, or equivalent surfaces
-- Find domain-model surfaces: `CONTEXT.md`, `CONTEXT-MAP.md`, bounded-context glossaries, decision records (ADR directories and `.agents/notes/` decision notes), and equivalent project conventions. Note canonical terms, overloaded language, and contradictions between docs and code.
+- Find domain-model surfaces: `CONTEXT.md`, `CONTEXT-MAP.md`, bounded-context glossaries, decision records (ADR directories and `.agents/notes/` decision notes), and equivalent project conventions. Note canonical terms, overloaded language, and contradictions between docs and code. Decision notes live in a hidden directory, so include hidden paths in the search and skip `.agents/notes/archived/`; classify each relevant note by its lifecycle folder (implemented = constraint, proposed = pending intent, rejected = approach not to re-propose without new evidence) and report accepted ADRs as constraints.
 
 ### 2. Module Mapping
 

@@ -1,5 +1,15 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.29.0 (2026-10-27)
+
+### Review fixes: decision records, untracked files, archive re-entry
+
+- **Fixed**: `task-architect` and `project-analyzer` read decision records with the same lifecycle rules as `task-executor` and TAV. Implemented notes and accepted ADRs are constraints, proposed notes are pending intent, rejected notes are not re-proposed without new evidence, and `.agents/notes/archived/` is skipped. The search names `rg --hidden` only as an example.
+- **Fixed**: The Spec axis (`parallel-protocol.md`, `code-reviewer`, `task-executor`) flags implementation that contradicts a recorded decision unless the task card explicitly supersedes it.
+- **Fixed**: `task-executor` verification starts from `git status --porcelain` as well as `git diff`, so untracked files are reviewed.
+- **Fixed**: Archive re-entry. A run whose first pass left a copy-only snapshot pending remote sync now refreshes its own archive directory and index row; it no longer creates a second archive or a duplicate row. The index's only in-place edit is that run's status changing to `Complete`.
+- **Changed**: `scripts/verify.ps1` resolves every quoted section citation, pins each cited behavioral-rule number to its title, and checks that the input-mapping table and TAV's task intake carry the same six fields. It also checks the decision-note contract against a sibling `write-notes-like-deepseek` checkout (`-DshPath`); CI checks that repository out.
+
 ## Version 1.28.0 (2026-10-27)
 
 ### Optional open-code-review in the Standards axis

@@ -16,7 +16,7 @@ This directory contains archived artifacts from Spec-Driven Develop workflows. E
 | [<project-name>](./<project-name>/<run-id>/progress/MASTER.md) | One-line description | YYYY-MM-DD — YYYY-MM-DD | GITHUB_FULL | `<run-id>` | <status> |
 ```
 
-When updating this file, append new rows to the table. Do not remove existing entries. Set `<status>` to `Complete` or `locally validated — awaiting remote sync` so the index preserves pending remote work accurately. In GitHub modes, include the GitHub Project URL in the Description field for easy reference.
+When updating this file, append new rows to the table. Do not remove existing entries; the only in-place edit allowed is changing this run's own `<status>` to `Complete` when a re-entry finishes its pending remote synchronization. Set `<status>` to `Complete` or `locally validated — awaiting remote sync` so the index preserves pending remote work accurately. In GitHub modes, include the GitHub Project URL in the Description field for easy reference.
 
 ---
 

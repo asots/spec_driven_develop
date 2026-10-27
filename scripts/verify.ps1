@@ -1,20 +1,25 @@
 #requires -Version 5.1
 # Spec-Driven Develop documentation self-check; run it together with scripts/validate.sh.
 # Checks what validate.sh does not: README/CHANGELOG version parity, SKILL.md references,
-# behavioral-rule numbering, contract fingerprints, and the cross-repo contract shared
-# with tav-workflow. Manifest versions, agent files, the review-context smoke test, and the
-# archive / GitHub-recovery / S.U.P.E.R-template invariants are validate.sh checks (b)-(j).
-# Run: pwsh scripts/verify.ps1 [-TavPath <path-to-tav-workflow-repo>]
+# behavioral-rule numbering and cited rule titles, section citations, contract fingerprints,
+# the cross-repo contract shared with tav-workflow, and the decision-note contract shared
+# with write-notes-like-deepseek. Manifest versions, agent files, the review-context smoke
+# test, and the archive / GitHub-recovery / S.U.P.E.R-template invariants are validate.sh
+# checks (b)-(j).
+# Run: pwsh scripts/verify.ps1 [-TavPath <tav-workflow-repo>] [-DshPath <write-notes-like-deepseek-repo>]
 
 param(
-  [string]$TavPath = ''
+  [string]$TavPath = '',
+  [string]$DshPath = ''
 )
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 $skillDir = Join-Path $root 'plugins/spec-driven-develop/skills/spec-driven-develop'
+$agentsDir = Join-Path $root 'plugins/spec-driven-develop/agents'
 if ($TavPath -eq '') { $TavPath = Join-Path (Split-Path -Parent $root) 'tav-workflow' }
+if ($DshPath -eq '') { $DshPath = Join-Path (Split-Path -Parent $root) 'write-notes-like-deepseek' }
 $script:fail = 0
 
 function Fail($msg) { Write-Host "FAIL: $msg" -ForegroundColor Red; $script:fail++ }
@@ -36,6 +41,14 @@ function Get-Section([string]$text, [string]$heading) {
     if ($lines[$i] -match '^(#{1,6})\s' -and $Matches[1].Length -le $level) { $end = $i; break }
   }
   return ($lines[$start..($end - 1)] -join "`n")
+}
+
+# True when $text has a heading named exactly $anchor (optionally followed by a
+# parenthetical qualifier), or a line-leading label, plain or bold, then ':' or '('.
+function Test-Anchor([string]$text, [string]$anchor) {
+  $a = [regex]::Escape($anchor)
+  if ($text -match ('(?m)^#{1,6}\s+' + $a + '(\s+\([^)]*\))?\s*$')) { return $true }
+  return ($text -match ('(?m)^\s*(?:[-*]\s+|\d+\.\s+)?(?:\*\*)?' + $a + '(?:\*\*)?\s*[:(]'))
 }
 
 function Get-Bullets([string]$section) {
@@ -91,6 +104,51 @@ if ($nums.Count -eq 0) { Fail 'behavioral-rules.md contains no numbered rules' }
 elseif (Compare-Object $nums $expected -SyncWindow 0) { Fail "behavioral-rules.md numbering broken: found $($nums -join ',')" }
 else { Ok "behavioral-rules.md rules numbered 1..$($nums.Count) with no gaps" }
 
+# 5b. Every "rule N" / "rules N-M" citation names a pinned rule whose title is unchanged,
+# so a renumbering cannot silently repoint a citation at a different rule
+$rulePins = @{
+  16 = 'Stable learnings go to the resolved memory surface'
+  17 = 'Issues and PRs have different cardinality'
+  18 = 'Reviewer boundaries are enforced, not advisory'
+  19 = 'Sub-agent dispatch is an economic decision, not a default'
+}
+$docs = @(Get-Item (Join-Path $skillDir 'SKILL.md')) + @(Get-ChildItem -Path @((Join-Path $skillDir 'references'), $agentsDir) -Recurse -Filter '*.md')
+$failsBefore = $script:fail
+$cited = @{}
+foreach ($doc in $docs) {
+  foreach ($m in [regex]::Matches((Get-Content $doc.FullName -Raw -Encoding UTF8), '\b[Rr]ules? (\d+)(?:-(\d+))?\b')) {
+    $first = [int]$m.Groups[1].Value
+    $last = if ($m.Groups[2].Success) { [int]$m.Groups[2].Value } else { $first }
+    foreach ($n in $first..$last) { $cited[$n] = $doc.Name }
+  }
+}
+foreach ($n in $cited.Keys) {
+  if (-not $rulePins.ContainsKey($n)) { Fail "$($cited[$n]) cites rule $n, which has no title pin in verify.ps1" }
+}
+foreach ($n in $rulePins.Keys) {
+  if ($br -notmatch ('(?m)^' + $n + '\.\s+\*\*' + [regex]::Escape($rulePins[$n]) + '\*\*')) { Fail "behavioral rule $n is no longer '$($rulePins[$n])'" }
+}
+if ($script:fail -eq $failsBefore) { Ok "cited behavioral rules $((@($cited.Keys) | Sort-Object) -join ', ') keep their pinned titles" }
+
+# 5c. Every quoted section citation resolves: `references/x.md` "Name" or `SKILL.md` "Name"
+# (several names may follow one path, joined by and/or/commas)
+$sect = [string][char]0x00A7
+$cite = '`((?:references|examples)/[\w\-./]+\.md|SKILL\.md)`\s*(?:' + $sect + '\s*)?((?:"[^"\r\n]+"(?:\s*(?:,|and|or)\s*)?)+)'
+$failsBefore = $script:fail
+$citeCount = 0
+foreach ($doc in $docs) {
+  foreach ($m in [regex]::Matches((Get-Content $doc.FullName -Raw -Encoding UTF8), $cite)) {
+    $target = Join-Path $skillDir $m.Groups[1].Value
+    if (-not (Test-Path $target)) { Fail "$($doc.Name) cites missing file: $($m.Groups[1].Value)"; continue }
+    $targetText = Get-Content $target -Raw -Encoding UTF8
+    foreach ($q in [regex]::Matches($m.Groups[2].Value, '"([^"]+)"')) {
+      $citeCount++
+      if (-not (Test-Anchor $targetText $q.Groups[1].Value)) { Fail "$($doc.Name) cites missing section: $($m.Groups[1].Value) '$($q.Groups[1].Value)'" }
+    }
+  }
+}
+if ($script:fail -eq $failsBefore) { Ok "$citeCount section citations in SKILL.md, references/, and agents/ resolve" }
+
 # 6. Integrated planning, execution, and review discipline fingerprints
 $disciplineRefs = @(
   'references/domain-modeling.md',
@@ -125,16 +183,19 @@ Require-Fingerprints 'task-executor fallback contract' $executor @(
   'vertical RED',
   'Standards Review',
   'Spec Review',
-  'must be reported BLOCKED before editing'
+  'must be reported BLOCKED before editing',
+  'contradicts a recorded decision'
 )
 Require-Fingerprints 'code-reviewer two-axis contract' $reviewer @(
   'Standards Axis',
   'Spec Axis',
   'never combine them into one score',
-  'Machine Validation Run'
+  'Machine Validation Run',
+  'contradicts a recorded decision'
 )
 Require-Fingerprints 'parallel review contract' $parallel @(
   'Two-Axis Review Contract',
+  'contradicts a recorded decision',
   'explicit branch/worktree plus commit authorization',
   'downgrade the batch to Tier 0/1'
 )
@@ -280,7 +341,7 @@ if (-not (Test-Path $tavSkillPath)) {
   $tavSections = @(
     @{ File = 'references/branches.md'; Name = 'Hard-bug diagnosis branch'; Fingerprints = @('red-capable', 'original feedback command') },
     @{ File = 'references/branches.md'; Name = 'TDD execution branch'; Fingerprints = @('highest stable public boundary', 'vertical behavior slice') },
-    @{ File = 'SKILL.md'; Name = 'Two-axis review'; Fingerprints = @('Standards', 'Spec', 'Do not merge the axes into one score') }
+    @{ File = 'SKILL.md'; Name = 'Two-axis review'; Fingerprints = @('Standards', 'Spec', 'Do not merge the axes into one score', 'contradicts a recorded decision') }
   )
   foreach ($entry in $tavSections) {
     $tavFile = Join-Path $tavSkillDir $entry.File
@@ -355,10 +416,59 @@ if (-not (Test-Path $tavSkillPath)) {
     else { Ok 'three-layer state ownership block is mirrored across repos' }
   }
 
+  # 7c'. Intake parity: each input-mapping row has a matching TAV task-intake bullet
+  $intakeFields = @(
+    @{ Row = 'Task description'; Tav = 'task definition' },
+    @{ Row = 'Acceptance criteria + test expectation'; Tav = 'acceptance criteria and explicit test expectation' },
+    @{ Row = 'S.U.P.E.R design drivers'; Tav = 'S.U.P.E.R design drivers' },
+    @{ Row = 'Relevant files / dependencies'; Tav = 'relevant/affected files and dependencies' },
+    @{ Row = 'Delivery batch, delivery shape, and rollback boundary'; Tav = 'delivery-batch ID, delivery shape, and rollback boundary' },
+    @{ Row = 'Memory/governance impact'; Tav = 'memory/governance impact' }
+  )
+  $mapping = [regex]::Match($spdBoundary, '(?s)\*\*Input mapping.*?(?=\*\*Write-back mapping)').Value
+  $rowNames = @(($mapping -split "`r?`n") | Where-Object { $_ -match '^\|\s*[^\s|:-]' } | Select-Object -Skip 1 | ForEach-Object { ($_ -split '\|')[1].Trim() })
+  $intake = [regex]::Match($tavOp, '(?s)\*\*Task intake \(Thinker\):\*\*.*?(?=\r?\n\*\*)').Value
+  $failsBefore = $script:fail
+  if ($rowNames.Count -ne $intakeFields.Count) { Fail "input mapping has $($rowNames.Count) rows; the intake parity list expects $($intakeFields.Count)" }
+  foreach ($f in $intakeFields) {
+    if ($rowNames -notcontains $f.Row) { Fail "input mapping lacks row '$($f.Row)'" }
+    if (-not $intake.Contains($f.Tav)) { Fail "tav task intake lacks '$($f.Tav)'" }
+  }
+  if ($script:fail -eq $failsBefore) { Ok "input mapping and tav task intake carry the same $($intakeFields.Count) fields" }
+
   # 7d. Cross-references by section name must resolve both ways
   if ($skill -notlike '*Operating Inside a Spec-Driven Project*') { Fail 'SKILL.md no longer cites tav section "Operating Inside a Spec-Driven Project"' }
   elseif ($tav -notlike '*Boundary with TAV*') { Fail 'tav SKILL.md no longer cites spd section "Boundary with TAV"' }
   else { Ok 'cross-repo section citations resolve both ways' }
+}
+
+# 8. Decision-note contract with write-notes-like-deepseek: every .agents/notes/<folder>/
+# named here must be a lifecycle (or the archive) that DSH's tree gate accepts
+$dshSkillDir = Join-Path $DshPath 'skills/write-notes-like-deepseek'
+$dshTreePath = Join-Path $dshSkillDir 'scripts/agent-note-tree.ts'
+if (-not (Test-Path $dshTreePath)) {
+  $msg = "write-notes-like-deepseek not found at '$DshPath' - decision-note contract checks skipped (pass -DshPath to enable)"
+  if ($env:CI -eq 'true') { Fail $msg } else { Warn $msg }
+} else {
+  $tree = Get-Content $dshTreePath -Raw -Encoding UTF8
+  $failsBefore = $script:fail
+  if ((Get-Content (Join-Path $dshSkillDir 'SKILL.md') -Raw -Encoding UTF8) -notmatch '(?m)^name:\s*write-notes-like-deepseek\s*$') { Fail 'DSH SKILL.md name is no longer write-notes-like-deepseek' }
+  if (-not $tree.Contains("'.agents/notes'")) { Fail 'DSH tree gate no longer defaults to .agents/notes' }
+  $life = [regex]::Match($tree, 'AGENT_NOTE_LIFECYCLES\s*=\s*\[([^\]]*)\]')
+  $arch = [regex]::Match($tree, 'AGENT_NOTE_ARCHIVE\s*=\s*''([^'']+)''')
+  if (-not $life.Success -or -not $arch.Success) { Fail 'DSH tree gate lifecycle or archive constant not found' }
+  else {
+    $allowed = @([regex]::Matches($life.Groups[1].Value, '''([^'']+)''') | ForEach-Object { $_.Groups[1].Value }) + $arch.Groups[1].Value
+    foreach ($l in 'proposed', 'implemented', 'rejected', 'archived') {
+      if ($allowed -notcontains $l) { Fail "DSH tree gate no longer accepts '$l', which rule 16's decision-note lifecycle names" }
+    }
+    foreach ($doc in $docs) {
+      foreach ($m in [regex]::Matches((Get-Content $doc.FullName -Raw -Encoding UTF8), '\.agents/notes/([a-z-]+)/')) {
+        if ($allowed -notcontains $m.Groups[1].Value) { Fail "$($doc.Name) names unknown decision-note folder: .agents/notes/$($m.Groups[1].Value)/" }
+      }
+    }
+  }
+  if ($script:fail -eq $failsBefore) { Ok 'decision-note folders and lifecycles match the write-notes-like-deepseek tree gate' }
 }
 
 if ($script:fail -gt 0) { Write-Host "`n$($script:fail) check(s) FAILED" -ForegroundColor Red; exit 1 }

@@ -16,6 +16,8 @@ Design a practical, dependency-aware implementation plan that breaks the transfo
 
 Before designing tasks, read `references/decomposition-strategy.md`. It is the canonical delivery-shape policy; this prompt defines the architect contract and must not restate or weaken that reference.
 
+Treat the target project's decision records as design input. Search decision notes under `.agents/notes/` (a hidden directory, so include hidden paths in the search; skip `.agents/notes/archived/`) and ADR directories such as `docs/adr/` for the modules the transformation touches. Implemented notes and accepted ADRs are constraints, proposed notes are pending intent a task may implement, and rejected notes are approaches not to re-plan without new evidence. When the transformation must contradict a recorded decision, report it to the orchestrator as an open decision instead of designing around it.
+
 ### 1. Transformation Strategy
 
 Based on the analysis data provided, determine the optimal approach:
