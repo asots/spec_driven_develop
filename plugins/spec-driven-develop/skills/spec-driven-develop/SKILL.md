@@ -9,6 +9,10 @@ description: >-
   rewrite/refactor/migration keyword is not enough; single-module work belongs to tav-workflow.
 metadata:
   version: 1.29.0
+compatibility:
+  tav-workflow: ">=3.20.0"          # spec-tav/v1 handoff contract
+  write-notes-like-deepseek: "*"    # Phase 5b decision recording (behavioral rule 16)
+  open-code-review: ">=1.9.0"       # Phase 5b batch validation (optional)
 ---
 
 # Spec-Driven Develop
@@ -58,7 +62,7 @@ Do not use this workflow for small scoped fixes, single-file edits, or changes t
 
 ### Escalation Signals
 
-Keep this list in sync with `tav-workflow` § "L2 Escalation Signals" — both skills must apply the same test. Route to `spec-driven-develop` only when **at least two** of these hold; otherwise stay with `tav-workflow`:
+Keep this list in sync with `tav-workflow` § "L2 Escalation Signals" and `../../../../shared-references/change-classification.md` — all workflows must apply the same test. Route to `spec-driven-develop` only when **at least two** of these hold; otherwise stay with `tav-workflow`:
 
 - The change spans 3+ modules/subsystems, or breaks a public API/schema contract.
 - The work will realistically span multiple sessions or exceed ~10 files.
