@@ -10,9 +10,9 @@ description: >-
 metadata:
   version: 1.30.0
 compatibility:
-  tav-workflow: ">=3.20.0"          # spec-tav/v1 handoff contract
+  tav-workflow: ">=3.21.0"          # spec-tav/v1 handoff contract
   write-notes-like-deepseek: "*"    # Phase 5b decision recording (behavioral rule 16)
-  open-code-review: ">=1.0.0"       # optional delegation only; requires ocr CLI >=1.9.0
+  open-code-review: ">=1.1.0"       # optional delegation only; requires ocr CLI >=1.9.0
 ---
 
 # Spec-Driven Develop
@@ -144,7 +144,7 @@ After Phase 1, evaluate whether the analyzed destination can be turned into a co
 **Actions**:
 
 1. Present key Phase 1 findings: brief architecture summary, notable S.U.P.E.R health issues, and coupling/complexity highlights relevant to the transformation.
-2. Read `references/domain-modeling.md`, which owns the evidence, one-active-decision, glossary, and decision-record rules. Resolve blocking terminology or domain-boundary conflicts before freezing scope and return links to any confirmed write-back. When the platform provides the `grilling` and `domain-modeling` skills, run the decision loop and the glossary write-back through them, with qualifying decisions recorded through behavioral rule 16 (see that reference's "Skill Mapping"); the reference remains the authoritative contract.
+2. Read `references/domain-modeling.md`, which owns the evidence, one-active-decision, glossary, and decision-record rules. Resolve blocking terminology or domain-boundary conflicts before freezing scope and return links to any confirmed write-back. When the platform provides the `grilling` and `domain-modeling` skills, run the decision loop and the glossary write-back through them, with decisions recorded through behavioral rule 16 (see that reference's "Skill Mapping"); the reference remains the authoritative contract.
 3. Ask **targeted questions grounded in the analysis** — specific and informed, not generic (e.g., about circular dependencies found, hardcoded environment assumptions, missing interface contracts). At minimum confirm:
    - **Scope** — which modules from the inventory are in scope
    - **Target** — target technology/architecture/state
@@ -256,7 +256,7 @@ Every task card runs as one TAV cycle (Thinker → Actor → Verifier), even whe
 6. **Progress updates**:
    - **GitHub modes**: merged batch PRs auto-close their Issues; update MASTER.md "Current Status" and "Delivery Batches" once per batch transition.
    - **LOCAL_ONLY**: check off tasks in phase files; update MASTER.md counts.
-   - **All modes**: durable knowledge → resolved memory surface; agent-behavior changes → resolved instruction surfaces; decision-type knowledge (costly to reverse, genuine trade-off, rejected alternatives worth recording) → decision note through `write-notes-like-deepseek` per behavioral rule 16.
+   - **All modes**: durable knowledge → resolved memory surface; agent-behavior changes → resolved instruction surfaces; decision-type knowledge → decision note through `write-notes-like-deepseek` per behavioral rule 16. Before the batch integration commit/PR, move every note owned by this batch from `proposed` to `implemented` or `rejected`, update any existing implemented note whose facts this batch changed, and run that skill's `verify-notes` gate; a failing gate blocks batch integration. Include those note changes in the same batch PR.
 
 7. **At each phase boundary**: the phase's milestone acceptance task must pass before the phase closes — a failure there is a gate failure (return to the offending batch or task, or trigger adaptive replan if it reveals plan-level drift). Close the Milestone only after it passes.
 
@@ -299,7 +299,7 @@ Spec-Driven Develop owns analysis, decomposition, delivery-batch orchestration, 
 |:------------|:-------------------|
 | Verifier pass | TAV returns `ready for batch integration`; after integrated validation, the orchestrator marks project status and only performs authorized closure through the batch PR's `Closes #N` line or LOCAL_ONLY completion updates |
 | TAV execution signals (rework iterations, Thinker returns, unplanned files touched) | TAV returns one execution-event payload with Outcome, Rework, Plan returns, Unplanned dependencies, and Focused S.U.P.E.R result; the orchestrator records it once in the authoritative surface (see `references/adaptive-control.md`) |
-| Knowledge consolidation captures (at most 1-3 durable rules per cycle) | TAV returns candidates; the orchestrator reconciles and writes authorized updates to the surfaces resolved under "Governance Status" in MASTER.md — durable facts to memory, agent-behavior rules to instructions, decision-type captures to decision notes per behavioral rule 16 |
+| Knowledge consolidation and decision notes (memory/instruction rules capped at 1-3 per cycle; note necessity follows `write-notes-like-deepseek`) | TAV returns candidates; the orchestrator reconciles and writes authorized updates to the surfaces resolved under "Governance Status" in MASTER.md — durable facts to memory, agent-behavior rules to instructions, decision notes per behavioral rule 16 |
 | `[ESCALATION-REPORT]` or blocked state | TAV returns the event; the orchestrator records it in an authorized Issue comment or phase-file note and selects the response level |
 
 **State ownership:**

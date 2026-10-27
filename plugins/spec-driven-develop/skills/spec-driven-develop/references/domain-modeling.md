@@ -8,7 +8,7 @@ Resolve the repository's existing layout before creating anything:
 
 - Single context: root `CONTEXT.md`.
 - Multiple bounded contexts: root `CONTEXT-MAP.md` pointing to context-specific `CONTEXT.md` files.
-- Decision records: the repository's ADR or decision directory (commonly `docs/adr/`) and decision notes under `.agents/notes/`. Read both as evidence; write new records only through behavioral rule 16's decision-note channel.
+- Decision records: the repository's ADR or decision directory (commonly `docs/adr/`) and decision notes under `.agents/notes/`. Read both as evidence. Write new records through behavioral rule 16's decision-note channel; when the repository already has an established ADR or decision directory, that channel uses it instead of creating `.agents/notes/`, and `write-notes-like-deepseek` resolves the exact layout.
 - Existing project conventions win. Create a glossary lazily, only when a confirmed term must be recorded.
 
 `CONTEXT.md` is a glossary, not a specification, scratchpad, memory log, or implementation plan. Keep implementation choices in the confirmed spec/task documents or a decision record.
@@ -31,9 +31,9 @@ Resolve the repository's existing layout before creating anything:
 ## Write-Back
 
 - When a canonical term is confirmed, update the relevant `CONTEXT.md` in the same decision step. Preserve surrounding user content and existing format.
-- Record a decision only when it is all three: costly to reverse, surprising without context, and the result of a genuine trade-off. Route it through behavioral rule 16, which owns the decision-note channel and its fallback.
+- Record a decision through behavioral rule 16, which owns the decision-note channel and its fallback. The three-question test (costly to reverse, surprising without context, genuine trade-off) is a prioritization signal for spec-level decisions; it does not narrow the note-necessity rule owned by `write-notes-like-deepseek`.
 - Record unresolved contradictions or deferred terminology in the Phase 2 task definition's notes/out-of-scope section; do not pretend they are settled.
-- Phase 3 tasks that change canonical terms or qualifying architecture decisions must include the matching glossary update or decision note in their acceptance criteria.
+- Phase 3 tasks that change canonical terms or produce a decision note under behavioral rule 16 must include the matching glossary update or decision note in their acceptance criteria.
 
 ## Skill Mapping
 

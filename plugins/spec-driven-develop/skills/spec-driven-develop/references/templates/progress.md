@@ -2,7 +2,7 @@
 
 Templates for the tracking documents generated in Phase 4 (Progress Tracking Documentation). Output to `docs/progress/`. Choose the template that matches the detected tracking mode.
 
-> **FORMAT FREEZE**: `scripts/export-progress.py` parses these files by regular expression. The following patterns are load-bearing ports — change them only together with the exporter:
+> **FORMAT STABILITY**: The following patterns are load-bearing for downstream tooling and human parsing. Keep them stable when editing these templates; if a parser is added later, update it together with the patterns:
 >
 > - Title line `# <Task Name> -- Progress Tracker` (the `--` separator must be ASCII hyphens, never an em-dash)
 > - Blockquote fields `> **Started**: ...` / `> **Last Updated**: ...`
