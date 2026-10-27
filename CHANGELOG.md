@@ -1,5 +1,13 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.30.0 (2026-10-27)
+
+### Decision-recording contract and bundled change classification
+
+- **Added**: Behavioral rule 16 now defines decision-note qualification (costly to reverse, surprising without context, genuine trade-off), the decision-type to note-class mapping, and the task-level versus batch-level recording contract.
+- **Added**: `references/change-classification.md` is bundled with the skill; its L0/L1/L2 definitions match TAV's lightweight-L0 workflow and its case table counts only the signals it defines.
+- **Changed**: The L2 escalation signals and dual-classification text link to the bundled reference instead of a workspace-level shared file.
+
 ## Version 1.29.0 (2026-10-27)
 
 ### Review fixes: decision records, untracked files, archive re-entry

@@ -8,11 +8,11 @@ description: >-
   Chinese cues: 整体重构, 全项目重构, 跨模块迁移, 架构级改造, 大规模, 规范驱动. A bare
   rewrite/refactor/migration keyword is not enough; single-module work belongs to tav-workflow.
 metadata:
-  version: 1.29.0
+  version: 1.30.0
 compatibility:
   tav-workflow: ">=3.20.0"          # spec-tav/v1 handoff contract
   write-notes-like-deepseek: "*"    # Phase 5b decision recording (behavioral rule 16)
-  open-code-review: ">=1.9.0"       # Phase 5b batch validation (optional)
+  open-code-review: ">=1.0.0"       # optional delegation only; requires ocr CLI >=1.9.0
 ---
 
 # Spec-Driven Develop
@@ -40,6 +40,7 @@ You are executing the **Spec-Driven Development** workflow — a seven-phase pip
 | Reference | Owns |
 |:----------|:-----|
 | `references/behavioral-rules.md` | All behavioral rules (1-25) |
+| `references/change-classification.md` | L0/L1/L2 tiers and L2 escalation signals; bundled copy kept in sync with TAV and WNLD |
 | `references/github-integration.md` | Tracking modes, pre-flight check, all `gh` commands and Issue/PR body templates |
 | `references/adaptive-control.md` | Execution events, response levels, canonical storage, controller activation |
 | `references/parallel-protocol.md` | Dispatch/review admission (tiers), lane/worktree protocol, review loop, merge risk, post-integration checks |
@@ -62,7 +63,7 @@ Do not use this workflow for small scoped fixes, single-file edits, or changes t
 
 ### Escalation Signals
 
-Keep this list in sync with `tav-workflow` § "L2 Escalation Signals" and `../../../../shared-references/change-classification.md` — all workflows must apply the same test. Route to `spec-driven-develop` only when **at least two** of these hold; otherwise stay with `tav-workflow`:
+Keep this list in sync with `tav-workflow` § "L2 Escalation Signals" and `references/change-classification.md` — all workflows must apply the same test. Route to `spec-driven-develop` only when **at least two** of these hold; otherwise stay with `tav-workflow`:
 
 - The change spans 3+ modules/subsystems, or breaks a public API/schema contract.
 - The work will realistically span multiple sessions or exceed ~10 files.
