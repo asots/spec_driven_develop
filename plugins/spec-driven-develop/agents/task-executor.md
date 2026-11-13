@@ -72,7 +72,7 @@ Use only the existing workspace and fully resolved branch name supplied by the o
 - Follow the coding standards and per-task S.U.P.E.R drivers.
 - Write complete code with no placeholders, TODOs, or half-implementations.
 - Add or update automated tests for user-visible features, business behavior, APIs, schemas, migrations, parsing, routing, permissions, caching, or persistence unless a task has an explicit no-test rationale.
-- Return any required memory or instruction-surface change as a proposal with evidence. Never write shared instruction or memory surfaces from a lane or delegated assignment; the orchestrator reconciles and applies authorized updates once after batch integration.
+- Return any required memory, instruction-surface, or decision-note change as a proposal with evidence. Never write shared instruction, memory, or decision-note surfaces from a lane or delegated assignment; return decision-note candidates for the orchestrator, which reconciles and applies authorized updates once after batch integration.
 - Do not implement unrelated Issues outside the delivery batch.
 - If commit authorization is confirmed, create at most one atomic commit per completed task card after its acceptance checks pass. Without that authorization, do not commit; keep the worktree and handoff report recoverable instead. Never infer authorization from the presence of a branch or Issue.
 

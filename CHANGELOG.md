@@ -1,5 +1,16 @@
 # Spec-Driven Develop Changelog
 
+## Version 1.31.0 (2026-11-13)
+
+### Decision-note ownership and host declarations
+
+- **Changed**: Rule 16 now places a task-level note at TAV Phase 4 for standalone or orchestrator-direct execution; a lane returns candidates for Phase 5b. A note already written when the gate cannot run stays in place and is reported unverified; a real gate failure still blocks.
+- **Changed**: ADR hosts declare `decision-note gate: N/A (ADR host)` in `AGENTS.md`/`CLAUDE.md` and mirror it in MASTER.md Governance Status; domain-modeling and the manual quality gate follow that declaration.
+- **Changed**: `task-executor` never writes decision notes from a lane; it returns candidates.
+- **Changed**: Decision-note qualification points to the WNLD red line; the three-question test is no longer restated as a gate.
+- **Changed**: `references/change-classification.md` 1.3.0. Compatibility floors are `tav-workflow >=3.22.0` and `write-notes-like-deepseek >=1.1.0`.
+- **Changed**: `scripts/verify.ps1` checks the three classification copies are byte-identical.
+
 ## Version 1.30.0 (2026-10-27)
 
 ### Decision-recording contract and bundled change classification

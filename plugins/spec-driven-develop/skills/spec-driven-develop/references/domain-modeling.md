@@ -8,7 +8,7 @@ Resolve the repository's existing layout before creating anything:
 
 - Single context: root `CONTEXT.md`.
 - Multiple bounded contexts: root `CONTEXT-MAP.md` pointing to context-specific `CONTEXT.md` files.
-- Decision records: the repository's ADR or decision directory (commonly `docs/adr/`) and decision notes under `.agents/notes/`. Read both as evidence. Write new records through behavioral rule 16's decision-note channel; when the repository already has an established ADR or decision directory, that channel uses it instead of creating `.agents/notes/`, and `write-notes-like-deepseek` resolves the exact layout.
+- Decision records: the repository's ADR or decision directory (commonly `docs/adr/`) and decision notes under `.agents/notes/`. Read both as evidence. New decision notes go through behavioral rule 16 to `.agents/notes/{proposed,implemented,rejected}/{class}/`. A repository that already owns an ADR process may declare it as its decision store: record `decision-note gate: N/A (ADR host)` in the project instruction surface (`AGENTS.md` or `CLAUDE.md`; in an SDD run also mirror it in MASTER.md Governance Status), follow the host's ADR format, and replace the script gate with the `write-notes-like-deepseek` skill's quality-gate manual checklist. Without that declaration the default note tree applies, and an empty `.agents/notes/` is not evidence that the gate passed.
 - Existing project conventions win. Create a glossary lazily, only when a confirmed term must be recorded.
 
 `CONTEXT.md` is a glossary, not a specification, scratchpad, memory log, or implementation plan. Keep implementation choices in the confirmed spec/task documents or a decision record.
@@ -31,7 +31,7 @@ Resolve the repository's existing layout before creating anything:
 ## Write-Back
 
 - When a canonical term is confirmed, update the relevant `CONTEXT.md` in the same decision step. Preserve surrounding user content and existing format.
-- Record a decision through behavioral rule 16, which owns the decision-note channel and its fallback. The three-question test (costly to reverse, surprising without context, genuine trade-off) is a prioritization signal for spec-level decisions; it does not narrow the note-necessity rule owned by `write-notes-like-deepseek`.
+- Record a decision through behavioral rule 16, which owns the decision-note channel and its fallback. Note necessity follows `write-notes-like-deepseek`'s red line; that skill defines the three-question test, which only orders which note comes first.
 - Record unresolved contradictions or deferred terminology in the Phase 2 task definition's notes/out-of-scope section; do not pretend they are settled.
 - Phase 3 tasks that change canonical terms or produce a decision note under behavioral rule 16 must include the matching glossary update or decision note in their acceptance criteria.
 

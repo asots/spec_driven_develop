@@ -8,10 +8,10 @@ description: >-
   Chinese cues: 整体重构, 全项目重构, 跨模块迁移, 架构级改造, 大规模, 规范驱动. A bare
   rewrite/refactor/migration keyword is not enough; single-module work belongs to tav-workflow.
 metadata:
-  version: 1.30.0
+  version: 1.31.0
 compatibility:
-  tav-workflow: ">=3.21.0"          # spec-tav/v1 handoff contract
-  write-notes-like-deepseek: "*"    # Phase 5b decision recording (behavioral rule 16)
+  tav-workflow: ">=3.22.0"          # spec-tav/v1 handoff contract
+  write-notes-like-deepseek: ">=1.1.0"    # Phase 5b decision recording (behavioral rule 16); note necessity owned by its red line
   open-code-review: ">=1.1.0"       # optional delegation only; requires ocr CLI >=1.9.0
 ---
 
